@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard — SmartArch</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+</head>
+<body>
+
+<div class="admin-layout">
+
+    <!-- ─── Sidebar ───────────────────────────────────────────────────────── -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <div class="sidebar-brand-icon"><i class="fas fa-home"></i></div>
+            <div class="sidebar-brand-text">
+                <strong>SmartArch</strong>
+                <span>Admin Panel</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-label">Overview</div>
+                <a class="nav-item active" data-page="dashboard">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <a class="nav-item" data-page="analytics">
+                    <i class="fas fa-chart-line"></i> Analytics
+                </a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-label">Management</div>
+                <a class="nav-item" data-page="users">
+                    <i class="fas fa-users"></i> Users
+                </a>
+                <a class="nav-item" data-page="projects">
+                    <i class="fas fa-drafting-compass"></i> Projects
+                </a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-label">Support</div>
+                <a class="nav-item" data-page="messages" style="display:flex;align-items:center;justify-content:space-between;">
+                    <span><i class="fas fa-inbox" style="margin-right:10px;"></i>Messages</span>
+                    <span id="adminMsgBadge" style="display:none;background:#ef4444;color:#fff;border-radius:20px;padding:1px 7px;font-size:0.7rem;font-weight:700;line-height:1.4;"></span>
+                </a>
+                <a class="nav-item" data-page="reviews">
+                    <i class="fas fa-star"></i> Reviews
+                </a>
+                <a class="nav-item" data-page="app-ratings">
+                    <i class="fas fa-mobile-alt"></i> App Ratings
+                </a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-label">System</div>
+                <a class="nav-item" href="index.html" target="_blank">
+                    <i class="fas fa-external-link-alt"></i> View Site
+                </a>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="admin-profile">
+                <div class="admin-avatar" id="adminNameInitials">A</div>
+                <div class="admin-info">
+                    <strong id="adminName">Admin</strong>
+                    <span id="adminEmail"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="81e0e5ece8efc1f2e8f5e4afe2eeec">[email&#160;protected]</a></span>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="adminLogout()">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </aside>
+
+    <!-- ─── Main Content ──────────────────────────────────────────────────── -->
+    <div class="main-content">
+
+        <!-- Topbar -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="topbar-btn" id="mobileMenuBtn" style="display:none">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div>
+                    <div class="page-title" id="pageTitle">Dashboard</div>
+                    <div class="page-subtitle" id="pageSubtitle">Overview & analytics</div>
+                </div>
+            </div>
+            <div class="topbar-right">
+                <div class="live-badge"><span class="live-dot"></span> Live</div>
+                <button class="topbar-btn" onclick="location.reload()" title="Refresh">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- ─── Page: Dashboard ───────────────────────────────────────────── -->
+        <div class="page-content">
+
+            <div class="page active" id="page-dashboard">
+
+                <!-- Stats Row -->
+                <div class="stats-grid">
+                    <div class="stat-card blue">
+                        <div class="stat-icon"><i class="fas fa-users"></i></div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="stat-total-users">—</div>
+                            <div class="stat-label">Total Users</div>
+                            <div class="stat-change up"><i class="fas fa-arrow-up"></i> <span id="stat-users-week">—</span> this week</div>
+                        </div>
+                    </div>
+                    <div class="stat-card green">
+                        <div class="stat-icon"><i class="fas fa-home"></i></div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="stat-total-projects">—</div>
+                            <div class="stat-label">Total Projects</div>
+                            <div class="stat-change up"><i class="fas fa-arrow-up"></i> <span id="stat-projects-week">—</span> this week</div>
+                        </div>
+                    </div>
+                    <div class="stat-card orange">
+                        <div class="stat-icon"><i class="fas fa-calendar-day"></i></div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="stat-projects-today">—</div>
+                            <div class="stat-label">Projects Today</div>
+                            <div class="stat-change neutral">New today</div>
+                        </div>
+                    </div>
+                    <div class="stat-card purple">
+                        <div class="stat-icon"><i class="fas fa-user-plus"></i></div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="stat-users-today">—</div>
+                            <div class="stat-label">New Users Today</div>
+                            <div class="stat-change neutral">Registered today</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row 1 -->
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fas fa-chart-line"></i> User Registrations (30 days)</div>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container"><canvas id="userGrowthChart"></canvas></div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fas fa-chart-area"></i> Projects Created (30 days)</div>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container"><canvas id="projectGrowthChart"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row 2 + Activity -->
+                <div class="grid-2">
+                    <div class="grid-2" style="grid-template-columns:1fr 1fr;gap:1.25rem">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title"><i class="fas fa-chart-pie"></i> By Status</div>
+                            </div>
+                            <div class="card-body">
+                                <div class="donut-container">
+                                    <div class="donut-chart"><canvas id="statusChart"></canvas></div>
+                                    <div class="donut-legend" id="statusLegend"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title"><i class="fas fa-building"></i> By Type</div>
+                            </div>
+                            <div class="card-body">
+                                <div class="donut-container">
+                                    <div class="donut-chart"><canvas id="typeChart"></canvas></div>
+                                    <div class="donut-legend" id="typeLegend"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fas fa-history"></i> Recent Activity</div>
+                        </div>
+                        <div class="card-body" style="padding-top:0.5rem">
+                            <div class="activity-feed" id="activityFeed">
+                                <div class="loading-spinner"><i class="fas fa-spinner"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Plan Distribution Row -->
+                <div class="grid-2" style="grid-template-columns:1fr 1fr;gap:1.25rem">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fas fa-layer-group"></i> Users by Plan</div>
+                        </div>
+                        <div class="card-body">
+                            <div class="donut-container">
+                                <div class="donut-chart"><canvas id="planChart"></canvas></div>
+                                <div class="donut-legend" id="planLegend"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fas fa-crown"></i> Plan Breakdown</div>
+                        </div>
+                        <div class="card-body">
+                            <div id="planBreakdownList" style="padding-top:0.25rem"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Tables -->
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fas fa-folder-open"></i> Recent Projects</div>
+                            <button class="btn btn-sm btn-gray" onclick="navigateTo('projects')">View All</button>
+                        </div>
+                        <div class="card-body" style="padding-top:0.5rem">
+                            <div id="recentProjectsList">
+                                <div class="loading-spinner"><i class="fas fa-spinner"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fas fa-user-clock"></i> Recent Users</div>
+                            <button class="btn btn-sm btn-gray" onclick="navigateTo('users')">View All</button>
+                        </div>
+                        <div class="card-body" style="padding-top:0.5rem">
+                            <div id="recentUsersList">
+                                <div class="loading-spinner"><i class="fas fa-spinner"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Users -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-trophy"></i> Most Active Users</div>
+                    </div>
+                    <div class="card-body" style="padding-top:0.5rem">
+                        <div id="topUsersList">
+                            <div class="loading-spinner"><i class="fas fa-spinner"></i></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ─── Page: Users ────────────────────────────────────────────── -->
+            <div class="page" id="page-users">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-users"></i> All Users <span id="usersTotalCount" style="font-weight:400;color:var(--gray);font-size:0.82rem;margin-left:0.5rem"></span></div>
+                    </div>
+                    <div class="table-controls">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="userSearch" placeholder="Search by name or email...">
+                        </div>
+                        <select class="filter-select" id="userSort">
+                            <option value="-createdAt">Newest First</option>
+                            <option value="createdAt">Oldest First</option>
+                            <option value="name">Name A-Z</option>
+                            <option value="-name">Name Z-A</option>
+                        </select>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Role</th>
+                                    <th>Plan</th>
+                                    <th>Projects</th>
+                                    <th>Status</th>
+                                    <th>Joined</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                                <tr><td colspan="7"><div class="loading-spinner"><i class="fas fa-spinner"></i></div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination">
+                        <span class="pagination-info" id="usersPaginationInfo"></span>
+                        <div class="pagination-btns" id="usersPaginationBtns"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── Page: Projects ─────────────────────────────────────────── -->
+            <div class="page" id="page-projects">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-drafting-compass"></i> All Projects <span id="projectsTotalCount" style="font-weight:400;color:var(--gray);font-size:0.82rem;margin-left:0.5rem"></span></div>
+                    </div>
+                    <div class="table-controls">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="projectSearch" placeholder="Search projects...">
+                        </div>
+                        <select class="filter-select" id="statusFilter">
+                            <option value="">All Statuses</option>
+                            <option value="draft">Draft</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="review">Review</option>
+                            <option value="approved">Approved</option>
+                            <option value="archived">Archived</option>
+                        </select>
+                        <select class="filter-select" id="typeFilter">
+                            <option value="">All Types</option>
+                            <option value="residential">Residential</option>
+                            <option value="commercial">Commercial</option>
+                            <option value="industrial">Industrial</option>
+                            <option value="mixed">Mixed</option>
+                        </select>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Project</th>
+                                    <th>Owner</th>
+                                    <th>Status</th>
+                                    <th>Type</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="projectsTableBody">
+                                <tr><td colspan="6"><div class="loading-spinner"><i class="fas fa-spinner"></i></div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination">
+                        <span class="pagination-info" id="projectsPaginationInfo"></span>
+                        <div class="pagination-btns" id="projectsPaginationBtns"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── Page: Analytics ───────────────────────────────────────── -->
+            <div class="page" id="page-analytics">
+                <div class="stats-grid" style="margin-bottom:1.5rem">
+                    <div class="stat-card blue">
+                        <div class="stat-icon"><i class="fas fa-users"></i></div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="stat-total-users-2">—</div>
+                            <div class="stat-label">Total Users</div>
+                        </div>
+                    </div>
+                    <div class="stat-card green">
+                        <div class="stat-icon"><i class="fas fa-home"></i></div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="stat-total-projects-2">—</div>
+                            <div class="stat-label">Total Projects</div>
+                        </div>
+                    </div>
+                    <div class="stat-card teal">
+                        <div class="stat-icon"><i class="fas fa-user-check"></i></div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="stat-users-week-2">—</div>
+                            <div class="stat-label">New Users (7d)</div>
+                        </div>
+                    </div>
+                    <div class="stat-card red">
+                        <div class="stat-icon"><i class="fas fa-folder-plus"></i></div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="stat-projects-week-2">—</div>
+                            <div class="stat-label">New Projects (7d)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid-2" style="margin-bottom:1.5rem">
+                    <div class="card">
+                        <div class="card-header"><div class="card-title"><i class="fas fa-chart-line"></i> User Growth (30 days)</div></div>
+                        <div class="card-body"><div class="chart-container"><canvas id="userGrowthChart2"></canvas></div></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><div class="card-title"><i class="fas fa-chart-bar"></i> Project Activity (30 days)</div></div>
+                        <div class="card-body"><div class="chart-container"><canvas id="projectGrowthChart2"></canvas></div></div>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="card-header"><div class="card-title"><i class="fas fa-trophy"></i> Top Contributors</div></div>
+                        <div class="card-body" style="padding-top:0.5rem"><div id="topUsersListAnalytics"></div></div>
+                    </div>
+                    <div class="grid-2" style="display:flex;flex-direction:column;gap:1.25rem">
+                        <div class="card">
+                            <div class="card-header"><div class="card-title"><i class="fas fa-chart-pie"></i> Projects by Status</div></div>
+                            <div class="card-body">
+                                <div class="donut-container">
+                                    <div class="donut-chart"><canvas id="statusChart2"></canvas></div>
+                                    <div class="donut-legend" id="statusLegend2"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header"><div class="card-title"><i class="fas fa-building"></i> Projects by Type</div></div>
+                            <div class="card-body">
+                                <div class="donut-container">
+                                    <div class="donut-chart"><canvas id="typeChart2"></canvas></div>
+                                    <div class="donut-legend" id="typeLegend2"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ─── AI Score Analytics ─────────────────────────────────── -->
+                <div style="border-top:2px solid #f0f2f5;margin:0.5rem 0 1.5rem;padding-top:1.5rem;">
+
+                    <!-- Section heading -->
+                    <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.25rem;">
+                        <div style="width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;">
+                            <i class="fas fa-star" style="color:#fff;font-size:0.8rem;"></i>
+                        </div>
+                        <div>
+                            <div style="font-size:1rem;font-weight:700;color:var(--dark);">AI Design Score Analytics</div>
+                            <div style="font-size:0.78rem;color:var(--gray);">Aggregated feedback scores across all analysed projects</div>
+                        </div>
+                    </div>
+
+                    <!-- 4 metric cards -->
+                    <div class="stats-grid" id="aiScoreCards" style="margin-bottom:1.25rem;">
+                        <div class="stat-card blue">
+                            <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                            <div class="stat-info">
+                                <div class="stat-value" id="ais-avg">—</div>
+                                <div class="stat-label">Platform avg score</div>
+                                <div class="stat-change neutral" id="ais-avg-label">out of 10</div>
+                            </div>
+                        </div>
+                        <div class="stat-card teal">
+                            <div class="stat-icon"><i class="fas fa-percentage"></i></div>
+                            <div class="stat-info">
+                                <div class="stat-value" id="ais-coverage">—</div>
+                                <div class="stat-label">Projects analysed</div>
+                                <div class="stat-change neutral" id="ais-coverage-sub">of total</div>
+                            </div>
+                        </div>
+                        <div class="stat-card green">
+                            <div class="stat-icon"><i class="fas fa-arrow-up"></i></div>
+                            <div class="stat-info">
+                                <div class="stat-value" id="ais-high">—</div>
+                                <div class="stat-label">Highest score</div>
+                                <div class="stat-change up"><i class="fas fa-award"></i> <span id="ais-high-name">—</span></div>
+                            </div>
+                        </div>
+                        <div class="stat-card orange">
+                            <div class="stat-icon"><i class="fas fa-arrow-down"></i></div>
+                            <div class="stat-info">
+                                <div class="stat-value" id="ais-low">—</div>
+                                <div class="stat-label">Lowest score</div>
+                                <div class="stat-change neutral"><span id="ais-low-name">—</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Radar chart + project table -->
+                    <div class="grid-2" style="margin-bottom:1.25rem;">
+
+                        <!-- Radar chart -->
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title"><i class="fas fa-spider"></i> Avg score per dimension</div>
+                            </div>
+                            <div class="card-body" style="display:flex;align-items:center;justify-content:center;min-height:280px;">
+                                <div id="aiRadarEmpty" style="text-align:center;color:var(--gray);display:none;">
+                                    <i class="fas fa-chart-radar" style="font-size:2rem;margin-bottom:0.5rem;opacity:.3;"></i>
+                                    <p style="font-size:0.85rem;">No analysed projects yet</p>
+                                </div>
+                                <div style="width:100%;max-width:320px;position:relative;">
+                                    <canvas id="aiRadarChart" height="280"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Top 5 scored projects -->
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title"><i class="fas fa-medal"></i> Top scored projects</div>
+                            </div>
+                            <div class="card-body" style="padding-top:0.5rem;">
+                                <div id="aiTopProjectsList">
+                                    <div class="loading-spinner"><i class="fas fa-spinner"></i></div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Full sortable table -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fas fa-table"></i> All analysed projects</div>
+                            <div style="display:flex;align-items:center;gap:0.5rem;">
+                                <label style="font-size:0.78rem;color:var(--gray);">Sort by</label>
+                                <select id="aiScoreSort" onchange="renderAIScoreTable()" style="font-size:0.78rem;padding:4px 8px;border:1px solid var(--gray-light);border-radius:6px;color:var(--dark);background:#fff;">
+                                    <option value="score-desc">Score (high first)</option>
+                                    <option value="score-asc">Score (low first)</option>
+                                    <option value="name">Project name</option>
+                                    <option value="date">Most recently analysed</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Project</th>
+                                        <th>Owner</th>
+                                        <th style="text-align:center">Score</th>
+                                        <th style="text-align:center">Space</th>
+                                        <th style="text-align:center">Flow</th>
+                                        <th style="text-align:center">Light</th>
+                                        <th style="text-align:center">Style</th>
+                                        <th style="text-align:center">Function</th>
+                                        <th>Analysed</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="aiScoreTableBody">
+                                    <tr><td colspan="10"><div class="loading-spinner"><i class="fas fa-spinner"></i></div></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+    <!-- ─── Messages / Inbox Page ──────────────────────────────────────────── -->
+    <div class="page" id="page-messages">
+        <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
+            <div>
+                <h2 class="page-title" style="display:none;">Support Inbox</h2>
+                <p class="page-subtitle" style="display:none;">Manage and reply to user support tickets</p>
+            </div>
+            <select id="ticketStatusFilter" onchange="loadAdminTickets()"
+                style="background:var(--card-bg-2);border:1px solid var(--border-2);color:var(--white);padding:0.5rem 1rem;border-radius:8px;font-size:0.85rem;cursor:pointer;box-shadow:none;">
+                <option value="all">All Tickets</option>
+                <option value="new">New</option>
+                <option value="seen">Seen</option>
+                <option value="replied">Replied</option>
+                <option value="closed">Closed</option>
+            </select>
+        </div>
+
+        <div style="display:grid;grid-template-columns:340px 1fr;gap:1.25rem;height:calc(100vh - 200px);min-height:480px;">
+
+            <!-- ── Ticket List ── -->
+            <div style="background:var(--card-bg);border-radius:12px;box-shadow:none;overflow:hidden;display:flex;flex-direction:column;border:1px solid var(--border-2);">
+                <div style="padding:0.875rem 1.125rem;border-bottom:1px solid var(--border-2);display:flex;align-items:center;justify-content:space-between;background:var(--card-bg-2)">
+                    <span style="font-weight:700;color:var(--white);font-size:0.875rem;">Tickets</span>
+                    <span id="ticketCountBadge" style="color:var(--gray);font-size:0.75rem;"></span>
+                </div>
+                <div id="ticketList" style="overflow-y:auto;flex:1;"></div>
+            </div>
+
+            <!-- ── Ticket Detail ── -->
+            <div style="background:var(--card-bg);border-radius:12px;box-shadow:none;overflow:hidden;display:flex;flex-direction:column;border:1px solid var(--border-2);" id="ticketDetail">
+                <!-- Empty state -->
+                <div id="ticketDetailEmpty" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:1rem;color:var(--gray);">
+                    <i class="fas fa-inbox" style="font-size:3rem;opacity:0.2;"></i>
+                    <p style="margin:0;font-size:0.9rem;">Select a ticket to read and reply</p>
+                </div>
+                <!-- Thread content -->
+                <div id="ticketDetailContent" style="display:none;flex-direction:column;height:100%;">
+                    <!-- Thread header -->
+                    <div style="padding:1rem 1.25rem;border-bottom:1px solid var(--border-2);background:var(--card-bg-2);display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-shrink:0;">
+                        <div style="flex:1;min-width:0;">
+                            <h3 id="tdSubject" style="margin:0 0 3px;color:var(--white);font-size:0.95rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></h3>
+                            <p id="tdMeta" style="margin:0;color:var(--gray);font-size:0.775rem;"></p>
+                        </div>
+                        <div style="display:flex;gap:0.5rem;flex-shrink:0;align-items:center;">
+                            <span id="tdStatusBadge"></span>
+                            <select id="tdStatusSelect" onchange="changeTicketStatus(this.value)"
+                                style="background:var(--card-bg-2);border:1px solid var(--border-2);color:var(--white);padding:0.35rem 0.7rem;border-radius:7px;font-size:0.775rem;cursor:pointer;">
+                                <option value="seen">Open</option>
+                                <option value="replied">Replied</option>
+                                <option value="closed">Closed</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- Thread messages -->
+                    <div id="tdThread" style="flex:1;overflow-y:auto;padding:1.25rem;display:flex;flex-direction:column;gap:0.875rem;background:var(--ink);"></div>
+                    <!-- Reply box -->
+                    <div style="padding:1rem 1.25rem;border-top:1px solid var(--border-2);background:var(--card-bg-2);flex-shrink:0;">
+                        <textarea id="replyBox" placeholder="Type your reply to the user…" rows="3"
+                            style="width:100%;background:var(--ink);border:1px solid var(--border-2);border-radius:9px;color:var(--white);font-family:inherit;font-size:0.875rem;padding:0.75rem 1rem;resize:vertical;outline:none;transition:border-color 0.2s;box-sizing:border-box;"
+                            onfocus="this.style.borderColor='var(--cyan)';this.style.boxShadow='0 0 0 3px rgba(0,212,200,0.12)'"
+                            onblur="this.style.borderColor='var(--border-2)';this.style.boxShadow='none'"></textarea>
+                        <div style="display:flex;justify-content:flex-end;margin-top:0.625rem;">
+                            <button onclick="sendAdminReply()"
+                                style="background:linear-gradient(135deg,var(--cyan),#0891b2);color:var(--ink);border:none;padding:0.6rem 1.4rem;border-radius:8px;font-weight:700;font-size:0.85rem;cursor:pointer;display:flex;align-items:center;gap:0.5rem;transition:opacity 0.2s;box-shadow:0 4px 12px rgba(0,212,200,0.3);"
+                                onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">
+                                <i class="fas fa-paper-plane"></i> Send Reply
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <!-- /page-content -->
+
+        <!-- ══════════════ REVIEWS PAGE ══════════════ -->
+        <div class="page" id="page-reviews">
+            <!-- Summary stat cards -->
+            <div class="stats-grid" style="margin-bottom:1.5rem">
+                <div class="stat-card blue">
+                    <div class="stat-icon"><i class="fas fa-star"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="rv-stat-total">—</div>
+                        <div class="stat-label">Total Reviews</div>
+                    </div>
+                </div>
+                <div class="stat-card green">
+                    <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="rv-stat-avg">—</div>
+                        <div class="stat-label">Overall Average</div>
+                    </div>
+                </div>
+                <div class="stat-card orange">
+                    <div class="stat-icon"><i class="fas fa-trophy"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="rv-stat-top">—</div>
+                        <div class="stat-label">Top Rated Project</div>
+                    </div>
+                </div>
+                <div class="stat-card purple">
+                    <div class="stat-icon"><i class="fas fa-fire"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="rv-stat-five">—</div>
+                        <div class="stat-label">5-Star Reviews</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts row -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem">
+                <!-- Rating distribution bar chart -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-chart-bar"></i> Rating Distribution</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container"><canvas id="rvDistChart"></canvas></div>
+                    </div>
+                </div>
+                <!-- Top rated projects -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-medal"></i> Top Rated Projects</div>
+                    </div>
+                    <div class="card-body" style="padding-top:.5rem">
+                        <div id="rvTopProjectsList"><p style="color:var(--gray);font-size:.85rem">Loading…</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent reviews feed -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title"><i class="fas fa-comments"></i> Recent Reviews</div>
+                </div>
+                <div class="card-body" style="padding-top:.5rem">
+                    <div id="rvRecentFeed"><p style="color:var(--gray);font-size:.85rem">Loading…</p></div>
+                </div>
+            </div>
+        </div>
+        <!-- /page-reviews -->
+
+        <!-- ══════════════ APP RATINGS PAGE ══════════════ -->
+        <div class="page" id="page-app-ratings">
+            <div class="stats-grid" style="margin-bottom:1.5rem">
+                <div class="stat-card blue">
+                    <div class="stat-icon"><i class="fas fa-star"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="ar-stat-total">—</div>
+                        <div class="stat-label">Total Ratings</div>
+                    </div>
+                </div>
+                <div class="stat-card green">
+                    <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="ar-stat-avg">—</div>
+                        <div class="stat-label">Overall Average</div>
+                    </div>
+                </div>
+                <div class="stat-card orange">
+                    <div class="stat-icon"><i class="fas fa-fire"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="ar-stat-five">—</div>
+                        <div class="stat-label">5-Star Ratings</div>
+                    </div>
+                </div>
+                <div class="stat-card purple">
+                    <div class="stat-icon"><i class="fas fa-medal"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="ar-stat-common">—</div>
+                        <div class="stat-label">Most Common</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-bottom:1.5rem">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-chart-bar"></i> Rating Distribution</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container"><canvas id="arDistChart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title"><i class="fas fa-comments"></i> Recent App Ratings</div>
+                </div>
+                <div class="card-body" style="padding-top:.5rem">
+                    <div id="arRecentFeed"><p style="color:var(--gray);font-size:.85rem">Loading…</p></div>
+                </div>
+            </div>
+        </div>
+        <!-- /page-app-ratings -->
+
+    </div>
+    <!-- /main-content -->
+
+</div>
+<!-- /admin-layout -->
+
+<!-- ─── Modals ─────────────────────────────────────────────────────────────── -->
+
+<!-- User Detail Modal -->
+<div class="modal-overlay" id="userDetailModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div class="modal-title">User Details</div>
+            <button class="modal-close" onclick="closeModal('userDetailModal')">&times;</button>
+        </div>
+        <div class="modal-body" id="userDetailBody">
+            <div class="loading-spinner"><i class="fas fa-spinner"></i></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-gray" onclick="closeModal('userDetailModal')">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Project Detail Modal -->
+<div class="modal-overlay" id="projectDetailModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div class="modal-title">Project Details</div>
+            <button class="modal-close" onclick="closeModal('projectDetailModal')">&times;</button>
+        </div>
+        <div class="modal-body" id="projectDetailBody">
+            <div class="loading-spinner"><i class="fas fa-spinner"></i></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-gray" onclick="closeModal('projectDetailModal')">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Confirm Modal -->
+<div class="modal-overlay" id="confirmModal">
+    <div class="modal-box" style="max-width:420px">
+        <div class="modal-body">
+            <div class="confirm-modal-icon"><i class="fas fa-exclamation-triangle"></i></div>
+            <div class="confirm-modal-text">
+                <h3 id="confirmTitle">Confirm Action</h3>
+                <p id="confirmMessage">Are you sure?</p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-gray" onclick="closeModal('confirmModal')">Cancel</button>
+            <button class="btn btn-danger" id="confirmBtn">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="js/admin.js?v=5"></script>
+
+<script>
+// Analytics page additional rendering
+const origLoadDashboard = window.loadDashboard || (() => {});
+
+// Hook into navigateTo for analytics AND messages
+const _origNavigate = window.navigateTo;
+window.navigateTo = function(page) {
+    _origNavigate(page);
+    if (page === 'analytics') renderAnalyticsPage();
+    if (page === 'messages' && typeof loadAdminTickets === 'function') loadAdminTickets();
+};
+
+async function renderAnalyticsPage() {
+    try {
+        const res = await fetch(`http://localhost:5000/api/admin/dashboard`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` }
+        });
+        const json = await res.json();
+        if (!json.success) return;
+        const d = json.data;
+
+        // Update secondary stat elements
+        const s2 = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+        s2('stat-total-users-2', d.stats.totalUsers);
+        s2('stat-total-projects-2', d.stats.totalProjects);
+        s2('stat-users-week-2', d.stats.usersThisWeek);
+        s2('stat-projects-week-2', d.stats.projectsThisWeek);
+
+        // Charts
+        if (window.Chart && document.getElementById('userGrowthChart2')) {
+            renderLineChart('userGrowthChart2', d.userGrowth, 'Users', '#667eea');
+            renderLineChart('projectGrowthChart2', d.projectGrowth, 'Projects', '#11998e');
+            renderDonut('statusChart2', d.projectsByStatus, 'status');
+            renderDonut('typeChart2', d.projectsByType, 'type');
+        }
+
+        // Top users
+        renderTopUsers2(d.topUsers);
+    } catch (e) { console.error(e); }
+}
+
+function renderTopUsers2(users) {
+    const el = document.getElementById('topUsersListAnalytics');
+    if (!el || !users) return;
+    if (!users.length) { el.innerHTML = '<div class="empty-state"><i class="fas fa-trophy"></i><p>No data yet</p></div>'; return; }
+    el.innerHTML = users.map((u, i) => {
+        const rc = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+        return `<div class="top-user-item">
+            <div class="rank-badge ${rc}">${i+1}</div>
+            <div class="user-avatar-sm">${u.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2)}</div>
+            <div class="top-user-info"><div class="top-user-name">${u.name}</div><div class="top-user-email">${u.email}</div></div>
+            <div class="top-user-count">${u.projectCount} <span style="font-size:0.7rem;color:var(--gray);font-weight:400">projects</span></div>
+        </div>`;
+    }).join('');
+}
+
+// Show mobile menu button on small screens
+if (window.innerWidth <= 768) {
+    const btn = document.getElementById('mobileMenuBtn');
+    if (btn) btn.style.display = 'flex';
+}
+
+</script>
+
+</body>
+</html>
