@@ -1,0 +1,1831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-client-id" content="974456097719-6004me69a76l065b7nhh0b55qng7hdbn.apps.googleusercontent.com">
+    <title>SmartArch — Find Your Perfect Architect</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ── Reset & Root ─────────────────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --ink:       #060a12;
+            --ink-2:     #0d1424;
+            --ink-3:     #111827;
+            --cyan:      #00d4c8;
+            --cyan-glow: rgba(0,212,200,0.25);
+            --amber:     #f59e0b;
+            --violet:    #8b5cf6;
+            --slate:     #94a3b8;
+            --slate-2:   #64748b;
+            --white:     #f1f5f9;
+            --border:    rgba(255,255,255,0.07);
+            --card-bg:   rgba(255,255,255,0.04);
+            --nav-h:     68px;
+            --r:         14px;
+            --r-lg:      22px;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--ink);
+            color: var(--white);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        body::before {
+            content: '';
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            background-image:
+                linear-gradient(rgba(0,212,200,0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,212,200,0.025) 1px, transparent 1px);
+            background-size: 72px 72px;
+        }
+
+        body::after {
+            content: '';
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+            opacity: 0.4;
+        }
+
+        .ambient {
+            position: fixed; pointer-events: none; z-index: 0; border-radius: 50%;
+            filter: blur(120px);
+        }
+        .ambient-1 {
+            width: 700px; height: 700px; top: -200px; left: -150px;
+            background: radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%);
+        }
+        .ambient-2 {
+            width: 600px; height: 600px; bottom: -100px; right: -100px;
+            background: radial-gradient(circle, rgba(0,212,200,0.07) 0%, transparent 70%);
+        }
+        .ambient-3 {
+            width: 500px; height: 500px; top: 40%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle, rgba(139,92,246,0.04) 0%, transparent 70%);
+        }
+
+        /* ─── NAVBAR ──────────────────────────────────────────────────── */
+        .navbar {
+            position: fixed; top: 0; left: 0; right: 0;
+            height: var(--nav-h);
+            display: flex; align-items: center;
+            padding: 0 5%;
+            background: rgba(6,10,18,0.8);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-bottom: 1px solid var(--border);
+            z-index: 1000;
+            transition: background 0.3s;
+        }
+
+        .nav-brand {
+            display: flex; align-items: center; gap: 10px;
+            text-decoration: none; flex-shrink: 0;
+        }
+
+        .nav-logo {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, var(--violet), #6d28d9);
+            border-radius: 9px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; color: #fff;
+            box-shadow: 0 0 20px rgba(139,92,246,0.35);
+        }
+
+        .nav-brand-text {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800; font-size: 1.1rem;
+            color: var(--white); letter-spacing: -0.5px;
+        }
+
+        .nav-brand-text em { font-style: normal; color: var(--cyan); }
+
+        .client-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: rgba(139,92,246,0.12);
+            border: 1px solid rgba(139,92,246,0.25);
+            color: var(--violet);
+            padding: 2px 10px; border-radius: 40px;
+            font-size: 0.65rem; font-weight: 700;
+            letter-spacing: 1.2px; text-transform: uppercase;
+        }
+
+        .nav-center {
+            display: flex; align-items: center; gap: 0.25rem;
+            margin: 0 auto;
+        }
+
+        .nav-link {
+            text-decoration: none; color: var(--slate);
+            font-size: 0.875rem; font-weight: 500;
+            padding: 0.45rem 0.875rem; border-radius: 8px;
+            transition: all 0.2s; letter-spacing: 0.01em;
+        }
+        .nav-link:hover { color: var(--white); background: rgba(255,255,255,0.06); }
+
+        .nav-right { display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0; }
+        .nav-auth  { display: flex; align-items: center; gap: 0.75rem; }
+        .nav-user  { display: none; align-items: center; gap: 0.75rem; }
+
+        .btn-ghost {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.15);
+            color: var(--white);
+            padding: 0.45rem 1.1rem; border-radius: 9px;
+            font-size: 0.875rem; font-weight: 500;
+            cursor: pointer; text-decoration: none;
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            transition: all 0.2s;
+        }
+        .btn-ghost:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05); }
+
+        .btn-cta {
+            background: linear-gradient(135deg, var(--violet), #6d28d9);
+            color: #fff; border: none;
+            padding: 0.5rem 1.25rem; border-radius: 9px;
+            font-size: 0.875rem; font-weight: 700;
+            cursor: pointer; text-decoration: none;
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            transition: all 0.25s; font-family: 'Syne', sans-serif;
+        }
+        .btn-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(139,92,246,0.4);
+        }
+
+        /* Avatar menu */
+        .user-menu-wrap { position: relative; }
+        .user-avatar {
+            width: 38px; height: 38px; border-radius: 50%;
+            border: 2px solid var(--violet);
+            cursor: pointer; object-fit: cover;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .user-avatar:hover { box-shadow: 0 0 0 3px rgba(139,92,246,0.18); }
+
+        .user-dropdown {
+            position: absolute; top: calc(100% + 12px); right: 0;
+            background: var(--ink-2);
+            border: 1px solid var(--border);
+            border-radius: 14px; min-width: 220px; padding: 0.4rem;
+            display: block;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04);
+            opacity: 0; transform: translateY(-8px) scale(0.97);
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            z-index: 1000;
+        }
+        .user-menu-wrap.open .user-dropdown {
+            opacity: 1; transform: translateY(0) scale(1); pointer-events: auto;
+        }
+
+        .user-dropdown-header {
+            display: flex; align-items: center; gap: 0.65rem;
+            padding: 0.7rem 0.875rem 0.6rem;
+            border-bottom: 1px solid rgba(255,255,255,0.07); margin-bottom: 0.3rem;
+        }
+        .user-dropdown-avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            object-fit: cover; border: 1.5px solid var(--violet); flex-shrink: 0;
+        }
+        .user-dropdown-info { overflow: hidden; }
+        .user-dropdown-name { font-size: 0.82rem; font-weight: 600; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-dropdown-email { font-size: 0.72rem; color: var(--slate); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-dropdown a {
+            display: flex; align-items: center; gap: 0.6rem;
+            padding: 0.6rem 0.875rem; border-radius: 8px;
+            color: var(--slate); text-decoration: none; font-size: 0.875rem;
+            transition: all 0.15s;
+        }
+        .user-dropdown a:hover { background: rgba(255,255,255,0.06); color: var(--white); }
+        .user-dropdown a.logout-link { color: #f87171; }
+        .user-dropdown a.logout-link:hover { background: rgba(248,113,113,0.08); color: #fca5a5; }
+
+        .hamburger {
+            display: none; background: none; border: none;
+            cursor: pointer; color: var(--slate); font-size: 1.3rem; padding: 0.25rem;
+        }
+
+        /* ── TICKER ───────────────────────────────────────────────────── */
+        .ticker-bar {
+            margin-top: var(--nav-h); overflow: hidden;
+            border-bottom: 1px solid var(--border);
+            background: rgba(255,255,255,0.018);
+            padding: 11px 0; position: relative; z-index: 1;
+        }
+        .ticker-track {
+            display: flex; gap: 56px; width: max-content;
+            animation: ticker 30s linear infinite;
+        }
+        .ticker-item {
+            font-size: 0.72rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 1.5px;
+            color: var(--slate-2); white-space: nowrap;
+            display: flex; align-items: center; gap: 12px;
+        }
+        .ticker-dot { color: var(--violet); }
+        @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+        /* ── HERO ─────────────────────────────────────────────────────── */
+        .hero {
+            min-height: calc(100vh - var(--nav-h) - 42px);
+            display: grid; grid-template-columns: 1fr 1fr;
+            align-items: center; gap: 4rem;
+            padding: 5rem 5% 4rem;
+            position: relative; z-index: 1;
+        }
+
+        .hero-eyebrow {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(139,92,246,0.08);
+            border: 1px solid rgba(139,92,246,0.22);
+            color: var(--violet);
+            padding: 5px 14px; border-radius: 40px;
+            font-size: 0.72rem; font-weight: 700;
+            letter-spacing: 1.5px; text-transform: uppercase;
+            margin-bottom: 1.5rem;
+        }
+
+        .pulse-dot {
+            width: 7px; height: 7px; background: var(--violet);
+            border-radius: 50%; animation: pulseAnim 2s ease-in-out infinite;
+        }
+        @keyframes pulseAnim { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.75)} }
+
+        .hero-h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2.6rem, 5.5vw, 4.2rem);
+            font-weight: 800; line-height: 1.08;
+            letter-spacing: -2px; color: var(--white); margin-bottom: 1.5rem;
+        }
+        .hero-h1 .gradient-text {
+            background: linear-gradient(120deg, var(--violet) 0%, #a78bfa 50%, var(--cyan) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+
+        .hero-p {
+            color: var(--slate); font-size: 1.05rem; line-height: 1.75;
+            max-width: 480px; margin-bottom: 2.5rem;
+        }
+
+        .hero-btns { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+        .btn-hero-primary {
+            background: linear-gradient(135deg, var(--violet), #6d28d9);
+            color: #fff; border: none;
+            padding: 0.9rem 2rem; border-radius: var(--r);
+            font-family: 'Syne', sans-serif; font-size: 0.95rem; font-weight: 700;
+            cursor: pointer; text-decoration: none;
+            display: inline-flex; align-items: center; gap: 0.6rem;
+            transition: all 0.3s;
+        }
+        .btn-hero-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 16px 48px rgba(139,92,246,0.45);
+        }
+        .btn-hero-outline {
+            background: transparent; color: var(--white);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 0.9rem 2rem; border-radius: var(--r);
+            font-size: 0.95rem; font-weight: 500;
+            cursor: pointer; text-decoration: none;
+            display: inline-flex; align-items: center; gap: 0.6rem;
+            transition: all 0.3s;
+        }
+        .btn-hero-outline:hover { border-color: var(--violet); color: var(--violet); background: rgba(139,92,246,0.06); }
+
+        .hero-stats {
+            display: flex; gap: 2.5rem; margin-top: 3rem;
+            padding-top: 2rem; border-top: 1px solid var(--border);
+        }
+        .hero-stat-num {
+            font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800;
+            color: var(--violet); line-height: 1; display: block;
+        }
+        .hero-stat-label { font-size: 0.8rem; color: var(--slate-2); margin-top: 0.3rem; display: block; }
+
+        /* ── Hero Visual ──────────────────────────────────────────────── */
+        .hero-visual {
+            position: relative; display: flex; align-items: center; justify-content: center;
+        }
+
+        .client-card {
+            width: 100%; max-width: 480px;
+            background: var(--card-bg);
+            border: 1px solid rgba(139,92,246,0.18);
+            border-radius: var(--r-lg); overflow: hidden; position: relative;
+            box-shadow: 0 0 80px rgba(139,92,246,0.1), inset 0 1px 0 rgba(255,255,255,0.06);
+        }
+
+        .client-card-header {
+            padding: 1.5rem 1.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 0.75rem;
+        }
+        .client-card-header-icon {
+            width: 40px; height: 40px; border-radius: 10px;
+            background: rgba(139,92,246,0.15);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--violet); font-size: 1.1rem;
+        }
+        .client-card-title {
+            font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.9rem;
+            color: var(--white);
+        }
+        .client-card-sub { font-size: 0.75rem; color: var(--slate); }
+
+        .architect-list { padding: 0.75rem; }
+
+        .architect-item {
+            display: flex; align-items: center; gap: 0.875rem;
+            padding: 0.875rem; border-radius: 10px;
+            border: 1px solid transparent;
+            transition: all 0.25s; cursor: pointer;
+            margin-bottom: 0.5rem;
+        }
+        .architect-item:last-child { margin-bottom: 0; }
+        .architect-item:hover { background: rgba(139,92,246,0.06); border-color: rgba(139,92,246,0.2); }
+
+        .arch-avatar {
+            width: 42px; height: 42px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--violet), var(--cyan));
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.85rem;
+            color: #fff; flex-shrink: 0;
+        }
+        .arch-info { flex: 1; min-width: 0; }
+        .arch-name { font-weight: 600; font-size: 0.875rem; color: var(--white); }
+        .arch-spec { font-size: 0.75rem; color: var(--slate); }
+        .arch-rating { display: flex; align-items: center; gap: 3px; font-size: 0.72rem; }
+        .arch-rating i { color: var(--amber); font-size: 0.65rem; }
+        .arch-rating span { color: var(--slate); }
+
+        .arch-meta { text-align: right; flex-shrink: 0; }
+        .arch-projects { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; color: var(--cyan); }
+        .arch-projects-label { font-size: 0.65rem; color: var(--slate-2); }
+
+        .scanning-bar {
+            position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--violet), transparent);
+            animation: scanBar 3s ease-in-out infinite;
+        }
+        @keyframes scanBar { 0%,100%{transform:scaleX(0);transform-origin:left} 50%{transform:scaleX(1)} }
+
+        /* Floating badges */
+        .float-badge {
+            position: absolute;
+            background: rgba(6,10,18,0.85);
+            border: 1px solid rgba(139,92,246,0.3);
+            border-radius: 10px; padding: 8px 14px;
+            font-size: 0.75rem; font-weight: 600;
+            color: var(--violet); white-space: nowrap;
+            backdrop-filter: blur(10px);
+            display: flex; align-items: center; gap: 6px;
+        }
+        .float-badge-1 { top: 10%; right: -8%; animation: float1 5s ease-in-out infinite; }
+        .float-badge-2 { bottom: 18%; left: -8%; animation: float2 5.5s ease-in-out infinite 0.8s; }
+        @keyframes float1 { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+        @keyframes float2 { 0%,100%{transform:translateY(0)} 50%{transform:translateY(8px)} }
+        .badge-icon {
+            width: 20px; height: 20px;
+            background: rgba(139,92,246,0.15); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.7rem; color: var(--violet);
+        }
+
+        /* ── SECTIONS ─────────────────────────────────────────────────── */
+        .section { padding: 6rem 5%; position: relative; z-index: 1; }
+
+        .section-eyebrow {
+            display: flex; align-items: center; gap: 10px;
+            color: var(--violet); font-size: 0.72rem; font-weight: 700;
+            letter-spacing: 2px; text-transform: uppercase; margin-bottom: 0.875rem;
+        }
+        .section-eyebrow::before, .section-eyebrow::after {
+            content: ''; flex: 1; height: 1px;
+            background: linear-gradient(to right, var(--violet), transparent);
+        }
+        .section-eyebrow::before { max-width: 40px; }
+
+        .section-h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(1.9rem, 3.5vw, 2.8rem);
+            font-weight: 800; letter-spacing: -1px; color: var(--white); margin-bottom: 1rem;
+        }
+        .section-sub { color: var(--slate); font-size: 1.05rem; max-width: 540px; line-height: 1.7; }
+        .section-header { margin-bottom: 3.5rem; }
+
+        /* Feature grid */
+        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; }
+        .feat-card {
+            background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: var(--r-lg); padding: 1.75rem; position: relative;
+            overflow: hidden;
+            transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .feat-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--violet), transparent);
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .feat-card:hover { border-color: rgba(139,92,246,0.22); background: rgba(139,92,246,0.04); transform: translateY(-5px); box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 30px rgba(139,92,246,0.06); }
+        .feat-card:hover::before { opacity: 1; }
+        .feat-icon {
+            width: 48px; height: 48px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.25rem; margin-bottom: 1.25rem;
+        }
+        .feat-icon.c1 { background: rgba(139,92,246,0.12); color: var(--violet); }
+        .feat-icon.c2 { background: rgba(0,212,200,0.12); color: var(--cyan); }
+        .feat-icon.c3 { background: rgba(245,158,11,0.12); color: var(--amber); }
+        .feat-icon.c4 { background: rgba(59,130,246,0.12); color: #3b82f6; }
+        .feat-icon.c5 { background: rgba(16,185,129,0.12); color: #10b981; }
+        .feat-icon.c6 { background: rgba(239,68,68,0.12); color: #ef4444; }
+        .feat-tag { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--slate-2); margin-bottom: 0.4rem; }
+        .feat-title { font-family: 'Syne', sans-serif; font-size: 1.05rem; font-weight: 700; color: var(--white); margin-bottom: 0.6rem; }
+        .feat-desc { color: var(--slate); font-size: 0.875rem; line-height: 1.65; }
+
+        /* ── HOW IT WORKS ─────────────────────────────────────────────── */
+        .workflow-section { padding: 6rem 5%; position: relative; z-index: 1; }
+        .workflow-section::before {
+            content: ''; position: absolute; left: 0; right: 0; top: 0; height: 1px;
+            background: linear-gradient(to right, transparent, rgba(139,92,246,0.2), transparent);
+        }
+        .workflow-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: center; margin-top: 3.5rem; }
+        .steps { display: flex; flex-direction: column; gap: 0; }
+        .step { display: flex; gap: 1.25rem; padding: 1.5rem 0; border-bottom: 1px solid var(--border); }
+        .step:last-child { border-bottom: none; }
+        .step-num {
+            width: 44px; height: 44px; border: 1.5px solid rgba(139,92,246,0.35);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.9rem;
+            color: var(--violet); background: rgba(139,92,246,0.06); flex-shrink: 0;
+        }
+        .step-body h4 { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--white); margin-bottom: 0.4rem; }
+        .step-body p { color: var(--slate); font-size: 0.875rem; line-height: 1.65; }
+
+        /* Process visual */
+        .process-visual {
+            position: relative; display: flex; align-items: center; justify-content: center;
+        }
+        .process-diagram {
+            width: 100%; max-width: 420px;
+            background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: var(--r-lg); padding: 2rem;
+        }
+        .proc-step {
+            display: flex; align-items: center; gap: 1rem;
+            padding: 0.875rem 1rem; border-radius: var(--r); margin-bottom: 0.875rem;
+            font-size: 0.875rem; font-weight: 600; border: 1px solid var(--border);
+        }
+        .proc-step:last-child { margin-bottom: 0; }
+        .proc-step.p1 { background: rgba(139,92,246,0.07); border-color: rgba(139,92,246,0.2); color: var(--violet); }
+        .proc-step.p2 { background: rgba(0,212,200,0.07); border-color: rgba(0,212,200,0.2); color: var(--cyan); }
+        .proc-step.p3 { background: rgba(245,158,11,0.07); border-color: rgba(245,158,11,0.2); color: var(--amber); }
+        .proc-step.p4 { background: rgba(16,185,129,0.07); border-color: rgba(16,185,129,0.2); color: #10b981; }
+        .proc-arrow { text-align: center; color: var(--slate-2); font-size: 0.85rem; margin-bottom: 0.5rem; margin-top: -0.25rem; }
+
+        /* ── CTA ──────────────────────────────────────────────────────── */
+        .cta-section { padding: 6rem 5%; position: relative; z-index: 1; }
+        .cta-box {
+            background: linear-gradient(135deg, rgba(139,92,246,0.07), rgba(109,40,217,0.04), rgba(0,212,200,0.06));
+            border: 1px solid rgba(139,92,246,0.18);
+            border-radius: var(--r-lg); padding: 5rem 3rem;
+            text-align: center; position: relative; overflow: hidden;
+        }
+        .cta-box::before {
+            content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            width: 60%; height: 1px;
+            background: linear-gradient(to right, transparent, var(--violet), transparent);
+        }
+        .cta-glow {
+            position: absolute; top: -50%; left: 50%; transform: translateX(-50%);
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .cta-h2 {
+            font-family: 'Syne', sans-serif; font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 800; letter-spacing: -1.5px; color: var(--white);
+            margin-bottom: 1rem; position: relative;
+        }
+        .cta-p { color: var(--slate); font-size: 1.05rem; margin-bottom: 2.5rem; position: relative; }
+        .cta-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; position: relative; }
+
+        /* ── FOOTER ───────────────────────────────────────────────────── */
+        .footer {
+            border-top: 1px solid var(--border); padding: 3.5rem 5%;
+            position: relative; z-index: 1; background: rgba(6,10,18,0.6);
+        }
+        .footer-inner { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 3rem; margin-bottom: 2.5rem; }
+        .footer-brand-name { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 800; color: var(--white); margin: 0.75rem 0 0.5rem; }
+        .footer-brand-desc { color: var(--slate-2); font-size: 0.875rem; line-height: 1.65; max-width: 260px; }
+        .footer-col h4 { font-family: 'Syne', sans-serif; font-size: 0.78rem; font-weight: 700; color: var(--slate); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 1.1rem; }
+        .footer-col a { display: block; color: var(--slate-2); text-decoration: none; font-size: 0.875rem; margin-bottom: 0.6rem; transition: color 0.2s; }
+        .footer-col a:hover { color: var(--violet); }
+        .footer-bottom { border-top: 1px solid var(--border); padding-top: 1.5rem; display: flex; align-items: center; justify-content: space-between; color: var(--slate-2); font-size: 0.82rem; }
+        .footer-bottom a { color: var(--violet); text-decoration: none; }
+
+        /* ── MODAL ────────────────────────────────────────────────────── */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(8px);
+            display: none; align-items: center; justify-content: center;
+            z-index: 2000; padding: 1rem;
+        }
+        .modal-overlay.open { display: flex; }
+
+        /* Split-screen auth modal */
+        #authModal { align-items: center; }
+        #authModal .modal-box {
+            width: 75vw; height: 80vh; max-width: 1300px; max-height: 850px;
+            display: flex; flex-direction: row; padding: 0;
+            background: rgba(13, 20, 36, 0.65);
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 40px 100px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.08);
+            overflow: hidden; border-radius: var(--r-lg);
+        }
+
+        .modal-left-pane {
+            width: 45%; padding: 3rem 4rem;
+            display: flex; flex-direction: column; justify-content: center;
+            background: rgba(6,10,18,0.85); position: relative; z-index: 2;
+            overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(139,92,246,0.3) transparent;
+        }
+        .modal-left-pane::-webkit-scrollbar { width: 6px; }
+        .modal-left-pane::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.3); border-radius: 10px; }
+
+        .modal-right-pane {
+            width: 55%; position: relative;
+            background: var(--ink-2); overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .modal-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 2.5rem; }
+        .modal-brand .nav-logo { width: 42px; height: 42px; font-size: 1.1rem; box-shadow: 0 0 20px rgba(139,92,246,0.2); }
+        .modal-brand span { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.4rem; color: var(--white); }
+        .modal-brand em { font-style: normal; color: var(--cyan); }
+
+        .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.75rem; }
+        .modal-title { font-family: 'Syne', sans-serif; font-size: 1.25rem; font-weight: 800; color: var(--white); }
+
+        .form-group { margin-bottom: 1.1rem; }
+        .form-label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--slate); margin-bottom: 0.45rem; }
+        .form-input-wrap { position: relative; }
+        .form-input-icon { position: absolute; left: 0.875rem; top: 50%; transform: translateY(-50%); color: var(--slate-2); font-size: 0.85rem; }
+        .form-input {
+            width: 100%; background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: var(--r);
+            color: var(--white); font-family: 'Outfit', sans-serif; font-size: 0.9rem;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            transition: all 0.2s; outline: none;
+        }
+        .form-input::placeholder { color: var(--slate-2); }
+        .form-input:focus { border-color: rgba(139,92,246,0.5); background: rgba(139,92,246,0.05); box-shadow: 0 0 0 3px rgba(139,92,246,0.1); }
+
+        .form-submit {
+            width: 100%;
+            background: linear-gradient(135deg, var(--violet), #6d28d9);
+            color: #fff; border: none; padding: 0.85rem; border-radius: var(--r);
+            font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700;
+            cursor: pointer; transition: all 0.25s; margin-top: 0.5rem;
+            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+        }
+        .form-submit:hover { box-shadow: 0 8px 30px rgba(139,92,246,0.4); transform: translateY(-2px); }
+
+        .form-switch { text-align: center; margin-top: 1.25rem; color: var(--slate-2); font-size: 0.875rem; }
+        .form-switch a { color: var(--violet); text-decoration: none; font-weight: 600; }
+
+        /* Multi-step form */
+        .form-step { display: none; animation: fadeInStep 0.3s ease; }
+        .form-step.active { display: block; }
+        @keyframes fadeInStep { from{opacity:0;transform:translateX(10px)} to{opacity:1;transform:translateX(0)} }
+        .step-indicator { display: flex; gap: 8px; margin-bottom: 1.5rem; }
+        .step-dot { height: 4px; flex: 1; border-radius: 4px; background: rgba(255,255,255,0.1); transition: background 0.3s; }
+        .step-dot.active { background: var(--violet); box-shadow: 0 0 8px rgba(139,92,246,0.4); }
+        .step-nav-btns { display: flex; gap: 10px; margin-top: 1rem; }
+        .step-nav-btns .btn-hero-outline { width: 50%; justify-content: center; }
+        .step-nav-btns .form-submit { width: 50%; margin-top: 0; }
+
+        /* Auth modal close */
+        .auth-modal-close-floating {
+            position: absolute; top: 35px; right: 45px;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px); width: 46px; height: 46px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: var(--slate); font-size: 1.25rem;
+            transition: all 0.3s cubic-bezier(0.175,0.885,0.32,1.275); z-index: 2005;
+        }
+        .auth-modal-close-floating:hover {
+            background: rgba(255,255,255,0.15); color: var(--white);
+            border-color: var(--violet); transform: rotate(90deg) scale(1.1);
+            box-shadow: 0 0 20px rgba(139,92,246,0.3);
+        }
+
+        /* Right pane animated content */
+        .auth-bg-grid {
+            position: absolute; inset: -50%; pointer-events: none;
+            background-image: linear-gradient(rgba(139,92,246,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            transform: perspective(800px) rotateX(60deg) translateY(-100px) translateZ(-200px);
+            animation: gridMove 25s linear infinite;
+        }
+        @keyframes gridMove {
+            0%{transform:perspective(800px) rotateX(60deg) translateY(0) translateZ(-200px)}
+            100%{transform:perspective(800px) rotateX(60deg) translateY(400px) translateZ(-200px)}
+        }
+
+        .right-pane-content {
+            position: relative; z-index: 2; width: 80%; max-width: 340px;
+        }
+
+        .client-showcase {
+            background: rgba(13,20,36,0.7); border: 1px solid rgba(139,92,246,0.25);
+            border-radius: 16px; overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        .showcase-header {
+            padding: 1rem 1.25rem;
+            background: rgba(139,92,246,0.08);
+            border-bottom: 1px solid rgba(139,92,246,0.15);
+            display: flex; align-items: center; gap: 0.75rem;
+        }
+        .showcase-header-icon {
+            width: 32px; height: 32px; border-radius: 8px;
+            background: rgba(139,92,246,0.15);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--violet); font-size: 0.85rem;
+        }
+        .showcase-header-text {
+            font-family: 'Syne', sans-serif; font-size: 0.8rem; font-weight: 700; color: var(--white);
+        }
+        .showcase-header-sub { font-size: 0.7rem; color: var(--slate); }
+
+        .showcase-items { padding: 0.75rem; }
+        .showcase-item {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.75rem; border-radius: 10px; margin-bottom: 0.5rem;
+            border: 1px solid rgba(255,255,255,0.04);
+            animation: itemPulse 3s ease-in-out infinite;
+        }
+        .showcase-item:nth-child(2) { animation-delay: 1s; }
+        .showcase-item:nth-child(3) { animation-delay: 2s; }
+        @keyframes itemPulse {
+            0%,100%{ background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.04); }
+            50%{ background: rgba(139,92,246,0.05); border-color: rgba(139,92,246,0.12); }
+        }
+        .si-icon {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--violet), var(--cyan));
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.8rem; color: #fff;
+            flex-shrink: 0;
+        }
+        .si-info { flex: 1; }
+        .si-name { font-size: 0.8rem; font-weight: 600; color: var(--white); }
+        .si-detail { font-size: 0.68rem; color: var(--slate); }
+        .si-status {
+            font-size: 0.65rem; font-weight: 700; padding: 2px 8px;
+            border-radius: 20px; white-space: nowrap;
+        }
+        .si-status.online { background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.2); }
+        .si-status.busy { background: rgba(245,158,11,0.1); color: var(--amber); border: 1px solid rgba(245,158,11,0.2); }
+        .si-status.project { background: rgba(139,92,246,0.1); color: var(--violet); border: 1px solid rgba(139,92,246,0.2); }
+
+        .showcase-footer {
+            padding: 0.75rem 1.25rem;
+            border-top: 1px solid rgba(255,255,255,0.04);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .showcase-footer-text { font-size: 0.7rem; color: var(--slate); }
+        .showcase-count {
+            font-family: 'Syne', sans-serif; font-weight: 800;
+            font-size: 1.1rem; color: var(--violet);
+        }
+
+        /* HUD overlays */
+        .client-hud {
+            position: absolute; z-index: 10;
+            background: rgba(13,20,36,0.6); backdrop-filter: blur(12px);
+            border: 1px solid rgba(139,92,246,0.3); border-radius: 10px;
+            padding: 0.875rem 1.1rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4); pointer-events: none;
+        }
+        .hud-tl { top: 20px; left: 20px; border-left: 3px solid var(--violet); }
+        .hud-br { bottom: 20px; right: 20px; text-align: right; border-right: 3px solid var(--cyan); }
+        .hud-title { font-family: 'Syne', sans-serif; font-size: 0.72rem; font-weight: 800; color: var(--white); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 5px; }
+        .hud-line { font-size: 0.68rem; color: var(--slate); margin-bottom: 2px; }
+        .hud-line strong { color: var(--violet); font-weight: normal; }
+        .hud-bar { width: 100%; height: 2px; background: rgba(255,255,255,0.08); margin-top: 6px; border-radius: 3px; overflow: hidden; }
+        .hud-fill { height: 100%; background: linear-gradient(90deg, var(--violet), var(--cyan)); width: 0%; animation: hudLoad 5s infinite; }
+        @keyframes hudLoad { 0%{width:0%} 80%{width:100%} 100%{width:100%} }
+
+        /* ── TOAST ────────────────────────────────────────────────────── */
+        .toast-container { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; }
+        .toast {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.875rem 1.25rem; background: var(--ink-2);
+            border: 1px solid var(--border); border-radius: var(--r);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5); font-size: 0.875rem;
+            min-width: 280px; animation: toastIn 0.3s ease;
+            border-left: 3px solid var(--violet);
+        }
+        .toast.success { border-left-color: #10b981; }
+        .toast.error   { border-left-color: #ef4444; }
+        .toast i { color: var(--violet); }
+        .toast.success i { color: #10b981; }
+        .toast.error i   { color: #ef4444; }
+        @keyframes toastIn { from{opacity:0;transform:translateX(50px)} to{opacity:1;transform:none} }
+
+        /* Loading overlay */
+        #loadingOverlay {
+            position: fixed; inset: 0; background: rgba(6,10,18,0.85);
+            backdrop-filter: blur(8px);
+            display: none; align-items: center; justify-content: center;
+            z-index: 9998; flex-direction: column; gap: 1rem; color: var(--white);
+        }
+        #loadingOverlay i { color: var(--violet); }
+
+        /* Scroll reveal */
+        .reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.7s ease, transform 0.7s ease; }
+        .reveal.visible { opacity: 1; transform: none; }
+        .reveal-delay-1 { transition-delay: 0.1s; }
+        .reveal-delay-2 { transition-delay: 0.2s; }
+        .reveal-delay-3 { transition-delay: 0.3s; }
+        .reveal-delay-4 { transition-delay: 0.4s; }
+        .reveal-delay-5 { transition-delay: 0.5s; }
+
+        /* Password strength */
+        .toggle-eye { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #888; }
+        .toggle-eye:hover { color: var(--violet); }
+
+        /* OTP overlay */
+        #verifyPendingOverlay {
+            display: none; position: fixed; inset: 0; background: rgba(6,10,18,0.97);
+            z-index: 10000; align-items: center; justify-content: center;
+            backdrop-filter: blur(12px);
+        }
+
+        /* Mobile */
+        .mobile-menu {
+            display: none; position: fixed;
+            top: var(--nav-h); left: 0; right: 0;
+            background: rgba(6,10,18,0.97); border-bottom: 1px solid var(--border);
+            padding: 1rem 5%; z-index: 999; backdrop-filter: blur(20px);
+        }
+        .mobile-menu.open { display: flex; flex-direction: column; gap: 0.5rem; }
+        .mobile-menu .nav-link { padding: 0.75rem 1rem; display: block; border-radius: var(--r); }
+
+        /* blueprint expand animation */
+        @keyframes blueprintExpand {
+            0%{opacity:0;transform:scaleX(0.85) scaleY(0.92)}
+            40%{opacity:0.7;transform:scaleX(1.01) scaleY(0.98)}
+            70%{opacity:0.95;transform:scaleX(0.995) scaleY(1.008)}
+            100%{opacity:1;transform:scaleX(1) scaleY(1)}
+        }
+        @keyframes overlayFadeIn {
+            from{background:rgba(0,0,0,0);backdrop-filter:blur(0px)}
+            to{background:rgba(0,0,0,0.75);backdrop-filter:blur(8px)}
+        }
+        #authModal.opening { animation: overlayFadeIn 0.5s ease forwards; }
+        #authModal.opening .modal-box { animation: blueprintExpand 0.65s cubic-bezier(0.22,1,0.36,1) forwards; }
+
+        @media (max-width: 1024px) {
+            .hero { grid-template-columns: 1fr; gap: 3rem; padding: 4rem 5%; text-align: center; }
+            .hero-p { margin: 0 auto 2.5rem; }
+            .hero-btns { justify-content: center; }
+            .hero-stats { justify-content: center; }
+            .hero-visual { display: none; }
+            .workflow-grid { grid-template-columns: 1fr; }
+            .footer-inner { grid-template-columns: 1fr 1fr; }
+            #authModal .modal-box { width: 90vw; height: 85vh; flex-direction: column; }
+            .modal-left-pane { width: 100%; padding: 2.5rem 2rem; }
+            .modal-right-pane { display: none; }
+            .auth-modal-close-floating { top: 15px; right: 15px; width: 38px; height: 38px; font-size: 1rem; }
+        }
+        @media (max-width: 768px) {
+            .nav-center { display: none; }
+            .hamburger { display: block; }
+            .features-grid { grid-template-columns: 1fr; }
+            .cta-box { padding: 3rem 1.5rem; }
+            .footer-inner { grid-template-columns: 1fr; }
+            .footer-bottom { flex-direction: column; gap: 0.5rem; text-align: center; }
+            .section { padding: 4rem 5%; }
+        }
+
+        /* portal switch bar */
+        .portal-switch {
+            position: fixed; top: var(--nav-h); left: 0; right: 0; z-index: 900;
+            background: rgba(139,92,246,0.1); border-bottom: 1px solid rgba(139,92,246,0.2);
+            padding: 9px 5%; display: flex; align-items: center; justify-content: center; gap: 1rem;
+            font-size: 0.78rem; color: var(--slate);
+        }
+        .portal-switch a { color: var(--cyan); text-decoration: none; font-weight: 600; }
+        .portal-switch a:hover { text-decoration: underline; }
+        .portal-switch-icon { color: var(--violet); }
+        /* push ticker below portal switch */
+        .ticker-bar { margin-top: calc(var(--nav-h) + 38px); }
+        .hero { min-height: calc(100vh - var(--nav-h) - 42px - 38px); }
+
+        .form-input-no-icon { padding-left: 1rem !important; }
+
+        .auth-divider { text-align: center; margin: 12px 0; color: var(--slate-2); font-size: 12px; }
+
+        /* password tips */
+        .tips-btn { background: none; border: none; color: var(--slate-2); cursor: pointer; font-size: 12px; margin-left: auto; display: block; margin-top: 4px; }
+        .tips-popup {
+            display: none; position: absolute; top: 70px; left: 0; width: 300px;
+            background: #14132d; color: #eae2e2; border: 1px solid #333;
+            border-radius: 8px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+<div class="ambient ambient-1"></div>
+<div class="ambient ambient-2"></div>
+<div class="ambient ambient-3"></div>
+
+<!-- ═══ NAVBAR ═══════════════════════════════════════════════════════════════ -->
+<nav class="navbar">
+    <a href="client-index.html" class="nav-brand">
+        <div class="nav-logo"><i class="fas fa-users"></i></div>
+        <span class="nav-brand-text">Smart<em> Arch</em></span>
+        <span class="client-badge"><i class="fas fa-user"></i> Client</span>
+    </a>
+
+    <div class="nav-center">
+        <a href="#features" class="nav-link">Services</a>
+        <a href="#workflow" class="nav-link">How It Works</a>
+        <a href="about.html" class="nav-link">About</a>
+        <a href="contact.html" class="nav-link">Contact</a>
+    </div>
+
+    <div class="nav-right">
+        <div class="nav-auth" id="navAuth">
+            <button class="btn-ghost" onclick="showLogin()">Login</button>
+            <button class="btn-cta" onclick="showRegister()">
+                <i class="fas fa-rocket"></i> Get Started
+            </button>
+        </div>
+
+        <div class="nav-user" id="navUser">
+            <a href="client-dashboard.html" class="btn-ghost">
+                <i class="fas fa-th-large"></i> Dashboard
+            </a>
+            <div class="user-menu-wrap" id="userMenuWrap">
+                <img src="" alt="User" id="userAvatar" class="user-avatar">
+                <div class="user-dropdown" id="userDropdown">
+                    <div class="user-dropdown-header">
+                        <img src="" alt="" class="user-dropdown-avatar" id="userDropdownAvatar">
+                        <div class="user-dropdown-info">
+                            <div class="user-dropdown-name" id="userDropdownName">—</div>
+                            <div class="user-dropdown-email" id="userDropdownEmail">—</div>
+                        </div>
+                    </div>
+                    <a href="client-dashboard.html"><i class="fas fa-th-large"></i> Dashboard</a>
+                    <a href="client-dashboard.html#settings"><i class="fas fa-cog"></i> Settings</a>
+                    <a href="#" class="logout-link" onclick="logout(); return false;"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="hamburger" id="hamburgerBtn" onclick="toggleMobileMenu()">
+        <i class="fas fa-bars"></i>
+    </button>
+</nav>
+
+<!-- Portal switch bar -->
+<!-- <div class="portal-switch">
+    <span class="portal-switch-icon"><i class="fas fa-exchange-alt"></i></span>
+    <span>Are you an architect?</span>
+    <a href="index.html">Switch to Architect Portal <i class="fas fa-arrow-right"></i></a>
+</div> -->
+
+<!-- Mobile nav -->
+<div class="mobile-menu" id="mobileMenu">
+    <a href="#features" class="nav-link" onclick="closeMobileMenu()">Services</a>
+    <a href="#workflow" class="nav-link" onclick="closeMobileMenu()">How It Works</a>
+    <a href="about.html" class="nav-link">About</a>
+    <div id="mobileNavAuth">
+        <button class="btn-ghost" onclick="showLogin(); closeMobileMenu()" style="width:100%;margin-top:0.5rem">Login</button>
+        <button class="btn-cta" onclick="showRegister(); closeMobileMenu()" style="width:100%;margin-top:0.5rem;justify-content:center">Get Started</button>
+    </div>
+    <div id="mobileNavUser" style="display:none">
+        <a href="client-dashboard.html" class="btn-ghost" style="width:100%;margin-top:0.5rem;justify-content:center">Dashboard</a>
+        <button class="btn-ghost" onclick="logout()" style="width:100%;margin-top:0.5rem">Logout</button>
+    </div>
+</div>
+
+<!-- ═══ TICKER ───────────────────────────────────────────────────────────── -->
+<div class="ticker-bar">
+    <div class="ticker-track">
+        <div class="ticker-item"><span class="ticker-dot">●</span> Find Verified Architects</div>
+        <div class="ticker-item"><span class="ticker-dot">●</span> Browse 3D Project Portfolios</div>
+        <div class="ticker-item"><span class="ticker-dot">●</span> AI-Powered Project Matching</div>
+        <div class="ticker-item"><span class="ticker-dot">●</span> Transparent Pricing</div>
+        <div class="ticker-item"><span class="ticker-dot">●</span> Real-time Project Tracking</div>
+        <div class="ticker-item"><span class="ticker-dot">●</span> Secure Client Portal</div>
+        <div class="ticker-item"><span class="ticker-dot">●</span> Direct Architect Messaging</div>
+        <div class="ticker-item"><span class="ticker-dot">●</span> Find Verified Architects</div>
+        <div class="ticker-item"><span class="ticker-dot">●</span> Browse 3D Project Portfolios</div>
+        <div class="ticker-item"><span class="ticker-dot">●</span> AI-Powered Project Matching</div>
+        <div class="ticker-item"><span class="ticker-dot">●</span> Transparent Pricing</div>
+        <div class="ticker-item"><span class="ticker-dot">●</span> Real-time Project Tracking</div>
+        <div class="ticker-item"><span class="ticker-dot">●</span> Secure Client Portal</div>
+        <div class="ticker-item"><span class="ticker-dot">●</span> Direct Architect Messaging</div>
+    </div>
+</div>
+
+<!-- ═══ HERO ─────────────────────────────────────────────────────────────── -->
+<section class="hero">
+    <div class="hero-content">
+        <div class="hero-eyebrow">
+            <span class="pulse-dot"></span>
+            Client Platform — SmartArch
+        </div>
+        <h1 class="hero-h1">
+            Build Your Dream Home<br>
+            with <span class="gradient-text">Expert Architects</span>
+        </h1>
+        <p class="hero-p">
+            Connect with verified professional architects, browse stunning AI-generated portfolios,
+            and track your project from concept to construction — all in one secure place.
+        </p>
+        <div class="hero-btns">
+            <button class="btn-hero-primary" onclick="showRegister()">
+                <i class="fas fa-user-plus"></i> Create Free Account
+            </button>
+            <a href="#features" class="btn-hero-outline">
+                <i class="fas fa-compass"></i> Explore Services
+            </a>
+        </div>
+        <div class="hero-stats">
+            <div>
+                <span class="hero-stat-num">500+</span>
+                <span class="hero-stat-label">Verified Architects</span>
+            </div>
+            <div>
+                <span class="hero-stat-num">3K+</span>
+                <span class="hero-stat-label">Projects Completed</span>
+            </div>
+            <div>
+                <span class="hero-stat-num">4.9★</span>
+                <span class="hero-stat-label">Average Rating</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hero Visual: Architect directory card -->
+    <div class="hero-visual">
+        <div class="client-card">
+            <div class="client-card-header">
+                <div class="client-card-header-icon"><i class="fas fa-search"></i></div>
+                <div>
+                    <div class="client-card-title">Find an Architect</div>
+                    <div class="client-card-sub">Verified professionals near you</div>
+                </div>
+            </div>
+            <div class="architect-list">
+                <div class="architect-item">
+                    <div class="arch-avatar">JR</div>
+                    <div class="arch-info">
+                        <div class="arch-name">James Rivera</div>
+                        <div class="arch-spec">Residential · Modern</div>
+                        <div class="arch-rating">
+                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                            <span>5.0 (48 reviews)</span>
+                        </div>
+                    </div>
+                    <div class="arch-meta">
+                        <div class="arch-projects">24</div>
+                        <div class="arch-projects-label">projects</div>
+                    </div>
+                </div>
+                <div class="architect-item">
+                    <div class="arch-avatar" style="background:linear-gradient(135deg,#10b981,#0ea5e9)">SA</div>
+                    <div class="arch-info">
+                        <div class="arch-name">Sophia Anderson</div>
+                        <div class="arch-spec">Commercial · Luxury</div>
+                        <div class="arch-rating">
+                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
+                            <span>4.8 (31 reviews)</span>
+                        </div>
+                    </div>
+                    <div class="arch-meta">
+                        <div class="arch-projects">18</div>
+                        <div class="arch-projects-label">projects</div>
+                    </div>
+                </div>
+                <div class="architect-item">
+                    <div class="arch-avatar" style="background:linear-gradient(135deg,#f59e0b,#ef4444)">MK</div>
+                    <div class="arch-info">
+                        <div class="arch-name">Marcus Kim</div>
+                        <div class="arch-spec">Industrial · Sustainable</div>
+                        <div class="arch-rating">
+                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                            <span>4.9 (62 reviews)</span>
+                        </div>
+                    </div>
+                    <div class="arch-meta">
+                        <div class="arch-projects">37</div>
+                        <div class="arch-projects-label">projects</div>
+                    </div>
+                </div>
+            </div>
+            <div class="scanning-bar"></div>
+        </div>
+
+        <div class="float-badge float-badge-1">
+            <div class="badge-icon"><i class="fas fa-shield-check"></i></div>
+            Verified & Insured
+        </div>
+        <div class="float-badge float-badge-2">
+            <div class="badge-icon"><i class="fas fa-clock"></i></div>
+            Avg. 24hr Response
+        </div>
+    </div>
+</section>
+
+<!-- ═══ FEATURES ─────────────────────────────────────────────────────────── -->
+<section class="section" id="features">
+    <div class="section-header">
+        <div class="section-eyebrow">Client Services</div>
+        <h2 class="section-h2 reveal">Everything You Need to<br>Build Your Dream Home</h2>
+        <p class="section-sub reveal reveal-delay-1">
+            A complete client experience — from discovering the perfect architect to tracking
+            your build in real-time, with full transparency at every step.
+        </p>
+    </div>
+    <div class="features-grid">
+        <div class="feat-card reveal reveal-delay-1">
+            <div class="feat-icon c1"><i class="fas fa-search"></i></div>
+            <div class="feat-tag">Discovery</div>
+            <div class="feat-title">Find Your Perfect Architect</div>
+            <p class="feat-desc">Browse verified professionals filtered by specialization, location, budget range, and project type. Read real reviews and view AI-generated 3D portfolios before deciding.</p>
+        </div>
+        <div class="feat-card reveal reveal-delay-2">
+            <div class="feat-icon c2"><i class="fas fa-cube"></i></div>
+            <div class="feat-tag">Visualization</div>
+            <div class="feat-title">View 3D Project Portfolios</div>
+            <p class="feat-desc">Explore architects' past projects in immersive 3D and detailed 2D floor plans. See exactly how your space could look before committing to a single penny.</p>
+        </div>
+        <div class="feat-card reveal reveal-delay-3">
+            <div class="feat-icon c3"><i class="fas fa-tasks"></i></div>
+            <div class="feat-tag">Tracking</div>
+            <div class="feat-title">Real-time Project Monitoring</div>
+            <p class="feat-desc">Stay updated on your project's progress with milestone tracking, document sharing, and instant notifications. Your architect updates the dashboard; you see it live.</p>
+        </div>
+        <div class="feat-card reveal reveal-delay-4">
+            <div class="feat-icon c4"><i class="fas fa-comments"></i></div>
+            <div class="feat-tag">Communication</div>
+            <div class="feat-title">Direct Messaging & Collaboration</div>
+            <p class="feat-desc">Chat directly with your architect, share reference images, leave feedback on designs, and request revisions — all within the secure SmartArch platform.</p>
+        </div>
+        <div class="feat-card reveal reveal-delay-5">
+            <div class="feat-icon c5"><i class="fas fa-file-contract"></i></div>
+            <div class="feat-tag">Transparency</div>
+            <div class="feat-title">Budget & Cost Transparency</div>
+            <p class="feat-desc">Access real-time cost estimates, material breakdowns, and construction timelines. No surprises — every rupee is accounted for with detailed AI-powered cost analysis.</p>
+        </div>
+        <div class="feat-card reveal">
+            <div class="feat-icon c6"><i class="fas fa-star"></i></div>
+            <div class="feat-tag">Trust</div>
+            <div class="feat-title">Verified Reviews & Ratings</div>
+            <p class="feat-desc">Every review is verified — only clients who completed a project can leave feedback. Make confident decisions backed by authentic community experiences.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ HOW IT WORKS ─────────────────────────────────────────────────────── -->
+<section class="workflow-section" id="workflow">
+    <div style="max-width:1400px; margin:0 auto">
+        <div class="section-eyebrow reveal">Client Journey</div>
+        <h2 class="section-h2 reveal reveal-delay-1">From Idea to Dream Home<br>in 4 Simple Steps</h2>
+
+        <div class="workflow-grid">
+            <div class="steps">
+                <div class="step reveal reveal-delay-1">
+                    <div class="step-num">01</div>
+                    <div class="step-body">
+                        <h4>Create Your Free Client Account</h4>
+                        <p>Sign up in seconds. Tell us about your project — residential, commercial, renovation — your budget, location, and style preferences. No architect account needed.</p>
+                    </div>
+                </div>
+                <div class="step reveal reveal-delay-2">
+                    <div class="step-num">02</div>
+                    <div class="step-body">
+                        <h4>Discover & Connect with Architects</h4>
+                        <p>Browse our verified architect directory. View their 3D portfolios, read client reviews, check availability and rates. Send a direct project inquiry with one click.</p>
+                    </div>
+                </div>
+                <div class="step reveal reveal-delay-3">
+                    <div class="step-num">03</div>
+                    <div class="step-body">
+                        <h4>Collaborate on Your Design</h4>
+                        <p>Work together on your floor plan using SmartArch's AI tools. Provide feedback on 2D blueprints and 3D models. Request changes in real-time from your client dashboard.</p>
+                    </div>
+                </div>
+                <div class="step reveal reveal-delay-4">
+                    <div class="step-num">04</div>
+                    <div class="step-body">
+                        <h4>Track Build & Approve Milestones</h4>
+                        <p>Monitor construction progress, approve milestone completions, and manage payments — all from your secure client portal. Your dream home, built with confidence.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="process-visual reveal reveal-delay-2">
+                <div class="process-diagram">
+                    <div style="font-family:'Syne',sans-serif;font-size:0.75rem;font-weight:700;color:var(--slate-2);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:1.25rem;">Client Workflow</div>
+                    <div class="proc-step p1"><span class="arch-layer-icon"><i class="fas fa-user-plus"></i></span>Client Registration & Profile</div>
+                    <div class="proc-arrow"><i class="fas fa-arrows-alt-v"></i></div>
+                    <div class="proc-step p2"><span class="arch-layer-icon"><i class="fas fa-search"></i></span>Architect Discovery & Matching</div>
+                    <div class="proc-arrow"><i class="fas fa-arrows-alt-v"></i></div>
+                    <div class="proc-step p3"><span class="arch-layer-icon"><i class="fas fa-drafting-compass"></i></span>Design Collaboration & Revisions</div>
+                    <div class="proc-arrow"><i class="fas fa-arrows-alt-v"></i></div>
+                    <div class="proc-step p4"><span class="arch-layer-icon"><i class="fas fa-home"></i></span>Build Approval & Completion</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ CTA ──────────────────────────────────────────────────────────────── -->
+<section class="cta-section">
+    <div class="cta-box reveal">
+        <div class="cta-glow"></div>
+        <h2 class="cta-h2">Ready to Find Your<br>Dream Architect?</h2>
+        <p class="cta-p">Join thousands of homeowners and clients who built their vision with SmartArch's verified professionals.</p>
+        <div class="cta-btns">
+            <button class="btn-hero-primary" onclick="showRegister()">
+                <i class="fas fa-rocket"></i> Create Free Client Account
+            </button>
+            <button class="btn-hero-outline" onclick="showLogin()">
+                <i class="fas fa-sign-in-alt"></i> Sign In
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ FOOTER ───────────────────────────────────────────────────────────── -->
+<footer class="footer">
+    <div class="footer-inner">
+        <div>
+            <div class="nav-logo" style="width:40px;height:40px"><i class="fas fa-users"></i></div>
+            <div class="footer-brand-name">SmartArch — Client Portal</div>
+            <p class="footer-brand-desc">The trusted platform connecting homeowners and clients with verified professional architects.</p>
+        </div>
+        <div class="footer-col">
+            <h4>For Clients</h4>
+            <a href="#features">Services</a>
+            <a href="#workflow">How It Works</a>
+        </div>
+        <div class="footer-col">
+            <h4>Company</h4>
+            <a href="about.html">About</a>
+            <a href="contact.html">Contact</a>  
+        </div>
+        <div class="footer-col">
+            <h4>Legal</h4>
+            <a href="privacy.html">Privacy Policy</a>
+            <a href="terms.html">Terms of Service</a>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <span>&copy; 2025 SmartArch. All rights reserved.</span>
+        <span>Client Portal — Built with <span style="color:var(--violet)">♥</span> for homeowners</span>
+    </div>
+</footer>
+
+<!-- ═══ AUTH MODAL ════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="authModal" onclick="handleModalOverlayClick(event)">
+    <button class="auth-modal-close-floating" onclick="closeModal()">
+        <i class="fas fa-times"></i>
+    </button>
+
+    <div class="modal-box">
+        <!-- LEFT PANE: FORMS -->
+        <div class="modal-left-pane">
+            <div class="modal-brand">
+                <div class="nav-logo"><i class="fas fa-users"></i></div>
+                <span class="nav-brand-text">Smart<em> Arch</em> <span style="font-size:0.8rem;color:var(--slate);font-weight:500">Client</span></span>
+            </div>
+
+            <!-- LOGIN FORM -->
+            <div id="loginFormWrap">
+                <div class="modal-header">
+                    <div class="modal-title">Welcome Back</div>
+                </div>
+                <form id="loginFormElement" onsubmit="handleClientLogin(event)">
+                    <div class="form-group">
+                        <label class="form-label">Email Address</label>
+                        <div class="form-input-wrap">
+                            <span class="form-input-icon"><i class="fas fa-envelope"></i></span>
+                            <input type="email" id="loginEmail" class="form-input" placeholder="your@email.com" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <div class="form-input-wrap">
+                            <span class="form-input-icon"><i class="fas fa-lock"></i></span>
+                            <input type="password" id="loginPassword" class="form-input" placeholder="Your password" required>
+                            <span class="toggle-eye" onclick="togglePw('loginPassword', this)"><i class="fas fa-eye"></i></span>
+                        </div>
+                        <div style="text-align:right;margin-top:6px">
+                            <a href="#" id="clientForgotLink" style="font-size:13px;color:var(--violet);text-decoration:none;">Forgot password?</a>
+                        </div>
+                    </div>
+                    <button type="submit" class="form-submit"><i class="fas fa-sign-in-alt"></i> Sign In</button>
+                </form>
+                <p class="form-switch">Don't have an account? <a href="#" onclick="showRegister()">Sign up free</a></p>
+                <p class="form-switch" style="margin-top:0.5rem"><a href="index.html" style="color:var(--slate-2);font-size:0.8rem"><i class="fas fa-arrow-left"></i> Back to Architect Portal</a></p>
+            </div>
+
+            <!-- 3-STEP REGISTER FORM -->
+            <div id="registerFormWrap" style="display:none">
+                <div class="modal-header">
+                    <div class="modal-title">Create Client Account</div>
+                </div>
+                <div class="step-indicator">
+                    <div class="step-dot active" id="dot1"></div>
+                    <div class="step-dot" id="dot2"></div>
+                    <div class="step-dot" id="dot3"></div>
+                </div>
+
+                <form id="registerFormElement" onsubmit="handleClientRegister(event)">
+                    <!-- STEP 1 -->
+                    <div class="form-step active" id="step1">
+                        <div class="form-group">
+                            <label class="form-label">Full Name</label>
+                            <div class="form-input-wrap">
+                                <span class="form-input-icon"><i class="fas fa-user"></i></span>
+                                <input type="text" id="registerName" class="form-input" placeholder="John Doe" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email Address</label>
+                            <div class="form-input-wrap">
+                                <span class="form-input-icon"><i class="fas fa-envelope"></i></span>
+                                <input type="email" id="registerEmail" class="form-input" placeholder="your@email.com" required>
+                            </div>
+                        </div>
+                        <button type="button" class="form-submit" onclick="goToStep(2)">Next <i class="fas fa-arrow-right"></i></button>
+                    </div>
+
+                    <!-- STEP 2 -->
+                    <div class="form-step" id="step2">
+                        <div class="form-group">
+                            <label class="form-label">Password</label>
+                            <div class="form-input-wrap">
+                                <span class="form-input-icon"><i class="fas fa-lock"></i></span>
+                                <input type="password" id="registerPassword" class="form-input" placeholder="Strong password" required minlength="8" oninput="checkStrength(this.value)">
+                                <span class="toggle-eye" onclick="toggleRegPw(this)"><i class="fas fa-eye"></i></span>
+                            </div>
+                            <div id="strengthWrap" style="margin-top:0.6rem;display:none">
+                                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:5px">
+                                    <div id="rbar1" style="height:4px;border-radius:99px;background:rgba(255,255,255,0.1);transition:background 0.3s"></div>
+                                    <div id="rbar2" style="height:4px;border-radius:99px;background:rgba(255,255,255,0.1);transition:background 0.3s"></div>
+                                    <div id="rbar3" style="height:4px;border-radius:99px;background:rgba(255,255,255,0.1);transition:background 0.3s"></div>
+                                    <div id="rbar4" style="height:4px;border-radius:99px;background:rgba(255,255,255,0.1);transition:background 0.3s"></div>
+                                </div>
+                                <div id="rLabel" style="font-size:0.75rem;font-weight:600;color:var(--slate-2)">Enter a password</div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Confirm Password</label>
+                            <div id="confirmError" style="color:#ef4444;font-size:0.75rem;margin-bottom:4px;display:none">Passwords do not match</div>
+                            <div class="form-input-wrap">
+                                <span class="form-input-icon"><i class="fas fa-lock"></i></span>
+                                <input type="password" id="confirmPassword" class="form-input" placeholder="Re-enter password" required>
+                                <span class="toggle-eye" onclick="togglePw('confirmPassword', this)"><i class="fas fa-eye"></i></span>
+                            </div>
+                        </div>
+                        <div class="step-nav-btns">
+                            <button type="button" class="btn-hero-outline" onclick="goToStep(1)"><i class="fas fa-arrow-left"></i> Back</button>
+                            <button type="button" class="form-submit" onclick="goToStep(3)">Next <i class="fas fa-arrow-right"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- STEP 3 -->
+                    <div class="form-step" id="step3">
+                        <div class="form-group">
+                            <label class="form-label">Phone <span style="color:var(--slate-2)">(Optional)</span></label>
+                            <div class="form-input-wrap">
+                                <span class="form-input-icon"><i class="fas fa-phone"></i></span>
+                                <input type="tel" id="registerPhone" class="form-input" placeholder="+91 98765 43210">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Company / Org <span style="color:var(--slate-2)">(Optional)</span></label>
+                            <div class="form-input-wrap">
+                                <span class="form-input-icon"><i class="fas fa-building"></i></span>
+                                <input type="text" id="registerCompany" class="form-input" placeholder="Your company">
+                            </div>
+                        </div>
+                        <div class="step-nav-btns">
+                            <button type="button" class="btn-hero-outline" onclick="goToStep(2)"><i class="fas fa-arrow-left"></i> Back</button>
+                            <button type="submit" class="form-submit"><i class="fas fa-user-plus"></i> Create Account</button>
+                        </div>
+                    </div>
+                </form>
+                <p class="form-switch">Already have an account? <a href="#" onclick="showLogin()">Sign in</a></p>
+            </div>
+        </div>
+
+        <!-- RIGHT PANE: Animated architect showcase -->
+        <div class="modal-right-pane">
+            <div class="auth-bg-grid"></div>
+
+            <div class="client-hud hud-tl">
+                <div class="hud-title">SMARTARCH CLIENT</div>
+                <div class="hud-line"><strong>Portal:</strong> Client Access</div>
+                <div class="hud-line"><strong>Architects:</strong> <span style="color:#10b981">● 500+ Active</span></div>
+                <div class="hud-line"><strong>Status:</strong> <span style="color:#10b981">● Matching Online</span></div>
+            </div>
+
+            <div class="client-hud hud-br">
+                <div class="hud-title">LIVE MATCHING</div>
+                <div class="hud-bar"><div class="hud-fill"></div></div>
+                <div class="hud-line" style="margin-top:5px;color:var(--violet);" id="hudDynamicText">Finding architects...</div>
+            </div>
+
+            <div class="right-pane-content">
+                <div class="client-showcase">
+                    <div class="showcase-header">
+                        <div class="showcase-header-icon"><i class="fas fa-users"></i></div>
+                        <div>
+                            <div class="showcase-header-text">Available Architects</div>
+                            <div class="showcase-header-sub">Verified & ready to take your project</div>
+                        </div>
+                    </div>
+                    <div class="showcase-items">
+                        <div class="showcase-item">
+                            <div class="si-icon">JR</div>
+                            <div class="si-info">
+                                <div class="si-name">James Rivera</div>
+                                <div class="si-detail">Residential · 24 projects</div>
+                            </div>
+                            <div class="si-status online">Online</div>
+                        </div>
+                        <div class="showcase-item">
+                            <div class="si-icon" style="background:linear-gradient(135deg,#10b981,#0ea5e9)">SA</div>
+                            <div class="si-info">
+                                <div class="si-name">Sophia Anderson</div>
+                                <div class="si-detail">Luxury · 18 projects</div>
+                            </div>
+                            <div class="si-status busy">In meeting</div>
+                        </div>
+                        <div class="showcase-item">
+                            <div class="si-icon" style="background:linear-gradient(135deg,#f59e0b,#ef4444)">MK</div>
+                            <div class="si-info">
+                                <div class="si-name">Marcus Kim</div>
+                                <div class="si-detail">Sustainable · 37 projects</div>
+                            </div>
+                            <div class="si-status project">On project</div>
+                        </div>
+                    </div>
+                    <div class="showcase-footer">
+                        <div class="showcase-footer-text">Architects available now</div>
+                        <div class="showcase-count">247</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ OTP VERIFICATION ══════════════════════════════════════════════════ -->
+<div id="verifyPendingOverlay" style="display:none;position:fixed;inset:0;background:rgba(6,10,18,0.97);z-index:10000;align-items:center;justify-content:center;backdrop-filter:blur(12px);">
+    <div style="max-width:420px;width:90%;background:#0d1424;border:1px solid rgba(255,255,255,0.08);border-radius:20px;overflow:hidden;text-align:center;">
+        <div style="height:4px;background:linear-gradient(90deg,#8b5cf6,#00d4c8,#6d28d9);"></div>
+        <div style="padding:36px 32px 32px;">
+            <div style="width:60px;height:60px;background:rgba(139,92,246,0.1);border:1.5px solid rgba(139,92,246,0.3);border-radius:50%;margin:0 auto 18px;font-size:1.7rem;line-height:60px;">🔐</div>
+            <h2 style="margin:0 0 8px;font-size:1.35rem;font-weight:800;color:#f1f5f9;">Verify your email</h2>
+            <p style="margin:0 0 4px;color:#94a3b8;font-size:0.88rem;line-height:1.6;">We sent a 6-digit code to</p>
+            <p id="verifyPendingEmail" style="margin:0 0 24px;color:var(--violet);font-size:0.9rem;font-weight:600;">—</p>
+
+            <div id="otpBoxes" style="display:flex;gap:8px;justify-content:center;margin-bottom:20px;">
+                <input type="text" maxlength="1" class="otp-box" inputmode="numeric" pattern="[0-9]" style="width:44px;height:54px;background:#0a1628;border:1.5px solid rgba(255,255,255,0.12);border-radius:10px;text-align:center;font-size:1.5rem;font-weight:700;color:#f1f5f9;outline:none;transition:border-color 0.2s;">
+                <input type="text" maxlength="1" class="otp-box" inputmode="numeric" pattern="[0-9]" style="width:44px;height:54px;background:#0a1628;border:1.5px solid rgba(255,255,255,0.12);border-radius:10px;text-align:center;font-size:1.5rem;font-weight:700;color:#f1f5f9;outline:none;transition:border-color 0.2s;">
+                <input type="text" maxlength="1" class="otp-box" inputmode="numeric" pattern="[0-9]" style="width:44px;height:54px;background:#0a1628;border:1.5px solid rgba(255,255,255,0.12);border-radius:10px;text-align:center;font-size:1.5rem;font-weight:700;color:#f1f5f9;outline:none;transition:border-color 0.2s;">
+                <input type="text" maxlength="1" class="otp-box" inputmode="numeric" pattern="[0-9]" style="width:44px;height:54px;background:#0a1628;border:1.5px solid rgba(255,255,255,0.12);border-radius:10px;text-align:center;font-size:1.5rem;font-weight:700;color:#f1f5f9;outline:none;transition:border-color 0.2s;">
+                <input type="text" maxlength="1" class="otp-box" inputmode="numeric" pattern="[0-9]" style="width:44px;height:54px;background:#0a1628;border:1.5px solid rgba(255,255,255,0.12);border-radius:10px;text-align:center;font-size:1.5rem;font-weight:700;color:#f1f5f9;outline:none;transition:border-color 0.2s;">
+                <input type="text" maxlength="1" class="otp-box" inputmode="numeric" pattern="[0-9]" style="width:44px;height:54px;background:#0a1628;border:1.5px solid rgba(255,255,255,0.12);border-radius:10px;text-align:center;font-size:1.5rem;font-weight:700;color:#f1f5f9;outline:none;transition:border-color 0.2s;">
+            </div>
+
+            <p id="otpError" style="display:none;color:#f87171;font-size:0.8rem;margin:0 0 14px;">Invalid or expired code. Try again.</p>
+
+            <button onclick="handleVerifyOtp()" id="verifyOtpBtn"
+                style="width:100%;padding:13px;background:linear-gradient(135deg,var(--violet),#6d28d9);border:none;color:#fff;border-radius:10px;font-size:0.95rem;font-weight:700;cursor:pointer;margin-bottom:12px;">
+                Verify &amp; Continue
+            </button>
+            <p id="otpTimerMsg" style="color:#64748b;font-size:0.8rem;margin:0 0 10px;">
+                Code expires in <span id="otpTimerCount" style="color:#fbbf24;font-weight:600;">10:00</span>
+            </p>
+            <button onclick="handleResendVerification()" id="resendBtn"
+                style="background:none;border:none;color:var(--violet);font-size:0.85rem;font-weight:600;cursor:pointer;text-decoration:underline;padding:0;">
+                Resend code
+            </button>
+            <br><br>
+            <button onclick="closeVerifyPending()"
+                style="background:none;border:none;color:#475569;font-size:0.8rem;cursor:pointer;padding:0;">
+                Back to home
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Loading -->
+<div id="loadingOverlay" style="display:none;flex-direction:column;gap:1rem">
+    <i class="fas fa-spinner fa-spin fa-2x"></i>
+    <span id="loadingMsg" style="color:var(--slate)">Loading...</span>
+</div>
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ── API ────────────────────────────────────────────────────────────────────────
+const CLIENT_API = 'http://localhost:5000/api';
+
+const clientApi = {
+    token: localStorage.getItem('client_token') || localStorage.getItem('token'),
+    setToken(t) { this.token = t; },
+    headers() {
+        const h = { 'Content-Type': 'application/json' };
+        if (this.token) h['Authorization'] = 'Bearer ' + this.token;
+        return h;
+    },
+    async request(path, opts = {}) {
+        const r = await fetch(CLIENT_API + path, { ...opts, headers: { ...this.headers(), ...opts.headers } });
+        const d = await r.json();
+        if (!r.ok) { const e = new Error(d.message || 'Error'); e.data = d; e.requiresVerification = d.requiresVerification; throw e; }
+        return d;
+    },
+    register(data)       { return this.request('/client/register', { method: 'POST', body: JSON.stringify(data) }); },
+    login(data)          { return this.request('/client/login',    { method: 'POST', body: JSON.stringify(data) }); },
+    verifyOtp(email, otp){ return this.request('/auth/verify-otp', { method: 'POST', body: JSON.stringify({ email, otp }) }); },
+    resendOtp(email)     { return this.request('/auth/resend-verification', { method: 'POST', body: JSON.stringify({ email }) }); },
+    forgotPassword(email){ return this.request('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) }); }
+};
+
+// ── UTILITIES ──────────────────────────────────────────────────────────────────
+function showToast(msg, type = 'info') {
+    const c = document.getElementById('toastContainer');
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    const icons = { success:'fa-check-circle', error:'fa-exclamation-circle', info:'fa-info-circle' };
+    t.innerHTML = `<i class="fas ${icons[type]||icons.info}"></i><span>${msg}</span>`;
+    c.appendChild(t);
+    setTimeout(() => { t.style.opacity='0'; t.style.transform='translateX(60px)'; t.style.transition='all 0.3s'; setTimeout(()=>t.remove(),350); }, 3200);
+}
+function showLoading(msg){ document.getElementById('loadingMsg').textContent = msg||'Loading...'; document.getElementById('loadingOverlay').style.display='flex'; }
+function hideLoading(){ document.getElementById('loadingOverlay').style.display='none'; }
+
+// ── AUTH UI ────────────────────────────────────────────────────────────────────
+function showLogin() {
+    const m = document.getElementById('authModal');
+    m.classList.add('open'); triggerAnimation(m);
+    document.getElementById('loginFormWrap').style.display='block';
+    document.getElementById('registerFormWrap').style.display='none';
+}
+function showRegister() {
+    const m = document.getElementById('authModal');
+    m.classList.add('open'); triggerAnimation(m);
+    document.getElementById('loginFormWrap').style.display='none';
+    document.getElementById('registerFormWrap').style.display='block';
+    goToStep(1);
+}
+function triggerAnimation(m) {
+    m.classList.remove('opening'); void m.offsetWidth; m.classList.add('opening');
+    setTimeout(()=>m.classList.remove('opening'),750);
+}
+function closeModal() { document.getElementById('authModal').classList.remove('open'); }
+function handleModalOverlayClick(e) { if (e.target===document.getElementById('authModal')) closeModal(); }
+
+// ── MULTI-STEP FORM ───────────────────────────────────────────────────────────
+function goToStep(step) {
+    if (step === 2) {
+        const n = document.getElementById('registerName');
+        const e = document.getElementById('registerEmail');
+        if (!n.reportValidity() || !e.reportValidity()) return;
+    }
+    if (step === 3) {
+        const p = document.getElementById('registerPassword');
+        const c = document.getElementById('confirmPassword');
+        if (!p.reportValidity() || !c.reportValidity()) return;
+        if (p.value !== c.value) { document.getElementById('confirmError').style.display='block'; return; }
+        else document.getElementById('confirmError').style.display='none';
+    }
+    document.querySelectorAll('.form-step').forEach(el=>el.classList.remove('active'));
+    document.querySelectorAll('.step-dot').forEach(el=>el.classList.remove('active'));
+    document.getElementById('step'+step).classList.add('active');
+    for (let i=1;i<=step;i++) document.getElementById('dot'+i).classList.add('active');
+    const pane = document.querySelector('.modal-left-pane');
+    if (pane) pane.scrollTop=0;
+}
+
+// ── LOGIN ─────────────────────────────────────────────────────────────────────
+async function handleClientLogin(e) {
+    e.preventDefault();
+    const email    = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    try {
+        showLoading('Signing in...');
+        const data = await clientApi.login({ email, password });
+        localStorage.setItem('client_token', data.token);
+        localStorage.setItem('client_user', JSON.stringify(data.user));
+        clientApi.setToken(data.token);
+        hideLoading();
+        showToast('Welcome back!', 'success');
+        closeModal();
+        updateUILoggedIn(data.user);
+        setTimeout(()=>{ window.location.href='client-dashboard.html'; }, 1000);
+    } catch(err) {
+        hideLoading();
+        if (err.requiresVerification || (err.data && err.data.requiresVerification)) {
+            closeModal();
+            showVerifyPending(err.data?.email || email);
+            showToast('Please verify your email first.', 'info');
+        } else {
+            showToast(err.message || 'Login failed', 'error');
+        }
+    }
+}
+
+// ── REGISTER ──────────────────────────────────────────────────────────────────
+async function handleClientRegister(e) {
+    e.preventDefault();
+    const name     = document.getElementById('registerName').value;
+    const email    = document.getElementById('registerEmail').value;
+    const password = document.getElementById('registerPassword').value;
+    const confirm  = document.getElementById('confirmPassword').value;
+    const phone    = document.getElementById('registerPhone')?.value || '';
+    const company  = document.getElementById('registerCompany')?.value || '';
+
+    if (password !== confirm) { showToast('Passwords do not match','error'); return; }
+    const rules = [
+        { test: password.length >= 8,           msg: 'Password must be at least 8 characters.' },
+        { test: /[A-Z]/.test(password),          msg: 'Must contain an uppercase letter.' },
+        { test: /[a-z]/.test(password),          msg: 'Must contain a lowercase letter.' },
+        { test: /[0-9]/.test(password),          msg: 'Must contain a number.' },
+        { test: /[^A-Za-z0-9]/.test(password),  msg: 'Must contain a special character.' }
+    ];
+    for (const r of rules) { if (!r.test) { showToast(r.msg,'error'); return; } }
+
+    try {
+        showLoading('Creating account...');
+        const data = await clientApi.register({ name, email, password, phone, company });
+        hideLoading();
+        if (data.requiresVerification) {
+            closeModal();
+            showVerifyPending(data.email || email);
+        } else {
+            showToast('Account created!', 'success');
+        }
+    } catch(err) {
+        hideLoading();
+        showToast(err.message || 'Registration failed','error');
+    }
+}
+
+// ── OTP ────────────────────────────────────────────────────────────────────────
+let _pendingEmail = '';
+let _otpTimer = null;
+
+function showVerifyPending(email) {
+    _pendingEmail = email;
+    document.getElementById('verifyPendingEmail').textContent = email;
+    document.querySelectorAll('.otp-box').forEach(b=>{ b.value=''; b.style.borderColor='rgba(255,255,255,0.12)'; });
+    document.getElementById('otpError').style.display='none';
+    const o = document.getElementById('verifyPendingOverlay');
+    o.style.display='flex';
+    startOtpTimer(600);
+    setTimeout(()=>{ const f=document.querySelector('.otp-box'); if(f) f.focus(); },100);
+}
+
+function closeVerifyPending() {
+    document.getElementById('verifyPendingOverlay').style.display='none';
+    if (_otpTimer) { clearInterval(_otpTimer); _otpTimer=null; }
+}
+
+function startOtpTimer(secs) {
+    if (_otpTimer) clearInterval(_otpTimer);
+    let rem = secs;
+    const el = document.getElementById('otpTimerCount');
+    function tick() {
+        const m=Math.floor(rem/60), s=rem%60;
+        if (el) el.textContent = m+':'+(s<10?'0':'')+s;
+        if (rem<=0) { clearInterval(_otpTimer); if(el){el.textContent='expired';el.style.color='#f87171';} }
+        rem--;
+    }
+    tick(); _otpTimer = setInterval(tick,1000);
+}
+
+async function handleVerifyOtp() {
+    const boxes = document.querySelectorAll('.otp-box');
+    const otp = Array.from(boxes).map(b=>b.value).join('');
+    if (otp.length < 6) { showToast('Enter the full 6-digit code','error'); return; }
+    const btn = document.getElementById('verifyOtpBtn');
+    const err = document.getElementById('otpError');
+    btn.disabled=true; btn.textContent='Verifying…'; err.style.display='none';
+    try {
+        const data = await clientApi.verifyOtp(_pendingEmail, otp);
+        if (data.success && data.token) {
+            if (_otpTimer) clearInterval(_otpTimer);
+            // route: client gets client_token, architect/user gets regular token
+            if (data.user && data.user.role === 'client') {
+                localStorage.setItem('client_token', data.token);
+                localStorage.setItem('client_user', JSON.stringify(data.user));
+            } else {
+                // fallback if somehow wrong role — still allow through
+                localStorage.setItem('client_token', data.token);
+                localStorage.setItem('client_user', JSON.stringify(data.user));
+            }
+            clientApi.setToken(data.token);
+            showToast('Email verified! Welcome to SmartArch 🎉','success');
+            document.getElementById('verifyPendingOverlay').style.display='none';
+            setTimeout(()=>{ window.location.href='client-dashboard.html'; },1000);
+        }
+    } catch(e) {
+        err.style.display='block';
+        boxes.forEach(b=>b.style.borderColor='#f87171');
+        btn.disabled=false; btn.textContent='Verify & Continue';
+    }
+}
+
+async function handleResendVerification() {
+    const btn = document.getElementById('resendBtn');
+    if (!btn || !_pendingEmail) return;
+    btn.disabled=true; btn.textContent='Sending…';
+    try {
+        const data = await clientApi.resendOtp(_pendingEmail);
+        if (data && data.limitReached) { showToast(data.message||'Daily limit reached','error'); btn.textContent='Limit reached'; return; }
+        showToast('New code sent!','success');
+        document.querySelectorAll('.otp-box').forEach(b=>{ b.value=''; b.style.borderColor='rgba(255,255,255,0.12)'; });
+        startOtpTimer(600);
+    } catch(e) {
+        showToast(e.message||'Failed to resend','error');
+    }
+    setTimeout(()=>{ if (!btn.disabled) return; btn.disabled=false; btn.textContent='Resend code'; },30000);
+}
+
+// OTP boxes keyboard nav
+document.addEventListener('DOMContentLoaded', ()=>{
+    const boxes = document.querySelectorAll('.otp-box');
+    boxes.forEach((box,i)=>{
+        box.addEventListener('focus',()=>box.style.borderColor='#8b5cf6');
+        box.addEventListener('blur',()=>box.style.borderColor=box.value?'rgba(139,92,246,0.5)':'rgba(255,255,255,0.12)');
+        box.addEventListener('input',()=>{
+            box.value=box.value.replace(/[^0-9]/g,'').slice(-1);
+            if (box.value && i<boxes.length-1) boxes[i+1].focus();
+            if (i===boxes.length-1 && box.value) handleVerifyOtp();
+        });
+        box.addEventListener('keydown',e=>{
+            if (e.key==='Backspace'&&!box.value&&i>0) boxes[i-1].focus();
+            if (e.key==='ArrowLeft'&&i>0) boxes[i-1].focus();
+            if (e.key==='ArrowRight'&&i<boxes.length-1) boxes[i+1].focus();
+        });
+        box.addEventListener('paste',e=>{
+            e.preventDefault();
+            const p=(e.clipboardData||window.clipboardData).getData('text').replace(/[^0-9]/g,'').slice(0,6);
+            p.split('').forEach((c,idx)=>{ if(boxes[idx]) boxes[idx].value=c; });
+            const next=Array.from(boxes).findIndex(b=>!b.value);
+            if(next!==-1) boxes[next].focus(); else boxes[boxes.length-1].focus();
+            if(p.length===6) handleVerifyOtp();
+        });
+    });
+});
+
+// ── UI ─────────────────────────────────────────────────────────────────────────
+function updateUILoggedIn(user) {
+    const na = document.getElementById('navAuth');
+    const nu = document.getElementById('navUser');
+    const mna = document.getElementById('mobileNavAuth');
+    const mnu = document.getElementById('mobileNavUser');
+    if (na) na.style.display='none';
+    if (nu) {
+        nu.style.display='flex';
+        const av = document.getElementById('userAvatar');
+        if (av) av.src = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=8b5cf6&color=fff&bold=true`;
+    }
+    if (mna) mna.style.display='none';
+    if (mnu) { mnu.style.display='flex'; mnu.style.flexDirection='column'; }
+    // populate dropdown
+    const dn = document.getElementById('userDropdownName');
+    const de = document.getElementById('userDropdownEmail');
+    const da = document.getElementById('userDropdownAvatar');
+    if (dn) dn.textContent = user.name||'—';
+    if (de) de.textContent = user.email||'—';
+    if (da) da.src = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=8b5cf6&color=fff&bold=true`;
+}
+
+function logout() {
+    localStorage.removeItem('client_token');
+    localStorage.removeItem('client_user');
+    showToast('Logged out successfully','info');
+    setTimeout(()=>{ window.location.href='client-index.html'; },800);
+}
+
+function checkClientAuth() {
+    const token = localStorage.getItem('client_token');
+    const userStr = localStorage.getItem('client_user');
+    if (token && userStr) {
+        try { updateUILoggedIn(JSON.parse(userStr)); } catch(e) {}
+    }
+}
+
+// Mobile nav
+function toggleMobileMenu() { document.getElementById('mobileMenu').classList.toggle('open'); }
+function closeMobileMenu() { document.getElementById('mobileMenu').classList.remove('open'); }
+
+// Password visibility toggle
+function togglePw(id, el) {
+    const inp = document.getElementById(id);
+    const icon = el.querySelector('i');
+    if (inp.type==='password') { inp.type='text'; icon.className='fas fa-eye-slash'; }
+    else { inp.type='password'; icon.className='fas fa-eye'; }
+}
+function toggleRegPw(btn) {
+    const inp = document.getElementById('registerPassword');
+    const icon = btn.querySelector('i');
+    if (inp.type==='password') { inp.type='text'; icon.className='fas fa-eye-slash'; }
+    else { inp.type='password'; icon.className='fas fa-eye'; }
+}
+
+// Password strength
+function checkStrength(val) {
+    const w = document.getElementById('strengthWrap');
+    if (!w) return;
+    w.style.display = val.length > 0 ? 'block' : 'none';
+    const rules = { len:val.length>=8, upper:/[A-Z]/.test(val), lower:/[a-z]/.test(val), num:/[0-9]/.test(val), sym:/[^A-Za-z0-9]/.test(val) };
+    const score = Object.values(rules).filter(Boolean).length;
+    ['rbar1','rbar2','rbar3','rbar4'].forEach(id=>{ const b=document.getElementById(id); if(b) b.style.background='rgba(255,255,255,0.1)'; });
+    let color, text, count;
+    if (score<=2){color='#ef4444';text='● Weak';count=1;}
+    else if (score<=4){color='#f59e0b';text='● Medium';count=2;}
+    else{color='#10b981';text='● Strong';count=4;}
+    for(let i=0;i<count;i++){const b=document.getElementById(['rbar1','rbar2','rbar3','rbar4'][i]);if(b)b.style.background=color;}
+    const lbl=document.getElementById('rLabel'); if(lbl){lbl.textContent=text;lbl.style.color=color;}
+}
+
+// User menu dropdown
+(function(){
+    const wrap = document.getElementById('userMenuWrap');
+    const avatar = document.getElementById('userAvatar');
+    if (!wrap||!avatar) return;
+    avatar.addEventListener('click', e=>{ e.stopPropagation(); wrap.classList.toggle('open'); });
+    document.addEventListener('click', e=>{ if (!wrap.contains(e.target)) wrap.classList.remove('open'); });
+    document.addEventListener('keydown', e=>{ if(e.key==='Escape') wrap.classList.remove('open'); });
+})();
+
+// Scroll reveal
+const observer = new IntersectionObserver(entries=>{
+    entries.forEach(e=>{ if(e.isIntersecting){e.target.classList.add('visible');observer.unobserve(e.target);} });
+},{threshold:0.12});
+document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
+
+// HUD dynamic text
+const hudMsgs = [
+    'Finding architects...','Scanning 500+ profiles...','Checking availability...',
+    'Matching to your needs...','Verifying credentials...','Calculating best fit...'
+];
+let hudIdx = 0;
+setInterval(()=>{
+    hudIdx=(hudIdx+1)%hudMsgs.length;
+    const el=document.getElementById('hudDynamicText');
+    if(el) el.textContent=hudMsgs[hudIdx];
+},2500);
+
+// Init
+document.addEventListener('DOMContentLoaded', ()=>{
+    checkClientAuth();
+    const p = new URLSearchParams(window.location.search);
+    const m = p.get('modal');
+    if (m==='login') showLogin();
+    else if (m==='register') showRegister();
+    // smooth anchors
+    document.querySelectorAll('a[href^="#"]').forEach(a=>{
+        a.addEventListener('click', e=>{
+            const href=a.getAttribute('href');
+            if(!href||href==='#') return;
+            const t=document.querySelector(href);
+            if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth'});}
+        });
+    });
+});
+</script>
+</body>
+</html>

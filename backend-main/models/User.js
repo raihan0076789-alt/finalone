@@ -31,7 +31,7 @@ const userSchema = new mongoose.Schema({
     // Role: 'user' kept for backward-compat during migration; new registrations default to 'architect'
     role: {
         type: String,
-        enum: ['user', 'architect', 'admin'],
+        enum: ['user', 'architect', 'admin', 'client'],
         default: 'architect'
     },
 

@@ -17,6 +17,7 @@ const protect = async (req, res, next) => {
 
             // Backward-compat: treat legacy 'user' role as 'architect' in memory
             // so all role checks using authorize('architect') pass transparently.
+            // NOTE: 'client' role is intentionally kept as-is.
             if (req.user.role === 'user') {
                 req.user = req.user.toObject();
                 req.user.role = 'architect';
