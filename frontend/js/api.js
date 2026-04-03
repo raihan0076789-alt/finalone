@@ -32,7 +32,7 @@ class API {
             const data     = await response.json();
             if (!response.ok) {
                 const err = new Error(data.message || 'Something went wrong');
-                err.data  = data;  // attach full response so callers can read requiresVerification, email, etc.
+                err.data  = data;
                 err.requiresVerification = data.requiresVerification || false;
                 throw err;
             }
@@ -43,78 +43,78 @@ class API {
         }
     }
 
-    // ── Auth ──────────────────────────────────────
-    async register(userData) {
-        return this.request('/auth/register', { method: 'POST', body: JSON.stringify(userData) });
-    }
+    // ── Auth (unchanged) ──────────────────────────────────────────────────────
+    async register(userData)              { return this.request('/auth/register', { method: 'POST', body: JSON.stringify(userData) }); }
+    async login(credentials)             { return this.request('/auth/login',    { method: 'POST', body: JSON.stringify(credentials) }); }
+    async googleAuth(credential)         { return this.request('/auth/google',   { method: 'POST', body: JSON.stringify({ credential }) }); }
+    async googleProfile(profile)         { return this.request('/auth/google-profile', { method: 'POST', body: JSON.stringify(profile) }); }
+    async forgotPassword(email)          { return this.request('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) }); }
+    async resetPassword(token, password) { return this.request(`/auth/reset-password/${token}`, { method: 'PUT', body: JSON.stringify({ password }) }); }
+    async verifyOtp(email, otp)          { return this.request('/auth/verify-otp', { method: 'POST', body: JSON.stringify({ email, otp }) }); }
+    async resendVerification(email)      { return this.request('/auth/resend-verification', { method: 'POST', body: JSON.stringify({ email }) }); }
 
-    async login(credentials) {
-        return this.request('/auth/login', { method: 'POST', body: JSON.stringify(credentials) });
-    }
-
-    async googleAuth(credential) {
-        return this.request('/auth/google', { method: 'POST', body: JSON.stringify({ credential }) });
-    }
-
-    async googleProfile(profile) {
-        return this.request('/auth/google-profile', { method: 'POST', body: JSON.stringify(profile) });
-    }
-
-    async forgotPassword(email) {
-        return this.request('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) });
-    }
-
-    async resetPassword(token, password) {
-        return this.request(`/auth/reset-password/${token}`, { method: 'PUT', body: JSON.stringify({ password }) });
-    }
-
-    async verifyOtp(email, otp) {
-        return this.request('/auth/verify-otp', { method: 'POST', body: JSON.stringify({ email, otp }) });
-    }
-
-    async resendVerification(email) {
-        return this.request('/auth/resend-verification', { method: 'POST', body: JSON.stringify({ email }) });
-    }
-
+    // ── Profile ───────────────────────────────────────────────────────────────
+    // getProfile() routes to /architect/profile (richer response with pro fields).
+    // Falls back to /auth/me so nothing breaks if architect route is unreachable.
     async getProfile() {
-        return this.request('/auth/me');
+        try {
+            return await this.request('/architect/profile');
+        } catch (e) {
+            return this.request('/auth/me');
+        }
     }
 
+    // updateProfile() — used by existing dashboard code.
+    // Routes to /architect/profile (handles all fields including new ones).
+    // Also mirrors to /auth/profile for backward-compat (avatar, name, phone, company).
     async updateProfile(profileData) {
-        return this.request('/auth/profile', { method: 'PUT', body: JSON.stringify(profileData) });
+        // Update architect profile (canonical)
+        const result = await this.request('/architect/profile', {
+            method: 'PUT',
+            body:   JSON.stringify(profileData)
+        });
+        // Fire-and-forget mirror to legacy /auth/profile so any code still using
+        // that endpoint sees up-to-date basic fields
+        const { name, email, phone, company, preferences, avatar } = profileData;
+        const basicData = { name, email, phone, company, preferences, avatar };
+        this.request('/auth/profile', { method: 'PUT', body: JSON.stringify(basicData) }).catch(() => {});
+        return result;
     }
 
-    // ── Projects ──────────────────────────────────
+    // Explicit architect profile methods (used by new architect-profile.js)
+    async getArchitectProfile()          { return this.request('/architect/profile'); }
+    async updateArchitectProfile(data)   { return this.request('/architect/profile', { method: 'PUT', body: JSON.stringify(data) }); }
+
+    // ── Projects (unchanged) ──────────────────────────────────────────────────
     async getProjects(params = {}) {
         const qs = new URLSearchParams(params).toString();
         return this.request(`/projects${qs ? `?${qs}` : ''}`);
     }
+    async getProject(id)                       { return this.request(`/projects/${id}`); }
+    async createProject(projectData)           { return this.request('/projects', { method: 'POST', body: JSON.stringify(projectData) }); }
+    async updateProject(id, projectData)       { return this.request(`/projects/${id}`, { method: 'PUT',  body: JSON.stringify(projectData) }); }
+    async deleteProject(id)                    { return this.request(`/projects/${id}`, { method: 'DELETE' }); }
+    async addCollaborator(projectId, data)     { return this.request(`/projects/${projectId}/collaborators`, { method: 'POST', body: JSON.stringify(data) }); }
+    async getProjectVersions(projectId)        { return this.request(`/projects/${projectId}/versions`); }
+    async restoreVersion(projectId, versionId) { return this.request(`/projects/${projectId}/versions/${versionId}/restore`, { method: 'POST' }); }
 
-    async getProject(id)                      { return this.request(`/projects/${id}`); }
-    async createProject(projectData)          { return this.request('/projects', { method: 'POST', body: JSON.stringify(projectData) }); }
-    async updateProject(id, projectData)      { return this.request(`/projects/${id}`, { method: 'PUT',  body: JSON.stringify(projectData) }); }
-    async deleteProject(id)                   { return this.request(`/projects/${id}`, { method: 'DELETE' }); }
-    async addCollaborator(projectId, data)    { return this.request(`/projects/${projectId}/collaborators`, { method: 'POST', body: JSON.stringify(data) }); }
-    async getProjectVersions(projectId)       { return this.request(`/projects/${projectId}/versions`); }
-    async restoreVersion(projectId, versionId){ return this.request(`/projects/${projectId}/versions/${versionId}/restore`, { method: 'POST' }); }
+    // ── AI Feedback (unchanged) ───────────────────────────────────────────────
+    async getAIFeedback(projectId)             { return this.request(`/projects/${projectId}/ai-feedback`); }
+    async saveAIFeedback(projectId, feedback)  { return this.request(`/projects/${projectId}/ai-feedback`, { method: 'PUT', body: JSON.stringify({ feedback }) }); }
 
-    // ── AI Feedback ───────────────────────────────
-    async getAIFeedback(projectId)            { return this.request(`/projects/${projectId}/ai-feedback`); }
-    async saveAIFeedback(projectId, feedback) { return this.request(`/projects/${projectId}/ai-feedback`, { method: 'PUT', body: JSON.stringify({ feedback }) }); }
-
-    // ── Reviews ───────────────────────────────────────────────────────────────
+    // ── Reviews (unchanged) ───────────────────────────────────────────────────
     async getProjectReviews(projectId)                   { return this.request(`/reviews/${projectId}`); }
     async upsertReview(projectId, rating, comment = '')  { return this.request(`/reviews/${projectId}`, { method: 'POST', body: JSON.stringify({ rating, comment }) }); }
     async deleteReview(projectId)                        { return this.request(`/reviews/${projectId}`, { method: 'DELETE' }); }
     async getAdminReviewStats()                          { return this.request('/reviews/admin/stats'); }
     async adminDeleteReview(reviewId)                    { return this.request(`/reviews/admin/${reviewId}`, { method: 'DELETE' }); }
 
-    // ── Subscriptions ─────────────────────────────
+    // ── Subscriptions (unchanged) ─────────────────────────────────────────────
     async getSubscriptionStatus()            { return this.request('/subscriptions/status'); }
     async createSubscriptionOrder(plan)      { return this.request('/subscriptions/subscribe', { method: 'POST', body: JSON.stringify({ plan }) }); }
     async verifySubscriptionPayment(payload) { return this.request('/subscriptions/verify',   { method: 'POST', body: JSON.stringify(payload) }); }
 
-    // ── Models ────────────────────────────────────
+    // ── Models (unchanged) ────────────────────────────────────────────────────
     async generateFloorPlan(projectId)        { return this.request(`/models/${projectId}/floorplan`, { method: 'POST' }); }
     async generate3DModel(projectId)          { return this.request(`/models/${projectId}/3d`,        { method: 'POST' }); }
     async getModelStats(projectId)            { return this.request(`/models/${projectId}/stats`); }
@@ -123,7 +123,6 @@ class API {
         const url      = `${API_BASE_URL}/models/${projectId}/export/${format}`;
         const response = await fetch(url, { headers: this.getHeaders() });
         if (!response.ok) throw new Error('Export failed');
-
         const blob        = await response.blob();
         const downloadUrl = window.URL.createObjectURL(blob);
         const a           = document.createElement('a');
@@ -137,143 +136,69 @@ class API {
 }
 
 // ─────────────────────────────────────────────
-//  AI Architecture API  (layout + chat — port 3001)
+//  AI Architecture API  (port 3001)
 // ─────────────────────────────────────────────
 class ArchitectureAPI {
-
-    /**
-     * Generate a building floorplan via the BSP layout engine.
-     *
-     * @param {object} params
-     * @param {string}  params.buildingType   'residential' | 'office' | 'commercial'
-     * @param {number}  params.floors         1–6
-     * @param {number}  params.totalArea      m² per floor
-     * @param {Array}   params.rooms          [{ type, count }]  optional
-     * @returns {Promise<{ success, floorplan: { floors: [] } }>}
-     */
     async generateFloorplan(params) {
-        try {
-            const response = await fetch(`${AI_API_BASE_URL}/floorplan/generate`, {
-                method:  'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body:    JSON.stringify(params),
-            });
-
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message || 'Floorplan generation failed');
-            return data;
-        } catch (error) {
-            console.error('ArchitectureAPI.generateFloorplan error:', error);
-            throw error;
-        }
+        const response = await fetch(`${AI_API_BASE_URL}/floorplan/generate`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(params),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'Floorplan generation failed');
+        return data;
     }
 
-    /**
-     * Upload a floorplan image and extract room layout via edge detection.
-     *
-     * @param {File}   file          PNG / JPEG / WEBP image File object
-     * @param {number} scaleFactor   Pixels per metre (default 20)
-     * @returns {Promise<{ success, floorplan: { floors: [] } }>}
-     */
     async uploadFloorplanImage(file, scaleFactor = 20) {
-        try {
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('scaleFactor', String(scaleFactor));
-
-            const response = await fetch(`${AI_API_BASE_URL}/floorplan/upload-image`, {
-                method: 'POST',
-                body:   formData,
-                // Note: do NOT set Content-Type header — browser sets it with boundary
-            });
-
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message || 'Image upload failed');
-            return data;
-        } catch (error) {
-            console.error('ArchitectureAPI.uploadFloorplanImage error:', error);
-            throw error;
-        }
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('scaleFactor', String(scaleFactor));
+        const response = await fetch(`${AI_API_BASE_URL}/floorplan/upload-image`, { method: 'POST', body: formData });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'Image upload failed');
+        return data;
     }
 
-    /**
-     * Send a chat message to the AI architect assistant (Ollama).
-     *
-     * @param {string} message
-     * @returns {Promise<{ success, data: { reply: string } }>}
-     */
     async chat(message) {
-        try {
-            const response = await fetch(`${AI_API_BASE_URL}/chat`, {
-                method:  'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body:    JSON.stringify({ message }),
-            });
-
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message || 'Chat request failed');
-            return data;
-        } catch (error) {
-            console.error('ArchitectureAPI.chat error:', error);
-            throw error;
-        }
+        const response = await fetch(`${AI_API_BASE_URL}/chat`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'Chat request failed');
+        return data;
     }
 
-    /**
-     * Request AI design quality feedback for a project.
-     * Routes through backend-main /api/ai/feedback so plan guard is enforced.
-     * @param {object} projectData  Full SmartArch project object
-     * @returns {Promise<{ success, feedback }>}
-     */
     async requestAIFeedback(projectData) {
-        try {
-            const token    = localStorage.getItem('token');
-            const response = await fetch(`${API_BASE_URL}/ai/feedback`, {
-                method:  'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-                },
-                body: JSON.stringify({ projectData }),
-            });
-            const data = await response.json();
-            if (!response.ok) {
-                const err = new Error(data.message || 'Feedback request failed');
-                err.data  = data;
-                throw err;
-            }
-            return data;
-        } catch (error) {
-            console.error('ArchitectureAPI.requestAIFeedback error:', error);
-            throw error;
-        }
+        const token    = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE_URL}/ai/feedback`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+            body: JSON.stringify({ projectData }),
+        });
+        const data = await response.json();
+        if (!response.ok) { const err = new Error(data.message || 'Feedback request failed'); err.data = data; throw err; }
+        return data;
     }
 }
 
-// ─────────────────────────────────────────────
-//  Singletons
-// ─────────────────────────────────────────────
-const api              = new API();
-const architectureAPI  = new ArchitectureAPI();
-
-window.api             = api;
+// ── Singletons ────────────────────────────────────────────────────────────────
+const api             = new API();
+const architectureAPI = new ArchitectureAPI();
+window.api            = api;
 window.architectureAPI = architectureAPI;
 
-// ─────────────────────────────────────────────
-//  UI Utilities
-// ─────────────────────────────────────────────
+// ── UI utilities (unchanged) ──────────────────────────────────────────────────
 function showToast(message, type = 'info') {
     const container = document.getElementById('toastContainer');
     if (!container) return;
-
-    const toast       = document.createElement('div');
-    toast.className   = `toast ${type}`;
-    toast.innerHTML   = `
+    const toast     = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `
         <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
         <span>${message}</span>
     `;
     container.appendChild(toast);
-
     setTimeout(() => {
         toast.style.opacity   = '0';
         toast.style.transform = 'translateX(100%)';
@@ -284,15 +209,10 @@ function showToast(message, type = 'info') {
 function showLoading(message = 'Loading...') {
     let overlay = document.getElementById('loadingOverlay');
     if (!overlay) {
-        overlay            = document.createElement('div');
-        overlay.id         = 'loadingOverlay';
-        overlay.style.cssText = `
-            position:fixed;top:0;left:0;width:100%;height:100%;
-            background:rgba(0,0,0,0.5);display:flex;align-items:center;
-            justify-content:center;z-index:9999;color:white;font-size:1.2rem;
-            flex-direction:column;gap:1rem;
-        `;
-        overlay.innerHTML  = `<i class="fas fa-spinner fa-spin fa-2x"></i><span id="loadingMsg">${message}</span>`;
+        overlay           = document.createElement('div');
+        overlay.id        = 'loadingOverlay';
+        overlay.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;color:white;font-size:1.2rem;flex-direction:column;gap:1rem;`;
+        overlay.innerHTML = `<i class="fas fa-spinner fa-spin fa-2x"></i><span id="loadingMsg">${message}</span>`;
         document.body.appendChild(overlay);
     } else {
         document.getElementById('loadingMsg').textContent = message;
@@ -305,6 +225,6 @@ function hideLoading() {
     if (overlay) overlay.style.display = 'none';
 }
 
-window.showToast    = showToast;
-window.showLoading  = showLoading;
-window.hideLoading  = hideLoading;
+window.showToast   = showToast;
+window.showLoading = showLoading;
+window.hideLoading = hideLoading;

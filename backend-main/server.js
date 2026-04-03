@@ -39,6 +39,7 @@ app.use('/api/reviews',        require('./routes/reviewRoutes'));
 app.use('/api/app-ratings',    require('./routes/appRatingRoutes'));
 app.use('/api/subscriptions',  require('./routes/subscriptionRoutes'));
 app.use('/api/ai',             require('./routes/aiChatRoutes'));       // AI chat proxy with plan guard
+app.use('/api/architect',     require('./routes/architectRoutes'));    // Architect profile (new)
 
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });

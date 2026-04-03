@@ -1,7 +1,7 @@
-// backend/models/User.js
+// backend-main/models/User.js
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-const crypto = require('crypto');
+const bcrypt   = require('bcryptjs');
+const crypto   = require('crypto');
 
 const userSchema = new mongoose.Schema({
     name: {
@@ -24,70 +24,110 @@ const userSchema = new mongoose.Schema({
     },
     googleId: {
         type: String,
-        sparse: true,   // allows multiple null values (unique only among non-null)
+        sparse: true,
         unique: true
     },
+
+    // Role: 'user' kept for backward-compat during migration; new registrations default to 'architect'
     role: {
         type: String,
         enum: ['user', 'architect', 'admin'],
-        default: 'user'
+        default: 'architect'
     },
-    company: { type: String, trim: true },
-    phone: { type: String, trim: true },
-    avatar: { type: String, default: '' },
+
+    // Basic contact info
+    company:  { type: String, trim: true },
+    phone:    { type: String, trim: true },
+    avatar:   { type: String, default: '' },
+
+    // Architect professional profile (new fields)
+    bio: {
+        type: String,
+        trim: true,
+        maxlength: [500, 'Bio cannot exceed 500 characters'],
+        default: ''
+    },
+    location: {
+        type: String,
+        trim: true,
+        maxlength: [100, 'Location cannot exceed 100 characters'],
+        default: ''
+    },
+    specialization: {
+        type: String,
+        trim: true,
+        maxlength: [100, 'Specialization cannot exceed 100 characters'],
+        default: ''
+    },
+    experience: {
+        type: Number,
+        min: [0, 'Experience cannot be negative'],
+        max: [60, 'Experience seems too high'],
+        default: 0
+    },
+    portfolio: {
+        type: [String],
+        validate: {
+            validator: function (arr) { return arr.length <= 10; },
+            message: 'Portfolio cannot have more than 10 links'
+        },
+        default: []
+    },
+
+    // Stats managed by system
+    rating:        { type: Number, default: 0, min: 0, max: 5 },
+    totalProjects: { type: Number, default: 0, min: 0 },
+
     preferences: {
-        theme: { type: String, enum: ['light', 'dark'], default: 'light' },
+        theme:       { type: String, enum: ['light', 'dark'], default: 'light' },
         defaultUnit: { type: String, enum: ['meters', 'feet'], default: 'meters' },
-        autoSave: { type: Boolean, default: true }
+        autoSave:    { type: Boolean, default: true }
     },
-    // ── Subscription ────────────────────────────────────────────────────────
+
+    // Subscription
     plan: {
         type: String,
         enum: ['free', 'pro', 'enterprise'],
         default: 'free'
     },
-    planExpiresAt:          { type: Date, default: null },
+    planExpiresAt:          { type: Date,   default: null },
     razorpaySubscriptionId: { type: String, default: null },
     aiMessagesUsed:         { type: Number, default: 0 },
-    aiMessagesResetAt:      { type: Date, default: null },
-    // ────────────────────────────────────────────────────────────────────────
-    suspended: { type: Boolean, default: false },
-    emailVerified:      { type: Boolean, default: false },
-    emailOtp:           String,
-    emailOtpExpire:     Date,
-    otpResendCount:     { type: Number, default: 0 },
-    otpResendDate:      Date,
-    resetPasswordToken: String,
+    aiMessagesResetAt:      { type: Date,   default: null },
+
+    // Account status
+    suspended:           { type: Boolean, default: false },
+    emailVerified:       { type: Boolean, default: false },
+    emailOtp:            String,
+    emailOtpExpire:      Date,
+    otpResendCount:      { type: Number, default: 0 },
+    otpResendDate:       Date,
+    resetPasswordToken:  String,
     resetPasswordExpire: Date,
-    createdAt: { type: Date, default: Date.now }
+    createdAt:           { type: Date, default: Date.now }
 }, { timestamps: true });
 
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
     if (!this.isModified('password') || !this.password) { next(); return; }
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
     next();
 });
 
-userSchema.methods.matchPassword = async function(enteredPassword) {
+userSchema.methods.matchPassword = async function (enteredPassword) {
     return await bcrypt.compare(enteredPassword, this.password);
 };
 
-// Generate a 6-digit OTP for email verification (10 min expiry)
-userSchema.methods.getEmailOtp = function() {
-    const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit
+userSchema.methods.getEmailOtp = function () {
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
     this.emailOtp       = crypto.createHash('sha256').update(otp).digest('hex');
-    this.emailOtpExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
+    this.emailOtpExpire = Date.now() + 10 * 60 * 1000;
     return otp;
 };
 
-// Generate and hash a password reset token
-userSchema.methods.getResetPasswordToken = function() {
-    // Generate random 32-byte hex token (sent in email, not stored)
+userSchema.methods.getResetPasswordToken = function () {
     const resetToken = crypto.randomBytes(32).toString('hex');
-    // Store hashed version in DB
-    this.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-    // Expire in 30 minutes
+    this.resetPasswordToken  = crypto.createHash('sha256').update(resetToken).digest('hex');
     this.resetPasswordExpire = Date.now() + 30 * 60 * 1000;
     return resetToken;
 };

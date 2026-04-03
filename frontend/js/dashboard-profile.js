@@ -163,20 +163,42 @@ function populateProfileOverview() {
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         const el = id => document.getElementById(id);
 
+        // Basic fields (unchanged)
         if (el('overviewName'))    el('overviewName').textContent    = user.name    || '—';
         if (el('overviewEmail'))   el('overviewEmail').textContent   = user.email   || '—';
         if (el('overviewPhone'))   el('overviewPhone').textContent   = user.phone   || '—';
         if (el('overviewCompany')) el('overviewCompany').textContent = user.company || '—';
 
-         // ✅ ADD THIS (Total Projects from dashboard.js)
+        // New architect fields
+        if (el('overviewBio'))            el('overviewBio').textContent            = user.bio            || '—';
+        if (el('overviewLocation'))       el('overviewLocation').textContent       = user.location       || '—';
+        if (el('overviewSpecialization')) el('overviewSpecialization').textContent = user.specialization || '—';
+        if (el('overviewExperience'))     el('overviewExperience').textContent     = user.experience != null ? `${user.experience} yr${user.experience === 1 ? '' : 's'}` : '—';
+        if (el('overviewRating'))         el('overviewRating').textContent         = user.rating ? `${Number(user.rating).toFixed(1)} / 5` : '—';
+
+        // Total Projects: prefer live count from dashboard.js projects array, then from user object
         if (el('overviewTotalProjects')) {
-            const total = (window.projects && Array.isArray(window.projects)) 
-                ? window.projects.length 
-                : 0;
-            el('overviewTotalProjects').textContent = total;
+            const liveCount = (window.projects && Array.isArray(window.projects)) ? window.projects.length : null;
+            el('overviewTotalProjects').textContent = liveCount != null ? liveCount : (user.totalProjects || 0);
         }
 
-        // Mirror avatar into overview pic
+        // Portfolio links
+        const portfolioContainer = el('overviewPortfolio');
+        if (portfolioContainer) {
+            const urls = Array.isArray(user.portfolio) && user.portfolio.length > 0 ? user.portfolio : [];
+            if (urls.length === 0) {
+                portfolioContainer.innerHTML = '<span style="color:var(--muted,#64748b)">No portfolio links yet.</span>';
+            } else {
+                portfolioContainer.innerHTML = urls.map(u =>
+                    `<a href="${u}" target="_blank" rel="noopener noreferrer"
+                        style="display:block;color:var(--cyan,#00d4c8);font-size:0.82rem;
+                               text-overflow:ellipsis;overflow:hidden;white-space:nowrap;margin-bottom:4px;"
+                        title="${u}">${u}</a>`
+                ).join('');
+            }
+        }
+
+        // Avatar
         const STORAGE_KEY = getAvatarStorageKey();
         const saved = localStorage.getItem(STORAGE_KEY);
         const src = saved || user.avatar || '';

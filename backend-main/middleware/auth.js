@@ -1,5 +1,5 @@
-// backend/middleware/auth.js
-const jwt = require('jsonwebtoken');
+// backend-main/middleware/auth.js
+const jwt  = require('jsonwebtoken');
 const User = require('../models/User');
 
 const protect = async (req, res, next) => {
@@ -15,6 +15,13 @@ const protect = async (req, res, next) => {
                 return res.status(401).json({ success: false, message: 'User not found' });
             }
 
+            // Backward-compat: treat legacy 'user' role as 'architect' in memory
+            // so all role checks using authorize('architect') pass transparently.
+            if (req.user.role === 'user') {
+                req.user = req.user.toObject();
+                req.user.role = 'architect';
+            }
+
             next();
         } catch (error) {
             console.error(error);
@@ -27,12 +34,17 @@ const protect = async (req, res, next) => {
     }
 };
 
+/**
+ * authorize(...roles)
+ * Usage: router.get('/route', protect, authorize('architect'), handler)
+ * 'architect' implicitly includes legacy 'user' role (normalised above in protect).
+ */
 const authorize = (...roles) => {
     return (req, res, next) => {
         if (!roles.includes(req.user.role)) {
             return res.status(403).json({
                 success: false,
-                message: `User role ${req.user.role} is not authorized to access this route`
+                message: `Role '${req.user.role}' is not authorized to access this route`
             });
         }
         next();
