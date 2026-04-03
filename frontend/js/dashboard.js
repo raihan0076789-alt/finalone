@@ -13,7 +13,10 @@ document.addEventListener('DOMContentLoaded', function () {
     loadUserInfo();
     loadProjects();
     setupNavigation();
-   
+
+    // Fetch full profile from backend on every page load so localStorage
+    // always has the latest architect fields (bio, location, etc.)
+    loadUserProfile();
 
     // open section from URL
     setTimeout(() => {
@@ -1218,13 +1221,49 @@ async function loadUserProfile() {
     try {
         const data = await api.getProfile();
         const user = data.user;
+
+        // ── Persist full profile to localStorage so overview & forms always have fresh data ──
+        try {
+            const stored = JSON.parse(localStorage.getItem('user') || '{}');
+            const merged = Object.assign(stored, {
+                id:             user.id             || user._id,
+                name:           user.name           || '',
+                email:          user.email          || '',
+                role:           user.role           || '',
+                company:        user.company        || '',
+                phone:          user.phone          || '',
+                avatar:         user.avatar         || stored.avatar || '',
+                bio:            user.bio            || '',
+                location:       user.location       || '',
+                specialization: user.specialization || '',
+                experience:     user.experience     != null ? user.experience : 0,
+                rating:         user.rating         || 0,
+                portfolio:      user.portfolio      || [],
+                totalProjects:  user.totalProjects  || 0,
+                plan:           user.plan,
+                planExpiresAt:  user.planExpiresAt,
+                preferences:    user.preferences    || stored.preferences,
+                emailVerified:  user.emailVerified
+            });
+            localStorage.setItem('user', JSON.stringify(merged));
+        } catch (e) { /* ignore */ }
+
         const el = id => document.getElementById(id);
         if (el('profileName'))    el('profileName').value    = user.name    || '';
         if (el('profileEmail'))   el('profileEmail').value   = user.email   || '';
         if (el('profileCompany')) el('profileCompany').value = user.company || '';
         if (el('profilePhone'))   el('profilePhone').value   = user.phone   || '';
+
+        // Also populate professional fields if they exist in the DOM
+        if (el('profileLocation'))       el('profileLocation').value       = user.location       || '';
+        if (el('profileSpecialization')) el('profileSpecialization').value = user.specialization || '';
+        if (el('profileExperience'))     el('profileExperience').value     = user.experience != null ? user.experience : '';
+        if (el('profileBio'))            el('profileBio').value            = user.bio            || '';
+
         // Sync overview tab
         if (window.populateProfileOverview) populateProfileOverview();
+        // Sync professional form
+        if (window.loadProfessionalInfoForm) loadProfessionalInfoForm();
     } catch (error) {
         console.error('Failed to load profile:', error);
     }
@@ -1252,7 +1291,11 @@ async function updateProfile(event) {
         }
         hideLoading();
         showToast('Profile updated!', 'success');
+        // Re-fetch full profile so localStorage and overview are in sync
+        await loadUserProfile();
         loadUserInfo();
+        // Navigate to Overview tab to show updated data
+        if (typeof switchToOverviewTab === 'function') switchToOverviewTab();
     } catch (error) {
         hideLoading();
         showToast(error.message || 'Update failed', 'error');

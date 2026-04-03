@@ -84,7 +84,7 @@ exports.login = async (req, res) => {
         res.json({
             success: true,
             token,
-            user: { id: user._id, name: user.name, email: user.email, role: user.role, company: user.company, phone: user.phone, avatar: user.avatar, preferences: user.preferences }
+            user: { id: user._id, name: user.name, email: user.email, role: user.role, company: user.company || '', phone: user.phone || '', avatar: user.avatar || '', bio: user.bio || '', location: user.location || '', specialization: user.specialization || '', experience: user.experience || 0, rating: user.rating || 0, portfolio: user.portfolio || [], plan: user.plan, planExpiresAt: user.planExpiresAt, preferences: user.preferences, emailVerified: user.emailVerified }
         });
     } catch (error) {
         console.error(error);
@@ -287,7 +287,7 @@ exports.verifyEmail = async (req, res) => {
         res.json({
             success: true,
             token,
-            user: { id: user._id, name: user.name, email: user.email, role: user.role, company: user.company, phone: user.phone, avatar: user.avatar, preferences: user.preferences },
+            user: { id: user._id, name: user.name, email: user.email, role: user.role, company: user.company || '', phone: user.phone || '', avatar: user.avatar || '', bio: user.bio || '', location: user.location || '', specialization: user.specialization || '', experience: user.experience || 0, rating: user.rating || 0, portfolio: user.portfolio || [], plan: user.plan, planExpiresAt: user.planExpiresAt, preferences: user.preferences, emailVerified: user.emailVerified },
             message: 'Email verified successfully! Welcome to SmartArch.'
         });
     } catch (error) {

@@ -294,10 +294,233 @@ async function updatePassword(event) {
     }
 }
 
+// ── Unified Save — collects all sections and fires two API calls ──
+async function saveAllProfileChanges(event) {
+    event.preventDefault();
+
+    // Basic validation
+    const phone = (document.getElementById('profilePhone')?.value || '').trim();
+    if (phone && !/^(\+91[\-\s]?)?[6-9]\d{9}$/.test(phone)) {
+        showToast('Enter a valid Indian mobile number.', 'error');
+        return;
+    }
+
+    // Collect portfolio URLs
+    const portfolioInputs = document.querySelectorAll('.portfolio-link-input');
+    const portfolio = Array.from(portfolioInputs).map(i => i.value.trim()).filter(Boolean);
+    const invalidUrls = portfolio.filter(u => { try { new URL(u); return false; } catch { return true; } });
+    if (invalidUrls.length) {
+        showToast('Please enter valid portfolio URLs (include https://).', 'error');
+        return;
+    }
+
+    const val = id => (document.getElementById(id)?.value || '').trim();
+    const expRaw = val('profileExperience');
+
+    const payload = {
+        // Personal
+        name:           val('profileName'),
+        email:          val('profileEmail'),
+        company:        val('profileCompany'),
+        phone:          phone,
+        // Professional
+        location:       val('profileLocation'),
+        specialization: val('profileSpecialization'),
+        experience:     expRaw !== '' ? parseInt(expRaw, 10) : null,
+        bio:            val('profileBio'),
+        // Portfolio
+        portfolio:      portfolio,
+    };
+
+    try {
+        // Show loading state on button
+        const btn = document.getElementById('epSaveBtn');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…'; }
+
+        showLoading('Saving profile…');
+        const token = localStorage.getItem('token');
+        const res = await fetch('http://localhost:5000/api/architect/profile', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        hideLoading();
+
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> Save Changes'; }
+
+        if (!res.ok) throw new Error(data.message || 'Update failed');
+
+        // Re-sync localStorage from backend
+        if (typeof loadUserProfile === 'function') await loadUserProfile();
+        if (typeof loadUserInfo    === 'function') loadUserInfo();
+
+        showToast('Profile saved!', 'success');
+        switchToOverviewTab();
+    } catch (err) {
+        hideLoading();
+        const btn = document.getElementById('epSaveBtn');
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> Save Changes'; }
+        showToast(err.message || 'Failed to save profile', 'error');
+    }
+}
+
+// ── Discard — reload data from localStorage/backend ──────────
+function discardProfileChanges() {
+    if (typeof loadUserProfile === 'function') loadUserProfile();
+    switchToOverviewTab();
+}
+
+window.saveAllProfileChanges  = saveAllProfileChanges;
+window.discardProfileChanges  = discardProfileChanges;
+
 window.handleProfilePicUpload = handleProfilePicUpload;
 window.switchProfileTab       = switchProfileTab;
+
+// ── Switch to Overview tab programmatically (no click element needed) ──
+function switchToOverviewTab() {
+    const overviewBtn = document.querySelector('[data-profile-tab="overview"]');
+    if (overviewBtn) {
+        switchProfileTab('overview', overviewBtn);
+        // Smooth scroll to top of profile area
+        const panel = document.getElementById('profile-tab-overview');
+        if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+window.switchToOverviewTab = switchToOverviewTab;
 window.populateProfileOverview = populateProfileOverview;
 window.removeProfilePic       = removeProfilePic;
 window.switchToSettings       = switchToSettings;
 window.savePreference         = savePreference;
 window.updatePassword         = updatePassword;
+
+// ── Load professional info into edit form ──────────────────────
+function loadProfessionalInfoForm() {
+    try {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const el = id => document.getElementById(id);
+        if (el('profileLocation'))       el('profileLocation').value       = user.location       || '';
+        if (el('profileSpecialization')) el('profileSpecialization').value = user.specialization || '';
+        if (el('profileExperience'))     el('profileExperience').value     = user.experience != null ? user.experience : '';
+        if (el('profileBio'))            el('profileBio').value            = user.bio            || '';
+        renderPortfolioLinks(Array.isArray(user.portfolio) ? user.portfolio : []);
+    } catch (e) { /* ignore */ }
+}
+
+// ── Save Professional Info ─────────────────────────────────────
+async function updateProfessionalInfo(event) {
+    event.preventDefault();
+    const val = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+    const expRaw = val('profileExperience');
+    const payload = {
+        location:       val('profileLocation'),
+        specialization: val('profileSpecialization'),
+        experience:     expRaw !== '' ? parseInt(expRaw, 10) : null,
+        bio:            val('profileBio')
+    };
+    try {
+        showLoading('Saving professional info…');
+        const token = localStorage.getItem('token');
+        const res = await fetch('http://localhost:5000/api/architect/profile', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        hideLoading();
+        if (!res.ok) throw new Error(data.message || 'Update failed');
+        // Re-fetch full profile from backend to keep localStorage in sync
+        if (typeof loadUserProfile === 'function') await loadUserProfile();
+        else {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            Object.assign(user, payload);
+            localStorage.setItem('user', JSON.stringify(user));
+            populateProfileOverview();
+        }
+        showToast('Professional info saved!', 'success');
+        switchToOverviewTab();
+    } catch (err) {
+        hideLoading();
+        showToast(err.message || 'Failed to save professional info', 'error');
+    }
+}
+
+// ── Portfolio link UI helpers ──────────────────────────────────
+function renderPortfolioLinks(urls) {
+    const container = document.getElementById('portfolioLinksContainer');
+    if (!container) return;
+    if (urls.length === 0) urls = [''];
+    container.innerHTML = urls.map((url, i) => `
+        <div class="form-group" style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.6rem;" id="portfolio-row-${i}">
+            <input type="url" class="form-control portfolio-link-input" value="${url}"
+                   placeholder="https://your-portfolio.com" style="flex:1;">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="removePortfolioRow(${i})" title="Remove">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>`).join('');
+}
+
+function addPortfolioLink() {
+    const inputs = document.querySelectorAll('.portfolio-link-input');
+    if (inputs.length >= 10) { showToast('Maximum 10 portfolio links allowed.', 'error'); return; }
+    const urls = Array.from(inputs).map(i => i.value.trim());
+    urls.push('');
+    renderPortfolioLinks(urls);
+}
+
+function removePortfolioRow(index) {
+    const inputs = document.querySelectorAll('.portfolio-link-input');
+    const urls = Array.from(inputs).map(i => i.value.trim()).filter((_, i) => i !== index);
+    renderPortfolioLinks(urls.length ? urls : ['']);
+}
+
+async function savePortfolioLinks() {
+    const inputs = document.querySelectorAll('.portfolio-link-input');
+    const portfolio = Array.from(inputs).map(i => i.value.trim()).filter(Boolean);
+    // Basic URL check
+    const invalid = portfolio.filter(u => { try { new URL(u); return false; } catch { return true; } });
+    if (invalid.length) { showToast('Please enter valid URLs (include https://).', 'error'); return; }
+    try {
+        showLoading('Saving portfolio…');
+        const token = localStorage.getItem('token');
+        const res = await fetch('http://localhost:5000/api/architect/profile', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ portfolio })
+        });
+        const data = await res.json();
+        hideLoading();
+        if (!res.ok) throw new Error(data.message || 'Update failed');
+        // Re-fetch full profile from backend to keep localStorage in sync
+        if (typeof loadUserProfile === 'function') await loadUserProfile();
+        else {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            user.portfolio = portfolio;
+            localStorage.setItem('user', JSON.stringify(user));
+            populateProfileOverview();
+        }
+        showToast('Portfolio saved!', 'success');
+        switchToOverviewTab();
+    } catch (err) {
+        hideLoading();
+        showToast(err.message || 'Failed to save portfolio', 'error');
+    }
+}
+
+window.updateProfessionalInfo = updateProfessionalInfo;
+window.addPortfolioLink       = addPortfolioLink;
+window.removePortfolioRow     = removePortfolioRow;
+window.savePortfolioLinks     = savePortfolioLinks;
+window.loadProfessionalInfoForm = loadProfessionalInfoForm;
+
+// Auto-populate professional form when Edit Profile tab is shown
+const _origSwitchProfileTab = window.switchProfileTab;
+window.switchProfileTab = function(tabName, clickedBtn) {
+    _origSwitchProfileTab(tabName, clickedBtn);
+    if (tabName === 'edit') loadProfessionalInfoForm();
+};
+
+// Also load on initial DOMContentLoaded if edit tab is active
+document.addEventListener('DOMContentLoaded', function() {
+    loadProfessionalInfoForm();
+});
