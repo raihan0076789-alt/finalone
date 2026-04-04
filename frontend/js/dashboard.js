@@ -18,6 +18,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // always has the latest architect fields (bio, location, etc.)
     loadUserProfile();
 
+    // Pre-fetch connections on load so the badge count is accurate immediately
+    if (typeof loadArchConnections === 'function') loadArchConnections();
+
     // open section from URL
     setTimeout(() => {
         openSectionFromURL();
@@ -52,11 +55,12 @@ function openSectionFromURL() {
     if (!hash) return;
 
     const sectionMap = {
-        '#projectsSection':  'projects',
-        '#templatesSection': 'templates',
-        '#analyticsSection': 'analytics',
-        '#settingsSection':  'settings',
-        '#messagesSection':  'messages',
+        '#projectsSection':     'projects',
+        '#templatesSection':    'templates',
+        '#analyticsSection':    'analytics',
+        '#settingsSection':     'settings',
+        '#messagesSection':     'messages',
+        '#connectionsSection':  'connections',
     };
 
     // Find matching section key
@@ -76,7 +80,7 @@ function openSectionFromURL() {
     if (navBtn) navBtn.classList.add('active');
 
     // Update header title
-    const headerTitles = { projects:'My Projects', templates:'Project Templates', analytics:'Analytics', settings:'Settings', messages:'My Messages' };
+    const headerTitles = { projects:'My Projects', templates:'Project Templates', analytics:'Analytics', settings:'Settings', messages:'My Messages', connections:'Client Requests' };
     const headerEl = document.getElementById('headerTitle');
     if (headerEl) headerEl.textContent = headerTitles[section] || section;
 
@@ -87,6 +91,7 @@ function openSectionFromURL() {
     if (section === 'messages') loadUserTickets();
     if (section === 'analytics') { if (typeof updateAnalytics === 'function') updateAnalytics(); }
     if (section === 'settings') { if (typeof loadUserProfile === 'function') loadUserProfile(); }
+    if (section === 'connections') { if (typeof loadArchConnections === 'function') loadArchConnections(); }
 }
 
 function setupNavigation() {
