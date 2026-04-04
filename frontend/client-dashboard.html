@@ -51,13 +51,19 @@
             <span class="nav-icon"><i class="fas fa-search"></i></span>
             Find Architects
         </a>
+        <a href="#" class="nav-item" id="nav-connections" onclick="showView('connections', event)">
+            <span class="nav-icon"><i class="fas fa-user-check"></i></span>
+            My Connections
+            <span id="connNavBadge" style="display:none;background:#ef4444;color:#fff;border-radius:20px;padding:1px 7px;font-size:0.68rem;font-weight:700;margin-left:auto;"></span>
+        </a>
 
-        <div class="nav-section-label">Coming Soon</div>
-        <a href="#" class="nav-item" onclick="comingSoon(event,'My Projects')">
+        <div class="nav-section-label">Projects</div>
+        <a href="#" class="nav-item" id="nav-projects" onclick="showView('projects', event)">
             <span class="nav-icon"><i class="fas fa-folder-open"></i></span>
             My Projects
-            <span class="nav-badge soon">Soon</span>
         </a>
+
+        
         <a href="#" class="nav-item" onclick="comingSoon(event,'Messages')">
             <span class="nav-icon"><i class="fas fa-comments"></i></span>
             Messages
@@ -233,6 +239,216 @@
     </div>
 </div>
 
+<!-- VIEW: MY CONNECTIONS -->
+<div class="connections-main" id="view-connections" style="display:none">
+    <div class="hero-strip">
+        <h1>My <span>Connections</span></h1>
+        <p>Manage your architect connections and chat with accepted contacts</p>
+    </div>
+    <div class="connections-body" id="connectionsBody">
+        <div style="text-align:center;padding:3rem;color:var(--slate)">
+            <i class="fas fa-spinner fa-spin" style="font-size:1.5rem"></i>
+            <div style="margin-top:1rem">Loading connections...</div>
+        </div>
+    </div>
+</div>
+
+
+<!-- VIEW: MY PROJECTS -->
+<div class="proj-main" id="view-projects" style="display:none">
+    <div class="hero-strip">
+        <h1>My <span>Projects</span></h1>
+        <p>Create and manage your construction briefs to share with architects</p>
+        <div style="margin-top:1.25rem">
+            <button class="btn-primary" onclick="openCreateProject()" style="padding:0.75rem 1.75rem;border-radius:10px;font-size:0.9rem;font-weight:700;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:0.5rem;">
+                <i class="fas fa-plus"></i> Create Project
+            </button>
+        </div>
+    </div>
+    <div class="proj-body">
+        <div id="clientProjectsGrid">
+            <div style="text-align:center;padding:3rem;color:var(--slate)">
+                <i class="fas fa-spinner fa-spin" style="font-size:1.5rem"></i>
+                <div style="margin-top:1rem">Loading projects...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PROJECT WIZARD MODAL -->
+<div class="wizard-backdrop" id="wizardBackdrop">
+    <div class="wizard-panel" id="wizardPanel">
+
+        <!-- Header -->
+        <div class="wizard-header">
+            <div>
+                <div class="wizard-title" id="wizardTitle">New Project</div>
+                <div class="wizard-steps-row">
+                    <div class="wizard-step-dot active" id="wdot-1"></div>
+                    <div class="wizard-step-line" id="wline-1"></div>
+                    <div class="wizard-step-dot" id="wdot-2"></div>
+                    <div class="wizard-step-line" id="wline-2"></div>
+                    <div class="wizard-step-dot" id="wdot-3"></div>
+                    <div class="wizard-step-line" id="wline-3"></div>
+                    <div class="wizard-step-dot" id="wdot-4"></div>
+                </div>
+                <div class="wizard-step-label" id="wizardStepLabel">Step 1 of 4 — Basic Info</div>
+            </div>
+            <button class="wizard-close-btn" onclick="closeWizard()"><i class="fas fa-times"></i></button>
+        </div>
+
+        <!-- Steps -->
+        <div class="wizard-body">
+
+            <!-- STEP 1: Basic Info -->
+            <div class="wizard-step" id="wstep-1">
+                <div class="wizard-field">
+                    <label class="wizard-label">Project Title <span class="req">*</span></label>
+                    <input class="wizard-input" id="wf-title" type="text" maxlength="120"
+                        placeholder="e.g. 3BHK Family Home in Thrissur">
+                </div>
+                <div class="wizard-field">
+                    <label class="wizard-label">Project Type <span class="req">*</span></label>
+                    <div class="type-grid" id="typeGrid">
+                        <button class="type-btn" data-val="residential"  onclick="selectType(this)"><i class="fas fa-home"></i><span>Residential</span></button>
+                        <button class="type-btn" data-val="commercial"   onclick="selectType(this)"><i class="fas fa-building"></i><span>Commercial</span></button>
+                        <button class="type-btn" data-val="interior"     onclick="selectType(this)"><i class="fas fa-couch"></i><span>Interior</span></button>
+                        <button class="type-btn" data-val="renovation"   onclick="selectType(this)"><i class="fas fa-tools"></i><span>Renovation</span></button>
+                        <button class="type-btn" data-val="landscape"    onclick="selectType(this)"><i class="fas fa-tree"></i><span>Landscape</span></button>
+                        <button class="type-btn" data-val="other"        onclick="selectType(this)"><i class="fas fa-ellipsis-h"></i><span>Other</span></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 2: Requirements -->
+            <div class="wizard-step" id="wstep-2" style="display:none">
+                <div class="wizard-row-2">
+                    <div class="wizard-field">
+                        <label class="wizard-label">Min Budget (₹)</label>
+                        <input class="wizard-input" id="wf-budgetMin" type="number" min="0" placeholder="e.g. 2500000">
+                    </div>
+                    <div class="wizard-field">
+                        <label class="wizard-label">Max Budget (₹)</label>
+                        <input class="wizard-input" id="wf-budgetMax" type="number" min="0" placeholder="e.g. 5000000">
+                    </div>
+                </div>
+                <div class="wizard-row-2">
+                    <div class="wizard-field">
+                        <label class="wizard-label">Land Size</label>
+                        <input class="wizard-input" id="wf-landVal" type="number" min="0" placeholder="e.g. 2400">
+                    </div>
+                    <div class="wizard-field">
+                        <label class="wizard-label">Unit</label>
+                        <select class="wizard-input" id="wf-landUnit">
+                            <option value="sqft">sq ft</option>
+                            <option value="sqm">sq m</option>
+                            <option value="cents">cents</option>
+                            <option value="acres">acres</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="wizard-field">
+                    <label class="wizard-label">Architectural Style</label>
+                    <select class="wizard-input" id="wf-style">
+                        <option value="">Any / Not sure</option>
+                        <option value="modern">Modern</option>
+                        <option value="traditional">Traditional</option>
+                        <option value="contemporary">Contemporary</option>
+                        <option value="minimalist">Minimalist</option>
+                        <option value="colonial">Colonial</option>
+                        <option value="mediterranean">Mediterranean</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="wizard-row-3">
+                    <div class="wizard-field">
+                        <label class="wizard-label">Bedrooms</label>
+                        <input class="wizard-input" id="wf-bedrooms" type="number" min="0" max="20" placeholder="e.g. 3">
+                    </div>
+                    <div class="wizard-field">
+                        <label class="wizard-label">Bathrooms</label>
+                        <input class="wizard-input" id="wf-bathrooms" type="number" min="0" max="20" placeholder="e.g. 2">
+                    </div>
+                    <div class="wizard-field">
+                        <label class="wizard-label">Floors</label>
+                        <input class="wizard-input" id="wf-floors" type="number" min="1" max="10" placeholder="e.g. 2">
+                    </div>
+                </div>
+                <div class="wizard-field">
+                    <label class="wizard-label">Extras</label>
+                    <div class="extras-row">
+                        <label class="extra-chip"><input type="checkbox" id="wf-garage"> <i class="fas fa-car"></i> Garage</label>
+                        <label class="extra-chip"><input type="checkbox" id="wf-pool">   <i class="fas fa-swimmer"></i> Pool</label>
+                        <label class="extra-chip"><input type="checkbox" id="wf-garden"> <i class="fas fa-seedling"></i> Garden</label>
+                    </div>
+                </div>
+                <div class="wizard-field">
+                    <label class="wizard-label">Timeline</label>
+                    <select class="wizard-input" id="wf-timeline">
+                        <option value="flexible">Flexible</option>
+                        <option value="asap">As soon as possible</option>
+                        <option value="1-3months">1–3 months</option>
+                        <option value="3-6months">3–6 months</option>
+                        <option value="6-12months">6–12 months</option>
+                    </select>
+                </div>
+                <div class="wizard-field">
+                    <label class="wizard-label">Description</label>
+                    <textarea class="wizard-input wizard-textarea" id="wf-desc" rows="3"
+                        maxlength="2000" placeholder="Describe your vision, special requirements, or anything architects should know..."></textarea>
+                    <div style="text-align:right;font-size:0.72rem;color:var(--slate);margin-top:3px"><span id="wf-desc-count">0</span>/2000</div>
+                </div>
+            </div>
+
+            <!-- STEP 3: Attachments -->
+            <div class="wizard-step" id="wstep-3" style="display:none">
+                <div class="attach-drop-zone" id="attachDropZone" onclick="document.getElementById('attachFileInput').click()"
+                    ondragover="event.preventDefault();this.classList.add('drag-over')"
+                    ondragleave="this.classList.remove('drag-over')"
+                    ondrop="handleAttachDrop(event)">
+                    <i class="fas fa-cloud-upload-alt" style="font-size:2rem;color:var(--violet);margin-bottom:0.75rem;display:block"></i>
+                    <div style="font-weight:700;color:var(--white);margin-bottom:0.25rem">Drop files here or click to browse</div>
+                    <div style="font-size:0.78rem;color:var(--slate)">Images, PDFs, CAD files · Max 10 MB each · Up to 10 files</div>
+                </div>
+                <input type="file" id="attachFileInput" multiple accept=".jpg,.jpeg,.png,.webp,.gif,.pdf,.dxf,.dwg" style="display:none" onchange="handleAttachSelect(this.files)">
+                <div class="attach-preview-grid" id="attachPreviewGrid"></div>
+            </div>
+
+            <!-- STEP 4: Review -->
+            <div class="wizard-step" id="wstep-4" style="display:none">
+                <div class="review-card" id="reviewCard"></div>
+            </div>
+        </div>
+
+        <!-- Footer nav -->
+        <div class="wizard-footer">
+            <button class="wizard-back-btn" id="wizardBackBtn" onclick="wizardBack()" style="display:none">
+                <i class="fas fa-arrow-left"></i> Back
+            </button>
+            <div style="margin-left:auto;display:flex;gap:0.75rem">
+                <button class="wizard-cancel-btn" onclick="closeWizard()">Cancel</button>
+                <button class="wizard-next-btn" id="wizardNextBtn" onclick="wizardNext()">
+                    Next <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PROJECT DETAIL MODAL -->
+<div class="connect-backdrop" id="projDetailBackdrop" onclick="closeProjDetail(event)">
+    <div class="proj-detail-panel" id="projDetailPanel">
+        <div class="proj-detail-header">
+            <div>
+                <div class="proj-detail-title" id="pdTitle"></div>
+                <div class="proj-detail-meta" id="pdMeta"></div>
+            </div>
+            <button class="modal-close" onclick="closeProjDetail()" style="position:static;margin-left:auto"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="proj-detail-body" id="pdBody"></div>
+    </div>
+</div>
+
 <!-- MODAL: ARCHITECT PROFILE -->
 <div class="modal-backdrop" id="modalBackdrop" onclick="closeModal(event)">
     <div class="modal-panel" id="modalPanel">
@@ -253,6 +469,69 @@
 <!-- TOAST CONTAINER -->
 <div class="toast-container" id="toastContainer"></div>
 
+<!-- ═══════════════════════════════════════════
+     CONNECT REQUEST MODAL
+═══════════════════════════════════════════ -->
+<div class="connect-backdrop" id="connectBackdrop" onclick="closeConnectModal(event)">
+    <div class="connect-panel" id="connectPanel">
+        <div class="connect-header">
+            <div class="connect-header-info">
+                <img id="connectArchAvatar" src="" alt="" class="connect-arch-avatar">
+                <div>
+                    <div class="connect-arch-name" id="connectArchName"></div>
+                    <div class="connect-arch-spec" id="connectArchSpec"></div>
+                </div>
+            </div>
+            <button class="modal-close" onclick="closeConnectModal()" style="position:static;margin-left:auto"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="connect-body">
+            <div class="connect-section-title"><i class="fas fa-folder-open" style="color:var(--violet)"></i> Select a Project <span style="color:var(--slate-2);font-weight:400;font-size:0.8rem">(optional)</span></div>
+            <div class="connect-project-list" id="connectProjectList">
+                <div style="color:var(--slate);font-size:0.85rem;padding:0.5rem 0"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
+            </div>
+            <div class="connect-section-title" style="margin-top:1.25rem"><i class="fas fa-comment-alt" style="color:var(--cyan)"></i> Introduce yourself</div>
+            <textarea id="connectIntroMsg" class="connect-textarea" rows="3"
+                placeholder="Hi! I'm interested in working with you on my project. I'd love to discuss..."></textarea>
+            <div style="display:flex;justify-content:flex-end;margin-top:1rem;gap:0.75rem">
+                <button class="connect-cancel-btn" onclick="closeConnectModal()">Cancel</button>
+                <button class="connect-send-btn" id="connectSendBtn" onclick="submitConnectRequest()">
+                    <i class="fas fa-paper-plane"></i> Send Request
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     CHAT MODAL (for accepted connections)
+═══════════════════════════════════════════ -->
+<div class="connect-backdrop" id="chatBackdrop" onclick="closeChatModal(event)">
+    <div class="chat-modal-panel" id="chatModalPanel">
+        <div class="chat-modal-header">
+            <div style="display:flex;align-items:center;gap:0.75rem">
+                <img id="chatModalAvatar" src="" alt="" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid var(--violet)">
+                <div>
+                    <div style="font-weight:700;color:var(--white);font-size:0.95rem" id="chatModalName"></div>
+                    <div style="font-size:0.72rem;color:var(--emerald)"><i class="fas fa-circle" style="font-size:0.5rem"></i> Connected</div>
+                </div>
+            </div>
+            <button class="modal-close" onclick="closeChatModal()" style="position:static;margin-left:auto"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="chat-modal-messages" id="chatModalMessages">
+            <div style="text-align:center;padding:2rem;color:var(--slate)"><i class="fas fa-spinner fa-spin"></i></div>
+        </div>
+        <div class="chat-modal-input-row">
+            <textarea id="chatModalInput" class="chat-modal-input" rows="1"
+                placeholder="Type a message... (Enter to send)"
+                onkeydown="handleChatKeydown(event)"></textarea>
+            <button class="chat-modal-send-btn" onclick="sendChatMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+
 <script>
 'use strict';
 const CLIENT_API = 'http://localhost:5000/api';
@@ -270,11 +549,22 @@ const VIEWS = {
         el: 'view-architects', navId: 'nav-architects',
         title: 'Find Architects', sub: 'Browse verified architecture professionals',
         showDashBtns: false, showPlan: true
+    },
+    connections: {
+        el: 'view-connections', navId: 'nav-connections',
+        title: 'My Connections', sub: 'Manage your architect connections',
+        showDashBtns: false, showPlan: false
+    },
+    projects: {
+        el: 'view-projects', navId: 'nav-projects',
+        title: 'My Projects', sub: 'Manage your construction briefs',
+        showDashBtns: false, showPlan: false
     }
 };
 
 let currentView = 'dashboard';
 let architectsLoaded = false;
+let connectionsLoaded = false;
 
 function showView(name, event) {
     if (event) event.preventDefault();
@@ -303,6 +593,12 @@ function showView(name, event) {
     if (name === 'architects' && !architectsLoaded) {
         architectsLoaded = true;
         fetchArchitects();
+    }
+    if (name === 'connections') {
+        loadConnections();
+    }
+    if (name === 'projects') {
+        loadClientProjects();
     }
 }
 
@@ -508,7 +804,13 @@ function renderCards(architects) {
             '</div>' +
             '<div class="card-footer">' +
                 '<div class="card-bio">' + esc(bio) + '</div>' +
-                '<span class="card-cta">View <i class="fas fa-arrow-right" style="font-size:0.7rem"></i></span>' +
+                '<div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.65rem">' +
+                    '<span class="card-cta">View <i class="fas fa-arrow-right" style="font-size:0.7rem"></i></span>' +
+                    '<button class="connect-card-btn" id="cbtn-' + a.id + '" ' +
+                        'onclick="event.stopPropagation();openConnectModal(\'' + a.id + '\',\'' + esc(a.name) + '\',\'' + esc(a.specialization) + '\',\'' + (a.avatar||'') + '\')"> ' +
+                        '<i class="fas fa-user-plus" style="font-size:0.7rem"></i> Connect' +
+                    '</button>' +
+                '</div>' +
             '</div>' +
         '</div>';
     }).join('');
@@ -630,7 +932,15 @@ function renderModal(a) {
             '<div class="modal-stat"><div class="modal-stat-val">' + (a.rating || 0).toFixed(1) + '</div><div class="modal-stat-lbl">Rating</div></div>' +
         '</div>' +
         '<div class="modal-section"><div class="modal-section-title"><i class="fas fa-user" style="color:var(--violet)"></i> About</div>' + bioHtml + '</div>' +
-        portfolioHtml + projectsHtml + contactHtml;
+        portfolioHtml + projectsHtml + contactHtml +
+        '<div style="padding:0.25rem 0 0.5rem">' +
+            '<button class="connect-modal-cta" id="modalConnectBtn" ' +
+                'onclick="openConnectModal(\'' + a.id + '\',\'' + esc(a.name) + '\',\'' + esc(a.specialization) + '\',\'' + (a.avatar||'') + '\')"> ' +
+                '<i class="fas fa-user-plus"></i> Connect with ' + esc(a.name.split(' ')[0]) +
+            '</button>' +
+        '</div>';
+    // Update connect button state after modal renders
+    setTimeout(function() { refreshModalConnectBtn(a.id); }, 100);
 }
 
 function closeModal(e) {
@@ -741,6 +1051,867 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (e.key === 'Escape') closeModalDirect();
     });
 });
+
+/* ============================================================
+   CONNECT FEATURE
+   ============================================================ */
+
+var connectState = { architectId: null, architectName: null, selectedProjectId: null };
+var activeChatConnectionId = null;
+var chatPollTimer = null;
+
+/* ── Open Connect Modal ──────────────────────────────────────────────── */
+async function openConnectModal(archId, archName, archSpec, archAvatar) {
+    connectState.architectId   = archId;
+    connectState.architectName = archName;
+    connectState.selectedProjectId = null;
+
+    // Fill header
+    var fallback = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(archName) + '&background=8b5cf6&color=fff&bold=true';
+    document.getElementById('connectArchAvatar').src = archAvatar || fallback;
+    document.getElementById('connectArchAvatar').onerror = function() { this.src = fallback; };
+    document.getElementById('connectArchName').textContent = archName;
+    document.getElementById('connectArchSpec').textContent = archSpec || 'Architect';
+    document.getElementById('connectIntroMsg').value = '';
+
+    // Check existing status
+    try {
+        var r = await fetch(CLIENT_API + '/connections/status/' + archId, { headers: authHeaders() });
+        var d = await r.json();
+        if (d.status === 'accepted') {
+            closeModalDirect();
+            openChatModal(d.connectionId, archName, archAvatar || fallback);
+            return;
+        }
+        if (d.status === 'pending') {
+            closeModalDirect();
+            showToast('You already have a pending request with ' + archName + '.', 'info');
+            return;
+        }
+    } catch(e) {}
+
+    // Load client's projects into project picker
+    var listEl = document.getElementById('connectProjectList');
+    listEl.innerHTML = '<div style="color:var(--slate);font-size:0.85rem"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+
+    document.getElementById('connectBackdrop').classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    try {
+        var pr = await fetch(CLIENT_API + '/client/projects', { headers: authHeaders() });
+        var pd = await pr.json();
+        var projects = (pd.data || []).slice(0, 10);
+        var createNewHtml = '<div style="margin-top:0.5rem">' +
+            '<button onclick="closeConnectModal();openCreateProject()" ' +
+            'style="width:100%;padding:0.5rem;border:1.5px dashed rgba(139,92,246,0.4);border-radius:9px;background:rgba(139,92,246,0.05);color:var(--violet);font-size:0.78rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.4rem">' +
+            '<i class="fas fa-plus" style="font-size:0.7rem"></i> Create a new project brief</button></div>';
+        if (!projects.length) {
+            listEl.innerHTML = '<div style="color:var(--slate);font-size:0.83rem;padding:0.4rem 0">No projects yet — you can still connect without one.</div>' + createNewHtml;
+        } else {
+            listEl.innerHTML = projects.map(function(p) {
+                return '<label class="project-pick-item">' +
+                    '<input type="radio" name="connectProject" value="' + p._id + '" onchange="selectConnectProject(\'' + p._id + '\')">' +
+                    '<span class="project-pick-label">' +
+                        '<span class="project-pick-name">' + esc(p.title || p.name) + '</span>' +
+                        '<span class="project-pick-type">' + esc(p.projectType || p.type || 'project') + '</span>' +
+                    '</span>' +
+                '</label>';
+            }).join('') +
+            '<label class="project-pick-item">' +
+                '<input type="radio" name="connectProject" value="" checked onchange="selectConnectProject(null)">' +
+                '<span class="project-pick-label"><span class="project-pick-name" style="color:var(--slate)">No specific project</span></span>' +
+            '</label>' + createNewHtml;
+        }
+    } catch(e) {
+        listEl.innerHTML = '<div style="color:var(--slate);font-size:0.83rem">Could not load projects.</div>';
+    }
+}
+
+function selectConnectProject(id) {
+    connectState.selectedProjectId = id || null;
+}
+
+function closeConnectModal(e) {
+    if (e && e.target !== document.getElementById('connectBackdrop')) return;
+    document.getElementById('connectBackdrop').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+/* ── Submit Connect Request ──────────────────────────────────────────── */
+async function submitConnectRequest() {
+    var btn  = document.getElementById('connectSendBtn');
+    var msg  = document.getElementById('connectIntroMsg').value.trim();
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+    try {
+        var r = await fetch(CLIENT_API + '/connections/request', {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({
+                architectId:  connectState.architectId,
+                projectId:    connectState.selectedProjectId,
+                introMessage: msg
+            })
+        });
+        var d = await r.json();
+        if (!d.success) throw new Error(d.message);
+
+        document.getElementById('connectBackdrop').classList.remove('open');
+        document.body.style.overflow = '';
+        showToast('Connection request sent to ' + connectState.architectName + '!', 'success');
+
+        // Update card button to "Pending"
+        updateCardConnectBtn(connectState.architectId, 'pending');
+        var modalBtn = document.getElementById('modalConnectBtn');
+        if (modalBtn) { modalBtn.disabled = true; modalBtn.innerHTML = '<i class="fas fa-clock"></i> Request Pending'; }
+
+    } catch(err) {
+        showToast(err.message || 'Could not send request.', 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Request';
+    }
+}
+
+/* ── Refresh connect button state in card ────────────────────────────── */
+async function refreshCardConnectBtn(archId) {
+    try {
+        var r = await fetch(CLIENT_API + '/connections/status/' + archId, { headers: authHeaders() });
+        var d = await r.json();
+        updateCardConnectBtn(archId, d.status || 'none', d.connectionId, d.connectionId ? { id: d.connectionId } : null);
+    } catch(e) {}
+}
+
+async function refreshModalConnectBtn(archId) {
+    var btn = document.getElementById('modalConnectBtn');
+    if (!btn) return;
+    try {
+        var r = await fetch(CLIENT_API + '/connections/status/' + archId, { headers: authHeaders() });
+        var d = await r.json();
+        if (d.status === 'accepted') {
+            btn.innerHTML = '<i class="fas fa-comments"></i> Open Chat';
+            btn.onclick = function() { openChatModal(d.connectionId, btn.dataset.name || '', btn.dataset.avatar || ''); };
+        } else if (d.status === 'pending') {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-clock"></i> Request Pending';
+        }
+    } catch(e) {}
+}
+
+function updateCardConnectBtn(archId, status, connectionId, archData) {
+    var btn = document.getElementById('cbtn-' + archId);
+    if (!btn) return;
+    if (status === 'pending') {
+        btn.className = 'connect-card-btn status-pending';
+        btn.innerHTML = '<i class="fas fa-clock" style="font-size:0.7rem"></i> Pending';
+        btn.onclick = function(e) { e.stopPropagation(); showToast('Request is awaiting architect response.', 'info'); };
+    } else if (status === 'accepted') {
+        btn.className = 'connect-card-btn status-accepted';
+        btn.innerHTML = '<i class="fas fa-comments" style="font-size:0.7rem"></i> Chat';
+        btn.onclick = function(e) {
+            e.stopPropagation();
+            var av = btn.closest('.arch-card') ? btn.closest('.arch-card').querySelector('.card-avatar') : null;
+            openChatModal(connectionId, btn.dataset.archname || archId, av ? av.src : '');
+        };
+    }
+}
+
+/* ── Load My Connections View ────────────────────────────────────────── */
+async function loadConnections() {
+    var body = document.getElementById('connectionsBody');
+    body.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--slate)"><i class="fas fa-spinner fa-spin" style="font-size:1.5rem"></i><div style="margin-top:1rem">Loading...</div></div>';
+
+    try {
+        var r = await fetch(CLIENT_API + '/connections/my', { headers: authHeaders() });
+        var d = await r.json();
+        if (!d.success) throw new Error();
+        renderConnections(d.data);
+    } catch(e) {
+        body.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--rose)"><i class="fas fa-exclamation-circle" style="font-size:1.5rem"></i><div style="margin-top:1rem">Could not load connections.</div></div>';
+    }
+}
+
+function renderConnections(conns) {
+    var body = document.getElementById('connectionsBody');
+
+    // Update nav badge
+    var pending = conns.filter(function(c) { return c.status === 'pending'; }).length;
+    var unread  = conns.filter(function(c) { return c.unreadByClient > 0; }).length;
+    var badge   = document.getElementById('connNavBadge');
+    if (pending + unread > 0) {
+        badge.textContent = pending + unread;
+        badge.style.display = '';
+    } else {
+        badge.style.display = 'none';
+    }
+
+    if (!conns.length) {
+        body.innerHTML =
+            '<div class="conn-empty">' +
+                '<div class="conn-empty-icon"><i class="fas fa-user-friends"></i></div>' +
+                '<div class="conn-empty-title">No connections yet</div>' +
+                '<div class="conn-empty-sub">Browse architects and click Connect to send a request.</div>' +
+                `<button class="btn-primary" onclick="showView('architects')" style="margin-top:1.5rem;padding:0.65rem 1.5rem;border-radius:9px;font-size:0.875rem;font-weight:700;border:none;cursor:pointer;">` +
+                    '<i class="fas fa-search"></i> Find Architects' +
+                '</button>' +
+            '</div>';
+        return;
+    }
+
+    body.innerHTML = '<div class="conn-grid">' + conns.map(function(c) {
+        var arch = c.architect || {};
+        var avatar = arch.avatar ||
+            'https://ui-avatars.com/api/?name=' + encodeURIComponent(arch.name || 'A') + '&background=8b5cf6&color=fff&bold=true';
+        var statusMap = { pending: 'Pending', accepted: 'Accepted', rejected: 'Rejected' };
+        var statusCls = { pending: 'status-pending', accepted: 'status-accepted', rejected: 'status-rejected' };
+        var projHtml  = c.projectName ? '<div class="conn-project"><i class="fas fa-folder" style="font-size:0.65rem;color:var(--violet)"></i> ' + esc(c.projectName) + '</div>' : '';
+        var intro     = c.introMessage ? '<div class="conn-intro">' + esc(c.introMessage) + '</div>' : '';
+        var unreadBadge = (c.unreadByClient > 0) ? '<span class="conn-unread-badge">' + c.unreadByClient + ' new</span>' : '';
+
+        var actionBtn = '';
+        if (c.status === 'accepted') {
+            actionBtn = '<button class="conn-chat-btn" onclick="openChatModal(\'' + c._id + '\',\'' + esc(arch.name) + '\',\'' + avatar + '\')">' +
+                '<i class="fas fa-comments"></i> Chat ' + unreadBadge + '</button>';
+        } else if (c.status === 'pending') {
+            actionBtn = '<div class="conn-pending-note"><i class="fas fa-clock"></i> Awaiting response</div>';
+        } else {
+            actionBtn = '<div class="conn-rejected-note"><i class="fas fa-times-circle"></i> Request not accepted</div>';
+        }
+
+        return `
+<div class="conn-card">
+    <div class="conn-card-top">
+        <img class="conn-arch-avatar"
+             src="${avatar}"
+             alt="${esc(arch.name)}"
+             onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(arch.name || 'A')}&background=8b5cf6&color=fff&bold=true'">
+
+        <div class="conn-arch-info">
+            <div class="conn-arch-name">${esc(arch.name)}</div>
+            <div class="conn-arch-spec">${esc(arch.specialization || 'Architect')}</div>
+            <span class="conn-status-chip ${statusCls[c.status] || ''}">
+                ${statusMap[c.status] || c.status}
+            </span>
+        </div>
+    </div>
+
+    ${projHtml}
+    ${intro}
+
+    <div class="conn-card-footer">
+        ${actionBtn}
+    </div>
+</div>
+`;
+    }).join('') + '</div>';
+}
+
+/* ── Chat Modal ──────────────────────────────────────────────────────── */
+function openChatModal(connectionId, archName, archAvatar) {
+    activeChatConnectionId = connectionId;
+    document.getElementById('chatModalName').textContent   = archName;
+    document.getElementById('chatModalAvatar').src         = archAvatar ||
+        'https://ui-avatars.com/api/?name=' + encodeURIComponent(archName) + '&background=8b5cf6&color=fff&bold=true';
+    document.getElementById('chatModalMessages').innerHTML =
+        '<div style="text-align:center;padding:2rem;color:var(--slate)"><i class="fas fa-spinner fa-spin"></i></div>';
+    document.getElementById('chatModalInput').value = '';
+
+    document.getElementById('chatBackdrop').classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    loadChatMessages();
+
+    // Poll for new messages every 8 seconds
+    clearInterval(chatPollTimer);
+    chatPollTimer = setInterval(loadChatMessages, 8000);
+}
+
+function closeChatModal(e) {
+    if (e && e.target !== document.getElementById('chatBackdrop')) return;
+    document.getElementById('chatBackdrop').classList.remove('open');
+    document.body.style.overflow = '';
+    clearInterval(chatPollTimer);
+    chatPollTimer = null;
+    activeChatConnectionId = null;
+}
+
+async function loadChatMessages() {
+    if (!activeChatConnectionId) return;
+    try {
+        var r = await fetch(CLIENT_API + '/connections/' + activeChatConnectionId + '/messages', { headers: authHeaders() });
+        var d = await r.json();
+        if (!d.success) return;
+        renderChatMessages(d.messages, d.connection);
+    } catch(e) {}
+}
+
+function renderChatMessages(messages, connection) {
+    var clientId = (JSON.parse(localStorage.getItem('client_user') || '{}') || {}).id || '';
+    var el = document.getElementById('chatModalMessages');
+
+    if (!messages || !messages.length) {
+        // Show intro message if exists
+        var intro = connection && connection.introMessage;
+        if (intro) {
+            el.innerHTML = '<div class="chat-msg chat-msg-self"><div class="chat-msg-bubble">' + esc(intro) + '</div><div class="chat-msg-time">Request message</div></div>' +
+                '<div class="chat-msg-divider">Waiting for architect to respond...</div>';
+        } else {
+            el.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--slate)">No messages yet. Say hello!</div>';
+        }
+        return;
+    }
+
+    var html = '';
+    // Show intro message first if any
+    if (connection && connection.introMessage) {
+        html += '<div class="chat-msg chat-msg-self"><div class="chat-msg-bubble">' + esc(connection.introMessage) + '</div><div class="chat-msg-time">Request message</div></div>';
+    }
+    messages.forEach(function(m) {
+        var isSelf = m.senderRole === 'client';
+        var time   = new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        html += '<div class="chat-msg ' + (isSelf ? 'chat-msg-self' : 'chat-msg-other') + '">' +
+            '<div class="chat-msg-bubble">' + esc(m.text) + '</div>' +
+            '<div class="chat-msg-time">' + time + '</div>' +
+        '</div>';
+    });
+
+    el.innerHTML = html;
+    el.scrollTop = el.scrollHeight;
+}
+
+async function sendChatMessage() {
+    if (!activeChatConnectionId) return;
+    var input = document.getElementById('chatModalInput');
+    var text  = input.value.trim();
+    if (!text) return;
+
+    input.value = '';
+    input.disabled = true;
+
+    try {
+        var r = await fetch(CLIENT_API + '/connections/' + activeChatConnectionId + '/messages', {
+            method:  'POST',
+            headers: authHeaders(),
+            body:    JSON.stringify({ text: text })
+        });
+        var d = await r.json();
+        if (!d.success) throw new Error(d.message);
+        await loadChatMessages();
+    } catch(err) {
+        showToast(err.message || 'Could not send message.', 'error');
+        input.value = text;
+    } finally {
+        input.disabled = false;
+        input.focus();
+    }
+}
+
+function handleChatKeydown(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendChatMessage();
+    }
+}
+
+/* ============================================================
+   CLIENT PROJECT FEATURE
+   ============================================================ */
+
+var cpState = {
+    step:         1,
+    projectType:  '',
+    attachFiles:  [],    // File objects staged for upload
+    editingId:    null   // null = create, string = edit mode
+};
+
+/* ── Open / Close Wizard ──────────────────────────────────────────────────── */
+function openCreateProject(prefillType) {
+    cpState = { step: 1, projectType: prefillType || '', attachFiles: [], editingId: null };
+    document.getElementById('wizardTitle').textContent    = 'New Project';
+    document.getElementById('wizardNextBtn').textContent  = 'Next ';
+    document.getElementById('wizardNextBtn').innerHTML    = 'Next <i class="fas fa-arrow-right"></i>';
+    resetWizardFields();
+    if (prefillType) selectTypeByVal(prefillType);
+    goWizardStep(1);
+    document.getElementById('wizardBackdrop').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeWizard() {
+    document.getElementById('wizardBackdrop').classList.remove('open');
+    document.body.style.overflow = '';
+    cpState.attachFiles = [];
+}
+
+function resetWizardFields() {
+    ['wf-title','wf-budgetMin','wf-budgetMax','wf-landVal','wf-desc'].forEach(id => {
+        var el = document.getElementById(id); if (el) el.value = '';
+    });
+    ['wf-landUnit','wf-style','wf-timeline'].forEach(id => {
+        var el = document.getElementById(id); if (el) el.selectedIndex = 0;
+    });
+    ['wf-bedrooms','wf-bathrooms','wf-floors'].forEach(id => {
+        var el = document.getElementById(id); if (el) el.value = '';
+    });
+    ['wf-garage','wf-pool','wf-garden'].forEach(id => {
+        var el = document.getElementById(id); if (el) el.checked = false;
+    });
+    document.querySelectorAll('.type-btn').forEach(function(b) { b.classList.remove('active'); });
+    cpState.projectType = '';
+    document.getElementById('attachPreviewGrid').innerHTML = '';
+    document.getElementById('wf-desc-count').textContent = '0';
+}
+
+/* ── Step navigation ──────────────────────────────────────────────────────── */
+function goWizardStep(n) {
+    [1,2,3,4].forEach(function(i) {
+        var s = document.getElementById('wstep-' + i);
+        if (s) s.style.display = (i === n) ? '' : 'none';
+        var dot = document.getElementById('wdot-' + i);
+        if (dot) {
+            dot.classList.toggle('active',    i <= n);
+            dot.classList.toggle('completed', i < n);
+        }
+        var line = document.getElementById('wline-' + i);
+        if (line) line.classList.toggle('active', i < n);
+    });
+    var labels = ['Basic Info','Requirements','Attachments','Review & Submit'];
+    document.getElementById('wizardStepLabel').textContent = 'Step ' + n + ' of 4 — ' + labels[n-1];
+    document.getElementById('wizardBackBtn').style.display = n > 1 ? '' : 'none';
+    var nextBtn = document.getElementById('wizardNextBtn');
+    if (n === 4) {
+        nextBtn.innerHTML = '<i class="fas fa-check"></i> Submit Project';
+    } else {
+        nextBtn.innerHTML = 'Next <i class="fas fa-arrow-right"></i>';
+    }
+    cpState.step = n;
+    if (n === 4) buildReviewCard();
+}
+
+function wizardNext() {
+    var s = cpState.step;
+    if (s === 1) {
+        if (!document.getElementById('wf-title').value.trim()) {
+            showToast('Please enter a project title.', 'error'); return;
+        }
+        if (!cpState.projectType) {
+            showToast('Please select a project type.', 'error'); return;
+        }
+        goWizardStep(2);
+    } else if (s === 2) {
+        goWizardStep(3);
+    } else if (s === 3) {
+        goWizardStep(4);
+    } else if (s === 4) {
+        submitWizard();
+    }
+}
+
+function wizardBack() {
+    if (cpState.step > 1) goWizardStep(cpState.step - 1);
+}
+
+/* ── Step 1 helpers ───────────────────────────────────────────────────────── */
+function selectType(btn) {
+    document.querySelectorAll('.type-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    cpState.projectType = btn.dataset.val;
+}
+function selectTypeByVal(val) {
+    var btn = document.querySelector('.type-btn[data-val="' + val + '"]');
+    if (btn) selectType(btn);
+}
+
+/* ── Step 3 — Attachments ─────────────────────────────────────────────────── */
+function handleAttachSelect(files) {
+    Array.from(files).forEach(function(f) { addAttachFile(f); });
+    document.getElementById('attachFileInput').value = '';
+}
+function handleAttachDrop(e) {
+    e.preventDefault();
+    document.getElementById('attachDropZone').classList.remove('drag-over');
+    Array.from(e.dataTransfer.files).forEach(function(f) { addAttachFile(f); });
+}
+function addAttachFile(file) {
+    if (cpState.attachFiles.length >= 10) {
+        showToast('Maximum 10 files allowed.', 'error'); return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+        showToast(file.name + ' exceeds 10 MB limit.', 'error'); return;
+    }
+    cpState.attachFiles.push(file);
+    renderAttachPreviews();
+}
+function removeAttachFile(idx) {
+    cpState.attachFiles.splice(idx, 1);
+    renderAttachPreviews();
+}
+function renderAttachPreviews() {
+    var grid = document.getElementById('attachPreviewGrid');
+    if (!cpState.attachFiles.length) { grid.innerHTML = ''; return; }
+    grid.innerHTML = cpState.attachFiles.map(function(f, i) {
+        var isImg = f.type.startsWith('image/');
+        var icon  = isImg ? '' : '<i class="fas fa-file-alt" style="font-size:1.5rem;color:var(--violet)"></i>';
+        var thumb = '';
+        if (isImg) {
+            // Use object URL for preview
+            thumb = '<img src="' + URL.createObjectURL(f) + '" style="width:100%;height:100%;object-fit:cover;border-radius:7px">';
+        }
+        var kb = (f.size / 1024).toFixed(0);
+        return '<div class="attach-thumb">' +
+            (isImg ? thumb : '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:0.35rem">' + icon + '<span style="font-size:0.65rem;color:var(--slate);text-align:center;word-break:break-all;padding:0 4px">' + esc(f.name) + '</span></div>') +
+            '<div class="attach-thumb-info">' + esc(f.name.length > 12 ? f.name.slice(0,12)+'…' : f.name) + ' · ' + kb + 'KB</div>' +
+            '<button class="attach-thumb-remove" onclick="removeAttachFile(' + i + ')"><i class="fas fa-times"></i></button>' +
+        '</div>';
+    }).join('');
+}
+
+/* ── Step 4 — Review card ─────────────────────────────────────────────────── */
+function buildReviewCard() {
+    var title   = document.getElementById('wf-title').value.trim();
+    var ptype   = cpState.projectType;
+    var bMin    = document.getElementById('wf-budgetMin').value;
+    var bMax    = document.getElementById('wf-budgetMax').value;
+    var lVal    = document.getElementById('wf-landVal').value;
+    var lUnit   = document.getElementById('wf-landUnit').value;
+    var style   = document.getElementById('wf-style').value;
+    var beds    = document.getElementById('wf-bedrooms').value;
+    var baths   = document.getElementById('wf-bathrooms').value;
+    var floors  = document.getElementById('wf-floors').value;
+    var garage  = document.getElementById('wf-garage').checked;
+    var pool    = document.getElementById('wf-pool').checked;
+    var garden  = document.getElementById('wf-garden').checked;
+    var timeline= document.getElementById('wf-timeline').value;
+    var desc    = document.getElementById('wf-desc').value.trim();
+    var files   = cpState.attachFiles.length;
+
+    var budgetStr = (bMin || bMax)
+        ? '₹' + (bMin ? Number(bMin).toLocaleString('en-IN') : '0') + ' – ₹' + (bMax ? Number(bMax).toLocaleString('en-IN') : '∞')
+        : 'Not specified';
+    var landStr = lVal ? lVal + ' ' + lUnit : 'Not specified';
+    var extrasArr = [];
+    if (garage) extrasArr.push('Garage');
+    if (pool)   extrasArr.push('Pool');
+    if (garden) extrasArr.push('Garden');
+
+    document.getElementById('reviewCard').innerHTML =
+        '<div class="review-row"><span class="review-lbl">Title</span><span class="review-val">' + esc(title) + '</span></div>' +
+        '<div class="review-row"><span class="review-lbl">Type</span><span class="review-val" style="text-transform:capitalize">' + esc(ptype) + '</span></div>' +
+        '<div class="review-row"><span class="review-lbl">Budget</span><span class="review-val">' + budgetStr + '</span></div>' +
+        '<div class="review-row"><span class="review-lbl">Land Size</span><span class="review-val">' + landStr + '</span></div>' +
+        (style ? '<div class="review-row"><span class="review-lbl">Style</span><span class="review-val" style="text-transform:capitalize">' + esc(style) + '</span></div>' : '') +
+        ((beds||baths||floors) ? '<div class="review-row"><span class="review-lbl">Rooms</span><span class="review-val">' + [beds&&(beds+'BD'),baths&&(baths+'BA'),floors&&(floors+' fl')].filter(Boolean).join(' · ') + '</span></div>' : '') +
+        (extrasArr.length ? '<div class="review-row"><span class="review-lbl">Extras</span><span class="review-val">' + extrasArr.join(', ') + '</span></div>' : '') +
+        '<div class="review-row"><span class="review-lbl">Timeline</span><span class="review-val" style="text-transform:capitalize">' + esc(timeline.replace('-',' ')) + '</span></div>' +
+        (desc ? '<div class="review-row review-desc"><span class="review-lbl">Description</span><div class="review-val" style="margin-top:4px">' + esc(desc) + '</div></div>' : '') +
+        '<div class="review-row"><span class="review-lbl">Attachments</span><span class="review-val">' + files + ' file' + (files!==1?'s':'') + '</span></div>';
+}
+
+/* ── Submit ───────────────────────────────────────────────────────────────── */
+async function submitWizard() {
+    var btn = document.getElementById('wizardNextBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+    try {
+        var fd = new FormData();
+        fd.append('title',       document.getElementById('wf-title').value.trim());
+        fd.append('projectType', cpState.projectType);
+        fd.append('style',       document.getElementById('wf-style').value);
+        fd.append('timeline',    document.getElementById('wf-timeline').value);
+        fd.append('description', document.getElementById('wf-desc').value.trim());
+        fd.append('budget', JSON.stringify({
+            min: parseFloat(document.getElementById('wf-budgetMin').value) || null,
+            max: parseFloat(document.getElementById('wf-budgetMax').value) || null,
+            currency: 'INR'
+        }));
+        fd.append('landSize', JSON.stringify({
+            value: parseFloat(document.getElementById('wf-landVal').value) || null,
+            unit:  document.getElementById('wf-landUnit').value
+        }));
+        fd.append('requirements', JSON.stringify({
+            bedrooms:  parseInt(document.getElementById('wf-bedrooms').value)  || null,
+            bathrooms: parseInt(document.getElementById('wf-bathrooms').value) || null,
+            floors:    parseInt(document.getElementById('wf-floors').value)    || null,
+            garage:    document.getElementById('wf-garage').checked,
+            pool:      document.getElementById('wf-pool').checked,
+            garden:    document.getElementById('wf-garden').checked
+        }));
+        cpState.attachFiles.forEach(function(f) { fd.append('attachments', f); });
+
+        var token = getToken();
+        var method = cpState.editingId ? 'PUT' : 'POST';
+        var url    = CLIENT_API + '/client/projects' + (cpState.editingId ? '/' + cpState.editingId : '');
+        var r = await fetch(url, { method: method, headers: { 'Authorization': 'Bearer ' + token }, body: fd });
+        var d = await r.json();
+        if (!d.success) throw new Error(d.message);
+
+        closeWizard();
+        showToast(cpState.editingId ? 'Project updated!' : 'Project created!', 'success');
+        loadClientProjects();
+    } catch(err) {
+        showToast(err.message || 'Could not save project.', 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check"></i> Submit Project';
+    }
+}
+
+/* ── Load & render projects ───────────────────────────────────────────────── */
+async function loadClientProjects() {
+    var grid = document.getElementById('clientProjectsGrid');
+    if (!grid) return;
+    grid.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--slate)"><i class="fas fa-spinner fa-spin" style="font-size:1.5rem"></i><div style="margin-top:1rem">Loading...</div></div>';
+    try {
+        var r = await fetch(CLIENT_API + '/client/projects', { headers: authHeaders() });
+        var d = await r.json();
+        if (!d.success) throw new Error();
+        renderClientProjects(d.data);
+    } catch(e) {
+        grid.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--rose)"><i class="fas fa-exclamation-circle" style="font-size:1.5rem"></i><div style="margin-top:1rem">Could not load projects.</div></div>';
+    }
+}
+
+var PROJECT_TYPE_ICONS = {
+    residential:'fa-home', commercial:'fa-building', interior:'fa-couch',
+    renovation:'fa-tools', landscape:'fa-tree', industrial:'fa-industry', other:'fa-project-diagram'
+};
+var STATUS_CONFIG = {
+    active:      { label:'Active',      cls:'status-active' },
+    draft:       { label:'Draft',       cls:'status-draft' },
+    in_progress: { label:'In Progress', cls:'status-inprog' },
+    completed:   { label:'Completed',   cls:'status-done' },
+    cancelled:   { label:'Cancelled',   cls:'status-cancelled' }
+};
+
+function renderClientProjects(projects) {
+    var grid = document.getElementById('clientProjectsGrid');
+    if (!projects.length) {
+        grid.innerHTML =
+            '<div style="text-align:center;padding:4rem 2rem">' +
+                '<div style="font-size:2.5rem;color:rgba(139,92,246,0.3);margin-bottom:1rem"><i class="fas fa-folder-open"></i></div>' +
+                '<div style="font-size:1.15rem;font-weight:700;color:var(--white);margin-bottom:0.5rem">No projects yet</div>' +
+                '<div style="font-size:0.875rem;color:var(--slate);margin-bottom:1.5rem">Create your first project brief and find the perfect architect.</div>' +
+                '<button class="btn-primary" onclick="openCreateProject()" style="padding:0.7rem 1.5rem;border-radius:10px;font-weight:700;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:0.5rem"><i class="fas fa-plus"></i> Create Project</button>' +
+            '</div>';
+        return;
+    }
+    grid.innerHTML = '<div class="cp-grid">' + projects.map(function(p) {
+        var iconCls = PROJECT_TYPE_ICONS[p.projectType] || 'fa-project-diagram';
+        var sc      = STATUS_CONFIG[p.status] || { label: p.status, cls: 'status-draft' };
+        var bStr = '';
+        if (p.budget && (p.budget.min || p.budget.max)) {
+            var fmt = function(n) { return n >= 100000 ? '₹' + (n/100000).toFixed(1) + 'L' : '₹' + n.toLocaleString('en-IN'); };
+            bStr = (p.budget.min ? fmt(p.budget.min) : '') + (p.budget.min && p.budget.max ? ' – ' : '') + (p.budget.max ? fmt(p.budget.max) : '');
+        }
+        var lStr = (p.landSize && p.landSize.value) ? p.landSize.value + ' ' + p.landSize.value + ' ' + p.landSize.unit : '';
+        if (p.landSize && p.landSize.value) lStr = p.landSize.value + ' ' + p.landSize.unit;
+        var attCount = (p.attachments || []).length;
+        var date = new Date(p.createdAt).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+        return '<div class="cp-card">' +
+            '<div class="cp-card-top">' +
+                '<div class="cp-type-icon"><i class="fas ' + iconCls + '"></i></div>' +
+                '<div class="cp-card-info">' +
+                    '<div class="cp-title">' + esc(p.title) + '</div>' +
+                    '<div class="cp-type-tag">' + esc(p.projectType) + '</div>' +
+                '</div>' +
+                '<span class="cp-status ' + sc.cls + '">' + sc.label + '</span>' +
+            '</div>' +
+            '<div class="cp-meta-row">' +
+                (bStr ? '<div class="cp-meta-item"><i class="fas fa-rupee-sign"></i>' + esc(bStr) + '</div>' : '') +
+                (lStr ? '<div class="cp-meta-item"><i class="fas fa-expand-arrows-alt"></i>' + esc(lStr) + '</div>' : '') +
+                (p.style ? '<div class="cp-meta-item"><i class="fas fa-paint-brush"></i>' + esc(p.style) + '</div>' : '') +
+                (attCount ? '<div class="cp-meta-item"><i class="fas fa-paperclip"></i>' + attCount + ' file' + (attCount>1?'s':'') + '</div>' : '') +
+            '</div>' +
+            (p.description ? '<div class="cp-desc">' + esc(p.description) + '</div>' : '') +
+            '<div class="cp-date">Created ' + date + '</div>' +
+            '<div class="cp-actions">' +
+                '<button class="cp-btn cp-btn-view"    onclick="viewClientProject(\'' + p._id + '\')"><i class="fas fa-eye"></i> View</button>' +
+                '<button class="cp-btn cp-btn-edit"    onclick="editClientProject(\'' + p._id + '\')"><i class="fas fa-edit"></i> Edit</button>' +
+                '<button class="cp-btn cp-btn-connect" onclick="connectFromProject(\'' + p._id + '\',\'' + esc(p.title) + '\')"><i class="fas fa-user-plus"></i> Find Architect</button>' +
+                '<button class="cp-btn cp-btn-delete"  onclick="deleteClientProject(\'' + p._id + '\')"><i class="fas fa-trash"></i></button>' +
+            '</div>' +
+        '</div>';
+    }).join('') + '</div>';
+}
+
+/* ── Project actions ─────────────────────────────────────────────────────── */
+async function viewClientProject(id) {
+    document.getElementById('pdBody').innerHTML = '<div style="text-align:center;padding:2rem;color:var(--slate)"><i class="fas fa-spinner fa-spin"></i></div>';
+    document.getElementById('projDetailBackdrop').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    try {
+        var r = await fetch(CLIENT_API + '/client/projects/' + id, { headers: authHeaders() });
+        var d = await r.json();
+        if (!d.success) throw new Error();
+        renderProjectDetail(d.data);
+    } catch(e) {
+        document.getElementById('pdBody').innerHTML = '<div style="padding:2rem;color:var(--rose)">Could not load project.</div>';
+    }
+}
+
+function renderProjectDetail(p) {
+    var sc = STATUS_CONFIG[p.status] || { label: p.status, cls: 'status-draft' };
+    document.getElementById('pdTitle').textContent = p.title;
+    document.getElementById('pdMeta').innerHTML =
+        '<span style="text-transform:capitalize">' + esc(p.projectType) + '</span>' +
+        ' · <span class="cp-status ' + sc.cls + '" style="font-size:0.68rem">' + sc.label + '</span>';
+
+    var r   = p.requirements || {};
+    var bStr = '';
+    if (p.budget && (p.budget.min || p.budget.max)) {
+        var fmt = function(n) { return '₹' + Number(n).toLocaleString('en-IN'); };
+        bStr = (p.budget.min ? fmt(p.budget.min) : '0') + ' – ' + (p.budget.max ? fmt(p.budget.max) : '∞');
+    }
+    var lStr = (p.landSize && p.landSize.value) ? p.landSize.value + ' ' + p.landSize.unit : '';
+
+    var rows = [
+        ['Budget',      bStr || '—'],
+        ['Land Size',   lStr || '—'],
+        ['Style',       p.style || '—'],
+        ['Timeline',    (p.timeline || 'flexible').replace('-',' ')],
+        ['Bedrooms',    r.bedrooms  || '—'],
+        ['Bathrooms',   r.bathrooms || '—'],
+        ['Floors',      r.floors    || '—'],
+        ['Extras',      [r.garage&&'Garage', r.pool&&'Pool', r.garden&&'Garden'].filter(Boolean).join(', ') || 'None'],
+    ];
+    var detailHtml = '<div class="pd-grid">' +
+        rows.map(function(row) {
+            return '<div class="review-row"><span class="review-lbl">' + row[0] + '</span><span class="review-val" style="text-transform:capitalize">' + esc(String(row[1])) + '</span></div>';
+        }).join('') + '</div>';
+
+    if (p.description) {
+        detailHtml += '<div style="margin:1rem 0"><div style="font-size:0.78rem;font-weight:700;color:var(--slate);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.5rem">Description</div><div style="font-size:0.875rem;color:var(--white);line-height:1.6">' + esc(p.description) + '</div></div>';
+    }
+
+    // Attachments
+    if (p.attachments && p.attachments.length) {
+        detailHtml += '<div style="margin-top:1rem"><div style="font-size:0.78rem;font-weight:700;color:var(--slate);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.75rem">Attachments</div>' +
+            '<div style="display:flex;flex-wrap:wrap;gap:0.5rem">' +
+            p.attachments.map(function(a) {
+                var isImg = a.mimetype && a.mimetype.startsWith('image/');
+                var href  = 'http://localhost:5000' + a.url;
+                if (isImg) {
+                    return '<a href="' + href + '" target="_blank" style="display:block;width:80px;height:80px;border-radius:8px;overflow:hidden;border:1px solid var(--border)">' +
+                        '<img src="' + href + '" style="width:100%;height:100%;object-fit:cover" loading="lazy">' + '</a>';
+                }
+                return '<a href="' + href + '" target="_blank" class="cp-btn cp-btn-view" style="text-decoration:none;display:inline-flex;align-items:center;gap:0.35rem;font-size:0.75rem">' +
+                    '<i class="fas fa-file-alt"></i>' + esc(a.originalName) + '</a>';
+            }).join('') + '</div></div>';
+    }
+
+    detailHtml += '<div style="display:flex;gap:0.75rem;margin-top:1.5rem;flex-wrap:wrap">' +
+        '<button class="connect-send-btn" style="flex:1;min-width:140px;justify-content:center" onclick="closeProjDetail();connectFromProject(\'' + p._id + '\',\'' + esc(p.title) + '\')">' +
+            '<i class="fas fa-user-plus"></i> Find Architect</button>' +
+        '<button class="connect-cancel-btn" onclick="closeProjDetail();editClientProject(\'' + p._id + '\')">' +
+            '<i class="fas fa-edit"></i> Edit</button>' +
+    '</div>';
+
+    document.getElementById('pdBody').innerHTML = detailHtml;
+}
+
+function closeProjDetail(e) {
+    if (e && e.target !== document.getElementById('projDetailBackdrop')) return;
+    document.getElementById('projDetailBackdrop').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+async function editClientProject(id) {
+    try {
+        var r = await fetch(CLIENT_API + '/client/projects/' + id, { headers: authHeaders() });
+        var d = await r.json();
+        if (!d.success) throw new Error();
+        var p = d.data;
+        cpState = { step: 1, projectType: p.projectType, attachFiles: [], editingId: id };
+        resetWizardFields();
+        document.getElementById('wf-title').value       = p.title || '';
+        document.getElementById('wf-style').value       = p.style || '';
+        document.getElementById('wf-timeline').value    = p.timeline || 'flexible';
+        document.getElementById('wf-desc').value        = p.description || '';
+        document.getElementById('wf-desc-count').textContent = (p.description||'').length;
+        if (p.budget) {
+            if (p.budget.min) document.getElementById('wf-budgetMin').value = p.budget.min;
+            if (p.budget.max) document.getElementById('wf-budgetMax').value = p.budget.max;
+        }
+        if (p.landSize) {
+            if (p.landSize.value) document.getElementById('wf-landVal').value  = p.landSize.value;
+            if (p.landSize.unit)  document.getElementById('wf-landUnit').value = p.landSize.unit;
+        }
+        var req = p.requirements || {};
+        if (req.bedrooms)  document.getElementById('wf-bedrooms').value  = req.bedrooms;
+        if (req.bathrooms) document.getElementById('wf-bathrooms').value = req.bathrooms;
+        if (req.floors)    document.getElementById('wf-floors').value    = req.floors;
+        if (req.garage)    document.getElementById('wf-garage').checked  = true;
+        if (req.pool)      document.getElementById('wf-pool').checked    = true;
+        if (req.garden)    document.getElementById('wf-garden').checked  = true;
+        selectTypeByVal(p.projectType);
+        document.getElementById('wizardTitle').textContent   = 'Edit Project';
+        document.getElementById('wizardNextBtn').innerHTML   = 'Next <i class="fas fa-arrow-right"></i>';
+        goWizardStep(1);
+        document.getElementById('wizardBackdrop').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    } catch(e) {
+        showToast('Could not load project for editing.', 'error');
+    }
+}
+
+async function deleteClientProject(id) {
+    if (!confirm('Delete this project? This cannot be undone.')) return;
+    try {
+        var r = await fetch(CLIENT_API + '/client/projects/' + id, {
+            method: 'DELETE', headers: authHeaders()
+        });
+        var d = await r.json();
+        if (!d.success) throw new Error(d.message);
+        showToast('Project deleted.', 'success');
+        loadClientProjects();
+    } catch(e) {
+        showToast(e.message || 'Delete failed.', 'error');
+    }
+}
+
+/* ── Connect from project card ────────────────────────────────────────────── */
+function connectFromProject(projectId, projectTitle) {
+    // Pre-select this project in the connect modal and switch to architects view
+    cpState._pendingConnectProjectId    = projectId;
+    cpState._pendingConnectProjectTitle = projectTitle;
+    showView('architects');
+    showToast('Now pick an architect to connect — your project is pre-selected.', 'info');
+}
+
+/* ── Patch openConnectModal to honour pre-selected project ───────────────── */
+var _origOpenConnectModal = openConnectModal;
+openConnectModal = async function(archId, archName, archSpec, archAvatar) {
+    // If a project was pre-selected from the projects view, auto-select it
+    if (cpState._pendingConnectProjectId) {
+        connectState.architectId            = archId;
+        connectState.architectName          = archName;
+        connectState.selectedProjectId      = cpState._pendingConnectProjectId;
+        var pendingTitle                    = cpState._pendingConnectProjectTitle;
+        cpState._pendingConnectProjectId    = null;
+        cpState._pendingConnectProjectTitle = null;
+        // Call original but patch project list after it opens
+        await _origOpenConnectModal(archId, archName, archSpec, archAvatar);
+        // Pre-tick the matching radio button
+        var radios = document.querySelectorAll('input[name="connectProject"]');
+        radios.forEach(function(radio) {
+            if (radio.value === connectState.selectedProjectId) {
+                radio.checked = true;
+                selectConnectProject(radio.value);
+            }
+        });
+    } else {
+        await _origOpenConnectModal(archId, archName, archSpec, archAvatar);
+    }
+};
+
+/* ── Wire description char counter ──────────────────────────────────────────*/
+document.addEventListener('DOMContentLoaded', function() {
+    var desc = document.getElementById('wf-desc');
+    var cnt  = document.getElementById('wf-desc-count');
+    if (desc && cnt) desc.addEventListener('input', function() { cnt.textContent = desc.value.length; });
+});
+
 </script>
 </body>
 </html>

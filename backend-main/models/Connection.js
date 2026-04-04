@@ -1,0 +1,52 @@
+// backend-main/models/Connection.js
+// Tracks connect requests from clients to architects, and their chat messages.
+const mongoose = require('mongoose');
+
+const messageSchema = new mongoose.Schema({
+    sender:    { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    senderRole:{ type: String, enum: ['client', 'architect'], required: true },
+    text:      { type: String, required: true, trim: true, maxlength: 2000 },
+    readAt:    { type: Date, default: null }
+}, { timestamps: true });
+
+const connectionSchema = new mongoose.Schema({
+    client: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    architect: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    // Optional project context
+    project: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Project',
+        default: null
+    },
+    projectName: { type: String, default: '' },   // snapshot name for display
+
+    // The initial message the client sends when connecting
+    introMessage: { type: String, trim: true, maxlength: 1000, default: '' },
+
+    status: {
+        type: String,
+        enum: ['pending', 'accepted', 'rejected'],
+        default: 'pending'
+    },
+
+    // Chat — only visible/usable after status === 'accepted'
+    messages: [messageSchema],
+
+    // Unread counts for quick badge display
+    unreadByArchitect: { type: Number, default: 0 },
+    unreadByClient:    { type: Number, default: 0 }
+
+}, { timestamps: true });
+
+// One active connection per client-architect pair
+connectionSchema.index({ client: 1, architect: 1 }, { unique: true });
+
+module.exports = mongoose.model('Connection', connectionSchema);

@@ -107,7 +107,8 @@ function setupNavigation() {
                 settings:     'Settings',
                 messages:     'My Messages',
                 Guide:        'How to Use',
-                subscription: 'Subscription'
+                subscription: 'Subscription',
+                connections:  'Client Requests'
             };
             const headerEl = document.getElementById('headerTitle');
             if (headerEl) headerEl.textContent = headers[section] || section;
@@ -134,6 +135,9 @@ function setupNavigation() {
             }
             if (section === 'subscription') {
                 if (typeof loadSubscriptionStatus === 'function') loadSubscriptionStatus();
+            }
+            if (section === 'connections') {
+                if (typeof loadArchConnections === 'function') loadArchConnections();
             }
         });
     });
@@ -1725,3 +1729,285 @@ window.submitUserReply     = submitUserReply;
 window.handleReplyKeydown  = handleReplyKeydown;
 window.showChatListOnMobile= showChatListOnMobile;
 window.toggleTicketThread  = function(){};
+// ═══════════════════════════════════════════════════════════════════════════════
+// ARCHITECT — CLIENT CONNECTIONS FEATURE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const CONN_API = 'http://localhost:5000/api/connections';
+
+function connHeaders() {
+    const token = localStorage.getItem('token');
+    return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+}
+
+let activeArchChatId   = null;
+let archChatPollTimer  = null;
+
+// ── Load all connections for this architect ───────────────────────────────────
+async function loadArchConnections() {
+    const body = document.getElementById('archConnectionsBody');
+    if (!body) return;
+    body.innerHTML = '<div style="text-align:center;padding:3rem;color:#94a3b8"><i class="fas fa-spinner fa-spin" style="font-size:1.5rem"></i><div style="margin-top:1rem">Loading requests...</div></div>';
+
+    try {
+        const res  = await fetch(`${CONN_API}/my`, { headers: connHeaders() });
+        const data = await res.json();
+        if (!data.success) throw new Error();
+        renderArchConnections(data.data);
+        updateArchConnBadge(data.data);
+    } catch (e) {
+        body.innerHTML = '<div style="text-align:center;padding:3rem;color:#f43f5e"><i class="fas fa-exclamation-circle" style="font-size:1.5rem"></i><div style="margin-top:1rem">Could not load connections.</div></div>';
+    }
+}
+
+function updateArchConnBadge(conns) {
+    const badge   = document.getElementById('archConnBadge');
+    if (!badge) return;
+    const pending = conns.filter(c => c.status === 'pending').length;
+    const unread  = conns.filter(c => c.unreadByArchitect > 0 && c.status === 'accepted').length;
+    const total   = pending + unread;
+    if (total > 0) { badge.textContent = total; badge.style.display = 'inline-block'; }
+    else             badge.style.display = 'none';
+}
+
+function renderArchConnections(conns) {
+    const body = document.getElementById('archConnectionsBody');
+    if (!body) return;
+
+    if (!conns.length) {
+        body.innerHTML = `<div style="text-align:center;padding:4rem 2rem;color:#94a3b8">
+            <i class="fas fa-user-friends" style="font-size:2.5rem;color:rgba(139,92,246,0.3);display:block;margin-bottom:1rem"></i>
+            <div style="font-size:1.1rem;font-weight:700;color:#f1f5f9;margin-bottom:0.5rem">No connection requests yet</div>
+            <div style="font-size:0.875rem">Clients who want to work with you will appear here.</div>
+        </div>`;
+        return;
+    }
+
+    // Split into pending first, then accepted/rejected
+    const pending  = conns.filter(c => c.status === 'pending');
+    const accepted = conns.filter(c => c.status === 'accepted');
+    const rejected = conns.filter(c => c.status === 'rejected');
+    const ordered  = [...pending, ...accepted, ...rejected];
+
+    body.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem;">
+        ${ordered.map(c => archConnCardHtml(c)).join('')}
+    </div>`;
+}
+
+function archConnCardHtml(c) {
+    const client   = c.client || {};
+    const avatar   = client.avatar ||
+        `https://ui-avatars.com/api/?name=${encodeURIComponent(client.name||'C')}&background=00d4c8&color=060a12&bold=true`;
+    const projHtml = c.projectName
+        ? `<div style="font-size:0.78rem;color:#94a3b8;margin:0.4rem 0;display:flex;align-items:center;gap:0.35rem"><i class="fas fa-folder" style="font-size:0.65rem;color:#8b5cf6"></i>${escHtml(c.projectName)}</div>`
+        : '';
+    const introHtml = c.introMessage
+        ? `<div style="font-size:0.82rem;color:#94a3b8;font-style:italic;background:rgba(255,255,255,0.03);border-left:2px solid rgba(139,92,246,0.3);padding:0.5rem 0.65rem;border-radius:0 8px 8px 0;margin:0.5rem 0;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${escHtml(c.introMessage)}</div>`
+        : '';
+
+    const unreadBadge = c.unreadByArchitect > 0
+        ? `<span style="background:#ef4444;color:#fff;border-radius:20px;padding:1px 7px;font-size:0.68rem;font-weight:700;margin-left:0.35rem">${c.unreadByArchitect} new</span>`
+        : '';
+
+    let statusChip = '';
+    let actions    = '';
+
+    if (c.status === 'pending') {
+        statusChip = `<span style="display:inline-block;font-size:0.68rem;font-weight:700;padding:2px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:0.3px;background:rgba(245,158,11,0.12);color:#f59e0b;border:1px solid rgba(245,158,11,0.3)">Pending</span>`;
+        actions = `
+            <div style="display:flex;gap:0.65rem;margin-top:0.75rem">
+                <button onclick="respondToConnection('${c._id}','accept')"
+                    style="flex:1;padding:0.6rem;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-weight:700;font-size:0.82rem;border:none;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.4rem;transition:all 0.2s"
+                    onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">
+                    <i class="fas fa-check"></i> Accept
+                </button>
+                <button onclick="respondToConnection('${c._id}','reject')"
+                    style="flex:1;padding:0.6rem;background:rgba(244,63,94,0.1);color:#f43f5e;font-weight:700;font-size:0.82rem;border:1px solid rgba(244,63,94,0.25);border-radius:9px;cursor:pointer;transition:all 0.2s"
+                    onmouseover="this.style.background='rgba(244,63,94,0.2)'" onmouseout="this.style.background='rgba(244,63,94,0.1)'">
+                    <i class="fas fa-times"></i> Decline
+                </button>
+            </div>`;
+    } else if (c.status === 'accepted') {
+        statusChip = `<span style="display:inline-block;font-size:0.68rem;font-weight:700;padding:2px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:0.3px;background:rgba(16,185,129,0.12);color:#10b981;border:1px solid rgba(16,185,129,0.3)">Connected</span>`;
+        actions = `
+            <button onclick="openArchChatModal('${c._id}','${escHtml(client.name)}','${avatar}')"
+                style="width:100%;margin-top:0.75rem;padding:0.6rem;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-weight:700;font-size:0.85rem;border:none;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;transition:all 0.2s"
+                onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 18px rgba(16,185,129,0.3)'"
+                onmouseout="this.style.transform='';this.style.boxShadow=''">
+                <i class="fas fa-comments"></i> Chat ${unreadBadge}
+            </button>`;
+    } else {
+        statusChip = `<span style="display:inline-block;font-size:0.68rem;font-weight:700;padding:2px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:0.3px;background:rgba(244,63,94,0.1);color:#f43f5e;border:1px solid rgba(244,63,94,0.25)">Declined</span>`;
+        actions = `<div style="text-align:center;font-size:0.8rem;color:#f43f5e;padding:0.4rem;margin-top:0.5rem"><i class="fas fa-times-circle"></i> Request declined</div>`;
+    }
+
+    return `
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:1.25rem;transition:border-color 0.2s,transform 0.2s" onmouseover="this.style.borderColor='rgba(139,92,246,0.3)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.transform=''">
+        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem">
+            <img src="${avatar}" alt="${escHtml(client.name)}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid rgba(0,212,200,0.3);flex-shrink:0"
+                onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(client.name||'C')}&background=00d4c8&color=060a12&bold=true'">
+            <div>
+                <div style="font-weight:700;font-size:0.95rem;color:#f1f5f9">${escHtml(client.name)}</div>
+                <div style="font-size:0.78rem;color:#94a3b8">${escHtml(client.email || '')}</div>
+                ${statusChip}
+            </div>
+        </div>
+        ${projHtml}${introHtml}
+        ${actions}
+    </div>`;
+}
+
+// ── Accept / Reject ───────────────────────────────────────────────────────────
+async function respondToConnection(connId, action) {
+    try {
+        const res  = await fetch(`${CONN_API}/${connId}/respond`, {
+            method:  'PUT',
+            headers: connHeaders(),
+            body:    JSON.stringify({ action })
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message);
+
+        if (typeof showToast === 'function') {
+            showToast(action === 'accept' ? 'Connection accepted! Chat is now open.' : 'Request declined.', action === 'accept' ? 'success' : 'info');
+        }
+        // Reload the list
+        loadArchConnections();
+    } catch (err) {
+        if (typeof showToast === 'function') showToast(err.message || 'Action failed.', 'error');
+    }
+}
+
+// ── Architect Chat Modal ──────────────────────────────────────────────────────
+function openArchChatModal(connectionId, clientName, clientAvatar) {
+    activeArchChatId = connectionId;
+    const nameEl   = document.getElementById('archChatName');
+    const avatarEl = document.getElementById('archChatAvatar');
+    if (nameEl)   nameEl.textContent = clientName;
+    if (avatarEl) avatarEl.src       = clientAvatar;
+
+    const msgsEl = document.getElementById('archChatMessages');
+    if (msgsEl) msgsEl.innerHTML = '<div style="text-align:center;padding:2rem;color:#94a3b8"><i class="fas fa-spinner fa-spin"></i></div>';
+
+    const inputEl = document.getElementById('archChatInput');
+    if (inputEl) inputEl.value = '';
+
+    const backdrop = document.getElementById('archChatBackdrop');
+    if (backdrop) backdrop.classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    loadArchChatMessages();
+
+    clearInterval(archChatPollTimer);
+    archChatPollTimer = setInterval(loadArchChatMessages, 8000);
+}
+
+function closeArchChatModal(e) {
+    if (e && e.target !== document.getElementById('archChatBackdrop')) return;
+    const backdrop = document.getElementById('archChatBackdrop');
+    if (backdrop) backdrop.classList.remove('open');
+    document.body.style.overflow = '';
+    clearInterval(archChatPollTimer);
+    archChatPollTimer = null;
+    activeArchChatId  = null;
+    // Reload connection list to clear unread badge
+    loadArchConnections();
+}
+
+async function loadArchChatMessages() {
+    if (!activeArchChatId) return;
+    try {
+        const res  = await fetch(`${CONN_API}/${activeArchChatId}/messages`, { headers: connHeaders() });
+        const data = await res.json();
+        if (!data.success) return;
+        renderArchChatMessages(data.messages, data.connection);
+    } catch (e) {}
+}
+
+function renderArchChatMessages(messages, connection) {
+    const el = document.getElementById('archChatMessages');
+    if (!el) return;
+
+    let html = '';
+
+    // Show client's intro message at the top
+    if (connection && connection.introMessage) {
+        html += `<div style="display:flex;flex-direction:column;max-width:78%;align-self:flex-start;align-items:flex-start;margin-bottom:0.5rem">
+            <div style="padding:0.6rem 0.9rem;border-radius:14px 14px 14px 4px;font-size:0.875rem;line-height:1.5;background:rgba(255,255,255,0.07);color:#f1f5f9;word-break:break-word">${escHtml(connection.introMessage)}</div>
+            <div style="font-size:0.68rem;color:#64748b;margin-top:3px">Request message</div>
+        </div>`;
+    }
+
+    if (!messages || !messages.length) {
+        if (!connection || !connection.introMessage) {
+            el.innerHTML = '<div style="text-align:center;padding:2rem;color:#94a3b8">No messages yet. Reply to start the conversation!</div>';
+            return;
+        }
+        el.innerHTML = html + '<div style="text-align:center;color:#64748b;font-size:0.75rem;padding:0.75rem 0;border-top:1px dashed rgba(255,255,255,0.07);margin-top:0.5rem">Send a message to get started</div>';
+        return;
+    }
+
+    messages.forEach(m => {
+        const isSelf = m.senderRole === 'architect';
+        const time   = new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        html += `<div style="display:flex;flex-direction:column;max-width:78%;${isSelf ? 'align-self:flex-end;align-items:flex-end' : 'align-self:flex-start;align-items:flex-start'}">
+            <div style="padding:0.6rem 0.9rem;border-radius:${isSelf ? '14px 14px 4px 14px' : '14px 14px 14px 4px'};font-size:0.875rem;line-height:1.5;word-break:break-word;${isSelf ? 'background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#fff' : 'background:rgba(255,255,255,0.07);color:#f1f5f9'}">${escHtml(m.text)}</div>
+            <div style="font-size:0.68rem;color:#64748b;margin-top:3px">${time}</div>
+        </div>`;
+    });
+
+    el.innerHTML = `<div style="display:flex;flex-direction:column;gap:0.5rem">${html}</div>`;
+    el.scrollTop = el.scrollHeight;
+}
+
+async function sendArchChatMessage() {
+    if (!activeArchChatId) return;
+    const inputEl = document.getElementById('archChatInput');
+    const text    = (inputEl?.value || '').trim();
+    if (!text) return;
+
+    inputEl.value    = '';
+    inputEl.disabled = true;
+
+    try {
+        const res  = await fetch(`${CONN_API}/${activeArchChatId}/messages`, {
+            method:  'POST',
+            headers: connHeaders(),
+            body:    JSON.stringify({ text })
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message);
+        await loadArchChatMessages();
+    } catch (err) {
+        if (typeof showToast === 'function') showToast(err.message || 'Could not send.', 'error');
+        if (inputEl) inputEl.value = text;
+    } finally {
+        if (inputEl) { inputEl.disabled = false; inputEl.focus(); }
+    }
+}
+
+function handleArchChatKeydown(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendArchChatMessage(); }
+}
+
+// ── Poll architect badge on page load ─────────────────────────────────────────
+async function pollArchConnBadge() {
+    try {
+        const res  = await fetch(`${CONN_API}/my`, { headers: connHeaders() });
+        const data = await res.json();
+        if (data.success) updateArchConnBadge(data.data);
+    } catch (e) {}
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    pollArchConnBadge();
+    setInterval(pollArchConnBadge, 60000);
+});
+
+// ── Expose globals ────────────────────────────────────────────────────────────
+window.loadArchConnections  = loadArchConnections;
+window.respondToConnection  = respondToConnection;
+window.openArchChatModal    = openArchChatModal;
+window.closeArchChatModal   = closeArchChatModal;
+window.sendArchChatMessage  = sendArchChatMessage;
+window.handleArchChatKeydown= handleArchChatKeydown;

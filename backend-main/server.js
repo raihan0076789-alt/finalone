@@ -12,6 +12,9 @@ const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// Serve uploaded client-project files
+app.use('/uploads', require('express').static(require('path').join(__dirname, 'uploads')));
+
 const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:3000')
     .split(',')
     .map(o => o.trim())
@@ -41,6 +44,7 @@ app.use('/api/subscriptions',  require('./routes/subscriptionRoutes'));
 app.use('/api/ai',             require('./routes/aiChatRoutes'));       // AI chat proxy with plan guard
 app.use('/api/architect',     require('./routes/architectRoutes'));    // Architect profile (new)
 app.use('/api/client',        require('./routes/clientRoutes'));        // Client module (new)
+app.use('/api/connections',   require('./routes/connectionRoutes'));    // Connect feature
 
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
