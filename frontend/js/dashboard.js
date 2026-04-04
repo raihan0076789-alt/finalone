@@ -1758,6 +1758,7 @@ async function loadArchConnections() {
         const res  = await fetch(`${CONN_API}/my`, { headers: connHeaders() });
         const data = await res.json();
         if (!data.success) throw new Error();
+        window._archConnectionsCache = data.data;
         renderArchConnections(data.data);
         updateArchConnBadge(data.data);
     } catch (e) {
@@ -1800,66 +1801,397 @@ function renderArchConnections(conns) {
 }
 
 function archConnCardHtml(c) {
-    const client   = c.client || {};
-    const avatar   = client.avatar ||
-        `https://ui-avatars.com/api/?name=${encodeURIComponent(client.name||'C')}&background=00d4c8&color=060a12&bold=true`;
-    const projHtml = c.projectName
-        ? `<div style="font-size:0.78rem;color:#94a3b8;margin:0.4rem 0;display:flex;align-items:center;gap:0.35rem"><i class="fas fa-folder" style="font-size:0.65rem;color:#8b5cf6"></i>${escHtml(c.projectName)}</div>`
-        : '';
-    const introHtml = c.introMessage
-        ? `<div style="font-size:0.82rem;color:#94a3b8;font-style:italic;background:rgba(255,255,255,0.03);border-left:2px solid rgba(139,92,246,0.3);padding:0.5rem 0.65rem;border-radius:0 8px 8px 0;margin:0.5rem 0;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${escHtml(c.introMessage)}</div>`
-        : '';
+    const client = c.client || {};
+    const avatar = client.avatar ||
+        `https://ui-avatars.com/api/?name=${encodeURIComponent(client.name || 'C')}&background=00d4c8&color=060a12&bold=true`;
 
+    // ── Status chip ───────────────────────────────────────────────────────────
+    const statusStyles = {
+        pending:  { bg: 'rgba(245,158,11,0.12)',  color: '#f59e0b', border: 'rgba(245,158,11,0.3)',  label: 'Pending'   },
+        accepted: { bg: 'rgba(16,185,129,0.12)',  color: '#10b981', border: 'rgba(16,185,129,0.3)',  label: 'Connected' },
+        rejected: { bg: 'rgba(244,63,94,0.1)',    color: '#f43f5e', border: 'rgba(244,63,94,0.25)',  label: 'Declined'  },
+    };
+    const ss = statusStyles[c.status] || statusStyles.pending;
+    const statusChip = `<span style="display:inline-block;font-size:0.68rem;font-weight:700;padding:2px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:0.3px;background:${ss.bg};color:${ss.color};border:1px solid ${ss.border}">${ss.label}</span>`;
+
+    // ── Project banner (thumbnail strip matching .project-thumbnail style) ────
+    const proj = c.project || {};
+    const projTypeLabel = proj.type
+        ? proj.type.charAt(0).toUpperCase() + proj.type.slice(1)
+        : (c.projectName ? 'Project' : '');
+    const projectBanner = c.projectName ? `
+        <div style="background:linear-gradient(135deg,rgba(0,212,200,0.13) 0%,rgba(99,102,241,0.13) 100%);border-bottom:1px solid rgba(255,255,255,0.07);padding:0.75rem 1.1rem;display:flex;align-items:center;gap:0.6rem;">
+            <div style="width:32px;height:32px;border-radius:8px;background:rgba(0,212,200,0.12);border:1px solid rgba(0,212,200,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="fas fa-folder-open" style="color:#00d4c8;font-size:0.85rem;"></i>
+            </div>
+            <div style="min-width:0;">
+                <div style="font-size:0.82rem;font-weight:700;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(c.projectName)}</div>
+                ${projTypeLabel ? `<div style="font-size:0.7rem;color:#64748b;text-transform:capitalize;">${escHtml(projTypeLabel)}</div>` : ''}
+            </div>
+            <button onclick="openConnDetailModal('${c._id}')" title="View full project details"
+                style="margin-left:auto;flex-shrink:0;padding:4px 10px;background:rgba(99,102,241,0.12);color:#818cf8;font-size:0.72rem;font-weight:600;border:1px solid rgba(99,102,241,0.25);border-radius:7px;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:0.3rem;transition:all 0.2s;"
+                onmouseover="this.style.background='rgba(99,102,241,0.22)';this.style.color='#a5b4fc';"
+                onmouseout="this.style.background='rgba(99,102,241,0.12)';this.style.color='#818cf8';">
+                <i class="fas fa-expand-alt" style="font-size:0.65rem;"></i> View Details
+            </button>
+        </div>` : '';
+
+    // ── Description (intro message, 2-line clamp matching .project-info > p) ──
+    const descHtml = c.introMessage ? `
+        <div style="font-size:0.82rem;color:#64748b;line-height:1.5;margin:0.6rem 0 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
+            <i class="fas fa-quote-left" style="font-size:0.6rem;color:rgba(139,92,246,0.4);margin-right:0.3rem;"></i>${escHtml(c.introMessage)}
+        </div>` : '';
+
+    // ── Unread badge ──────────────────────────────────────────────────────────
     const unreadBadge = c.unreadByArchitect > 0
-        ? `<span style="background:#ef4444;color:#fff;border-radius:20px;padding:1px 7px;font-size:0.68rem;font-weight:700;margin-left:0.35rem">${c.unreadByArchitect} new</span>`
+        ? `<span style="background:#ef4444;color:#fff;border-radius:20px;padding:1px 7px;font-size:0.68rem;font-weight:700;margin-left:0.35rem;">${c.unreadByArchitect} new</span>`
         : '';
 
-    let statusChip = '';
-    let actions    = '';
-
+    // ── Action buttons ────────────────────────────────────────────────────────
+    let actions = '';
     if (c.status === 'pending') {
-        statusChip = `<span style="display:inline-block;font-size:0.68rem;font-weight:700;padding:2px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:0.3px;background:rgba(245,158,11,0.12);color:#f59e0b;border:1px solid rgba(245,158,11,0.3)">Pending</span>`;
         actions = `
-            <div style="display:flex;gap:0.65rem;margin-top:0.75rem">
+            <div style="display:flex;gap:0.6rem;padding-top:0.875rem;border-top:1px solid rgba(255,255,255,0.07);">
                 <button onclick="respondToConnection('${c._id}','accept')"
-                    style="flex:1;padding:0.6rem;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-weight:700;font-size:0.82rem;border:none;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.4rem;transition:all 0.2s"
-                    onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">
+                    style="flex:1;padding:0.55rem 0;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-weight:700;font-size:0.82rem;border:none;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.4rem;transition:all 0.2s;"
+                    onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 16px rgba(16,185,129,0.3)';"
+                    onmouseout="this.style.transform='';this.style.boxShadow='';">
                     <i class="fas fa-check"></i> Accept
                 </button>
                 <button onclick="respondToConnection('${c._id}','reject')"
-                    style="flex:1;padding:0.6rem;background:rgba(244,63,94,0.1);color:#f43f5e;font-weight:700;font-size:0.82rem;border:1px solid rgba(244,63,94,0.25);border-radius:9px;cursor:pointer;transition:all 0.2s"
-                    onmouseover="this.style.background='rgba(244,63,94,0.2)'" onmouseout="this.style.background='rgba(244,63,94,0.1)'">
+                    style="flex:1;padding:0.55rem 0;background:rgba(244,63,94,0.08);color:#f43f5e;font-weight:700;font-size:0.82rem;border:1px solid rgba(244,63,94,0.25);border-radius:9px;cursor:pointer;transition:all 0.2s;"
+                    onmouseover="this.style.background='rgba(244,63,94,0.18)';"
+                    onmouseout="this.style.background='rgba(244,63,94,0.08)';">
                     <i class="fas fa-times"></i> Decline
                 </button>
             </div>`;
     } else if (c.status === 'accepted') {
-        statusChip = `<span style="display:inline-block;font-size:0.68rem;font-weight:700;padding:2px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:0.3px;background:rgba(16,185,129,0.12);color:#10b981;border:1px solid rgba(16,185,129,0.3)">Connected</span>`;
         actions = `
-            <button onclick="openArchChatModal('${c._id}','${escHtml(client.name)}','${avatar}')"
-                style="width:100%;margin-top:0.75rem;padding:0.6rem;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-weight:700;font-size:0.85rem;border:none;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;transition:all 0.2s"
-                onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 18px rgba(16,185,129,0.3)'"
-                onmouseout="this.style.transform='';this.style.boxShadow=''">
-                <i class="fas fa-comments"></i> Chat ${unreadBadge}
-            </button>`;
+            <div style="padding-top:0.875rem;border-top:1px solid rgba(255,255,255,0.07);">
+                <button onclick="openArchChatModal('${c._id}','${escHtml(client.name)}','${avatar}')"
+                    style="width:100%;padding:0.55rem;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-weight:700;font-size:0.85rem;border:none;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;transition:all 0.2s;"
+                    onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 18px rgba(16,185,129,0.3)';"
+                    onmouseout="this.style.transform='';this.style.boxShadow='';">
+                    <i class="fas fa-comments"></i> Chat ${unreadBadge}
+                </button>
+            </div>`;
     } else {
-        statusChip = `<span style="display:inline-block;font-size:0.68rem;font-weight:700;padding:2px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:0.3px;background:rgba(244,63,94,0.1);color:#f43f5e;border:1px solid rgba(244,63,94,0.25)">Declined</span>`;
-        actions = `<div style="text-align:center;font-size:0.8rem;color:#f43f5e;padding:0.4rem;margin-top:0.5rem"><i class="fas fa-times-circle"></i> Request declined</div>`;
+        actions = `
+            <div style="padding-top:0.875rem;border-top:1px solid rgba(255,255,255,0.07);text-align:center;font-size:0.8rem;color:#f43f5e;">
+                <i class="fas fa-times-circle"></i> Request declined
+            </div>`;
     }
 
     return `
-    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:1.25rem;transition:border-color 0.2s,transform 0.2s" onmouseover="this.style.borderColor='rgba(139,92,246,0.3)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.transform=''">
-        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem">
-            <img src="${avatar}" alt="${escHtml(client.name)}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid rgba(0,212,200,0.3);flex-shrink:0"
-                onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(client.name||'C')}&background=00d4c8&color=060a12&bold=true'">
-            <div>
-                <div style="font-weight:700;font-size:0.95rem;color:#f1f5f9">${escHtml(client.name)}</div>
-                <div style="font-size:0.78rem;color:#94a3b8">${escHtml(client.email || '')}</div>
-                ${statusChip}
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:var(--r-lg,14px);overflow:hidden;transition:all 0.25s cubic-bezier(0.22,1,0.36,1);"
+        onmouseover="this.style.transform='translateY(-4px)';this.style.borderColor='rgba(0,212,200,0.2)';this.style.background='rgba(0,212,200,0.03)';this.style.boxShadow='0 20px 60px rgba(0,0,0,0.4),0 0 30px rgba(0,212,200,0.05)';"
+        onmouseout="this.style.transform='';this.style.borderColor='rgba(255,255,255,0.07)';this.style.background='rgba(255,255,255,0.04)';this.style.boxShadow='';">
+
+        ${projectBanner}
+
+        <div style="padding:1rem 1.1rem 1.1rem;">
+            <!-- Client identity row -->
+            <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.6rem;">
+                <img src="${avatar}" alt="${escHtml(client.name)}"
+                    style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid rgba(0,212,200,0.3);flex-shrink:0;"
+                    onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(client.name||'C')}&background=00d4c8&color=060a12&bold=true'">
+                <div style="min-width:0;">
+                    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(client.name)}</div>
+                    <div style="font-size:0.75rem;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(client.email || '')}</div>
+                </div>
+                <div style="margin-left:auto;flex-shrink:0;">${statusChip}</div>
             </div>
+
+            ${descHtml}
+            ${actions}
         </div>
-        ${projHtml}${introHtml}
-        ${actions}
     </div>`;
+}
+
+// ── Connection Detail Modal ───────────────────────────────────────────────────
+// Opens the full project-brief modal for a connection.
+// Shows a loading skeleton immediately, then fetches the full ClientProject
+// brief from the new /api/connections/:id/project-brief endpoint.
+async function openConnDetailModal(connId) {
+    const backdrop = document.getElementById('connDetailBackdrop');
+    const body     = document.getElementById('connDetailBody');
+    if (!backdrop || !body) return;
+
+    // ── Find base connection from cache ───────────────────────────────────────
+    const cached = window._archConnectionsCache || [];
+    const c = cached.find(x => String(x._id) === String(connId));
+    if (!c) return;
+
+    const client = c.client || {};
+    const avatar = client.avatar ||
+        `https://ui-avatars.com/api/?name=${encodeURIComponent(client.name || 'C')}&background=00d4c8&color=060a12&bold=true`;
+
+    // ── Open modal with skeleton loader ───────────────────────────────────────
+    body.innerHTML = _connDetailHeader(c, client, avatar, null) + `
+        <div style="flex:1;overflow-y:auto;padding:1.5rem;">
+            ${_skeletonRows(6)}
+        </div>`;
+    backdrop.classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    // ── Fetch full brief ──────────────────────────────────────────────────────
+    // Trigger on projectName — c.project is null because Connection.project has
+    // ref:'Project' but stores a ClientProject ObjectId, so mongoose populate
+    // silently returns null. The backend resolves via name-snapshot fallback.
+    let brief = null;
+    if (c.projectName) {
+        try {
+            const res  = await fetch(`${CONN_API}/${connId}/project-brief`, { headers: connHeaders() });
+            const data = await res.json();
+            if (data.success) brief = data.data;
+        } catch (e) { /* network error — render without brief */ }
+    }
+
+    // ── Re-render with full data ──────────────────────────────────────────────
+    body.innerHTML = _connDetailHeader(c, client, avatar, brief) +
+        `<div style="flex:1;overflow-y:auto;padding:0 1.5rem 1.5rem;" id="connDetailScroll">
+            ${_briefBody(c, client, avatar, brief)}
+        </div>`;
+}
+
+// ── Sub-renderers ─────────────────────────────────────────────────────────────
+
+function _connDetailHeader(c, client, avatar, brief) {
+    const statusColor  = c.status === 'pending' ? '#f59e0b' : c.status === 'accepted' ? '#10b981' : '#f43f5e';
+    const statusLabel  = c.status === 'pending' ? 'Pending' : c.status === 'accepted' ? 'Connected' : 'Declined';
+    const statusBorder = c.status === 'pending' ? 'rgba(245,158,11,0.3)' : c.status === 'accepted' ? 'rgba(16,185,129,0.3)' : 'rgba(244,63,94,0.3)';
+    const statusBg     = c.status === 'pending' ? 'rgba(245,158,11,0.1)' : c.status === 'accepted' ? 'rgba(16,185,129,0.1)' : 'rgba(244,63,94,0.1)';
+
+    // Resolve project type: prefer ClientProject.projectType, fallback to Project.type, fallback to null
+    const projType = (brief && (brief.projectType || brief.type)) || null;
+    const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+
+    return `
+        <div style="position:relative;padding:1.5rem 1.5rem 1.25rem;background:linear-gradient(135deg,rgba(0,212,200,0.08) 0%,rgba(99,102,241,0.08) 100%);border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0;">
+            <!-- close -->
+            <button onclick="closeConnDetailModal()"
+                style="position:absolute;top:1rem;right:1rem;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#64748b;width:30px;height:30px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.85rem;transition:all 0.2s;z-index:1;"
+                onmouseover="this.style.background='rgba(255,255,255,0.13)';this.style.color='#f1f5f9';"
+                onmouseout="this.style.background='rgba(255,255,255,0.07)';this.style.color='#64748b';">
+                <i class="fas fa-times"></i>
+            </button>
+            <!-- client identity -->
+            <div style="display:flex;align-items:center;gap:0.875rem;margin-bottom:0.875rem;">
+                <img src="${avatar}" alt="${escHtml(client.name)}"
+                    style="width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid rgba(0,212,200,0.35);flex-shrink:0;"
+                    onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(client.name||'C')}&background=00d4c8&color=060a12&bold=true'">
+                <div style="min-width:0;">
+                    <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;color:#f1f5f9;letter-spacing:-0.2px;">${escHtml(client.name)}</div>
+                    <div style="font-size:0.75rem;color:#64748b;margin-top:1px;">${escHtml(client.email || '')}</div>
+                </div>
+            </div>
+            <!-- project title + type + status row -->
+            ${c.projectName ? `
+            <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+                <span style="font-family:'Syne',sans-serif;font-size:1.15rem;font-weight:800;color:#f1f5f9;letter-spacing:-0.3px;">${escHtml(c.projectName)}</span>
+                ${projType ? `<span style="font-size:0.72rem;color:#94a3b8;font-weight:500;text-transform:capitalize;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:2px 8px;">${escHtml(cap(projType))}</span>` : ''}
+                <span style="font-size:0.68rem;font-weight:700;padding:2px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:0.4px;background:${statusBg};color:${statusColor};border:1px solid ${statusBorder};margin-left:auto;">${statusLabel}</span>
+            </div>` : `
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-size:0.82rem;color:#64748b;font-style:italic;">No project attached</span>
+                <span style="font-size:0.68rem;font-weight:700;padding:2px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:0.4px;background:${statusBg};color:${statusColor};border:1px solid ${statusBorder};">${statusLabel}</span>
+            </div>`}
+        </div>`;
+}
+
+function _briefBody(c, client, avatar, brief) {
+    const MAIN_API = 'http://localhost:5000';
+
+    // ── Reusable table row ────────────────────────────────────────────────────
+    const trow = (label, value) => (value !== null && value !== undefined && value !== '')
+        ? `<div style="display:grid;grid-template-columns:130px 1fr;align-items:baseline;padding:0.7rem 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+               <span style="font-size:0.68rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.6px;">${label}</span>
+               <span style="font-size:0.875rem;color:#e2e8f0;font-weight:500;">${value}</span>
+           </div>`
+        : '';
+
+    // ── Section heading ───────────────────────────────────────────────────────
+    const sectionHead = (icon, title, color = '#00d4c8') =>
+        `<div style="display:flex;align-items:center;gap:0.5rem;margin:1.25rem 0 0.5rem;padding-bottom:0.4rem;border-bottom:1px solid rgba(255,255,255,0.06);">
+             <i class="${icon}" style="color:${color};font-size:0.8rem;"></i>
+             <span style="font-size:0.68rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.6px;">${title}</span>
+         </div>`;
+
+    // ── Format helpers ────────────────────────────────────────────────────────
+    const cap   = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+    const fmtBudget = b => {
+        if (!b || (b.min == null && b.max == null)) return null;
+        const sym = b.currency === 'INR' ? '₹' : '$';
+        const fmt = n => n >= 10000000 ? sym + (n/10000000).toFixed(1) + 'Cr'
+                       : n >= 100000   ? sym + (n/100000).toFixed(1)   + 'L'
+                       : sym + n.toLocaleString('en-IN');
+        if (b.min != null && b.max != null) return `${fmt(b.min)} – ${fmt(b.max)}`;
+        if (b.min != null) return `From ${fmt(b.min)}`;
+        return `Up to ${fmt(b.max)}`;
+    };
+    const fmtTimeline = t => ({
+        'asap':'ASAP', '1-3months':'1–3 Months', '3-6months':'3–6 Months',
+        '6-12months':'6–12 Months', 'flexible':'Flexible'
+    }[t] || cap(t));
+    const fmtLand = ls => ls && ls.value ? `${ls.value.toLocaleString()} ${ls.unit ? ls.unit.toUpperCase() : ''}` : null;
+
+    let html = '';
+
+    if (!brief) {
+        // ── No ClientProject found — show connection-level info only ──────────
+        html += sectionHead('fas fa-info-circle', 'Request Info');
+        html += `<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:0 0.875rem;">`;
+        html += trow('Requested', c.createdAt ? new Date(c.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : '—');
+        if (c.unreadByArchitect > 0) html += trow('Unread', `<span style="color:#ef4444;font-weight:700;">${c.unreadByArchitect} new message${c.unreadByArchitect > 1 ? 's' : ''}</span>`);
+        html += `</div>`;
+
+        if (c.introMessage) {
+            html += sectionHead('fas fa-comment-alt', 'Message from Client');
+            html += `<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-left:3px solid rgba(0,212,200,0.4);border-radius:0 12px 12px 0;padding:0.875rem 1rem;">
+                <p style="font-size:0.875rem;color:#94a3b8;line-height:1.65;margin:0;font-style:italic;">${escHtml(c.introMessage)}</p>
+            </div>`;
+        }
+    } else {
+        // ── Full ClientProject brief ──────────────────────────────────────────
+
+        // 1. Overview table
+        html += sectionHead('fas fa-clipboard-list', 'Project Overview', '#00d4c8');
+        html += `<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:0 0.875rem;">`;
+        html += trow('Type',     cap(brief.projectType));
+        html += trow('Status',   `<span style="color:${brief.status==='active'?'#10b981':brief.status==='in_progress'?'#f59e0b':'#94a3b8'};font-weight:600;">${cap(brief.status?.replace(/_/g,' ') || '')}</span>`);
+        html += trow('Budget',   fmtBudget(brief.budget));
+        html += trow('Land Size',fmtLand(brief.landSize));
+        html += trow('Style',    cap(brief.style));
+        html += trow('Timeline', brief.timeline ? fmtTimeline(brief.timeline) : null);
+        html += `</div>`;
+
+        // 2. Space requirements
+        const req = brief.requirements || {};
+        const hasReqs = req.bedrooms || req.bathrooms || req.floors;
+        if (hasReqs) {
+            html += sectionHead('fas fa-th-large', 'Space Requirements', '#8b5cf6');
+            html += `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.6rem;">`;
+            const statBox = (icon, label, val, color) => val
+                ? `<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:0.75rem 0.625rem;text-align:center;">
+                       <i class="${icon}" style="color:${color};font-size:1rem;display:block;margin-bottom:0.35rem;"></i>
+                       <div style="font-size:1.1rem;font-weight:800;color:#f1f5f9;font-family:'Syne',sans-serif;">${val}</div>
+                       <div style="font-size:0.65rem;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;margin-top:2px;">${label}</div>
+                   </div>`
+                : '';
+            html += statBox('fas fa-bed',        'Bedrooms',  req.bedrooms,  '#818cf8');
+            html += statBox('fas fa-bath',       'Bathrooms', req.bathrooms, '#22d3ee');
+            html += statBox('fas fa-layer-group','Floors',    req.floors,    '#a78bfa');
+            html += `</div>`;
+        }
+
+        // 3. Extras (garage, pool, garden)
+        const extras = [];
+        if (req.garage) extras.push({ icon: 'fas fa-car',     label: 'Garage' });
+        if (req.pool)   extras.push({ icon: 'fas fa-swimming-pool', label: 'Pool' });
+        if (req.garden) extras.push({ icon: 'fas fa-leaf',    label: 'Garden' });
+        if (extras.length) {
+            html += sectionHead('fas fa-star', 'Extras', '#f59e0b');
+            html += `<div style="display:flex;gap:0.5rem;flex-wrap:wrap;">`;
+            extras.forEach(e => {
+                html += `<span style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.35rem 0.75rem;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:8px;font-size:0.8rem;color:#fbbf24;font-weight:600;">
+                    <i class="${e.icon}" style="font-size:0.72rem;"></i>${e.label}
+                </span>`;
+            });
+            html += `</div>`;
+        }
+
+        // 4. Description
+        if (brief.description) {
+            html += sectionHead('fas fa-align-left', 'Description', '#00d4c8');
+            html += `<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-left:3px solid rgba(0,212,200,0.35);border-radius:0 10px 10px 0;padding:0.875rem 1rem;">
+                <p style="font-size:0.875rem;color:#94a3b8;line-height:1.65;margin:0;">${escHtml(brief.description)}</p>
+            </div>`;
+        }
+
+        // 5. Client intro message
+        if (c.introMessage) {
+            html += sectionHead('fas fa-comment-alt', 'Message from Client', '#00d4c8');
+            html += `<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-left:3px solid rgba(139,92,246,0.4);border-radius:0 10px 10px 0;padding:0.875rem 1rem;">
+                <p style="font-size:0.875rem;color:#94a3b8;line-height:1.65;margin:0;font-style:italic;">${escHtml(c.introMessage)}</p>
+            </div>`;
+        }
+
+        // 6. Attachments
+        if (brief.attachments && brief.attachments.length) {
+            html += sectionHead('fas fa-paperclip', `Attachments (${brief.attachments.length})`, '#64748b');
+            html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:0.6rem;">`;
+            brief.attachments.forEach(att => {
+                const url  = `${MAIN_API}${att.url}`;
+                const isImg = att.mimetype && att.mimetype.startsWith('image/');
+                html += `<a href="${url}" target="_blank" rel="noopener"
+                    style="display:block;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.03);transition:border-color 0.2s;text-decoration:none;aspect-ratio:1;"
+                    onmouseover="this.style.borderColor='rgba(0,212,200,0.35)';"
+                    onmouseout="this.style.borderColor='rgba(255,255,255,0.1)';">
+                    ${isImg
+                        ? `<img src="${url}" alt="${escHtml(att.originalName)}" style="width:100%;height:100%;object-fit:cover;display:block;"
+                               onerror="this.parentElement.innerHTML='<div style=\\'width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:8px;\\'><i class=\\'fas fa-file\\' style=\\'color:#475569;font-size:1.25rem;\\'></i><span style=\\'font-size:0.6rem;color:#475569;text-align:center;word-break:break-all;\\'>${escHtml(att.originalName)}</span></div>'">`
+                        : `<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:8px;">
+                               <i class="fas fa-file-alt" style="color:#475569;font-size:1.25rem;"></i>
+                               <span style="font-size:0.6rem;color:#475569;text-align:center;word-break:break-all;line-clamp:2;">${escHtml(att.originalName)}</span>
+                           </div>`
+                    }
+                </a>`;
+            });
+            html += `</div>`;
+        }
+    }
+
+    // ── CTA footer ────────────────────────────────────────────────────────────
+    let cta = '';
+    if (c.status === 'pending') {
+        cta = `
+            <div style="display:flex;gap:0.75rem;margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid rgba(255,255,255,0.07);">
+                <button onclick="respondToConnection('${c._id}','accept');closeConnDetailModal();"
+                    style="flex:1;padding:0.7rem;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-weight:700;font-size:0.875rem;border:none;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;transition:all 0.2s;"
+                    onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 20px rgba(16,185,129,0.35)';"
+                    onmouseout="this.style.transform='';this.style.boxShadow='';">
+                    <i class="fas fa-check"></i> Accept Request
+                </button>
+                <button onclick="respondToConnection('${c._id}','reject');closeConnDetailModal();"
+                    style="flex:1;padding:0.7rem;background:rgba(244,63,94,0.08);color:#f43f5e;font-weight:700;font-size:0.875rem;border:1px solid rgba(244,63,94,0.25);border-radius:10px;cursor:pointer;transition:all 0.2s;"
+                    onmouseover="this.style.background='rgba(244,63,94,0.18)';"
+                    onmouseout="this.style.background='rgba(244,63,94,0.08)';">
+                    <i class="fas fa-times"></i> Decline
+                </button>
+            </div>`;
+    } else if (c.status === 'accepted') {
+        cta = `
+            <div style="margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid rgba(255,255,255,0.07);">
+                <button onclick="openArchChatModal('${c._id}','${escHtml(client.name)}','${avatar}');closeConnDetailModal();"
+                    style="width:100%;padding:0.7rem;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-weight:700;font-size:0.875rem;border:none;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;transition:all 0.2s;"
+                    onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 20px rgba(16,185,129,0.3)';"
+                    onmouseout="this.style.transform='';this.style.boxShadow='';">
+                    <i class="fas fa-comments"></i> Open Chat
+                </button>
+            </div>`;
+    }
+
+    return html + cta;
+}
+
+// ── Skeleton loader rows ──────────────────────────────────────────────────────
+function _skeletonRows(n) {
+    const pulse = `animation:connSkeletonPulse 1.4s ease-in-out infinite;`;
+    let rows = '';
+    for (let i = 0; i < n; i++) {
+        const w = [65, 80, 55, 70, 60, 75][i % 6];
+        rows += `<div style="display:grid;grid-template-columns:130px 1fr;gap:0.5rem;padding:0.7rem 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+            <div style="height:11px;border-radius:4px;background:rgba(255,255,255,0.06);width:70%;${pulse}"></div>
+            <div style="height:11px;border-radius:4px;background:rgba(255,255,255,0.08);width:${w}%;${pulse}"></div>
+        </div>`;
+    }
+    return `<div style="margin-top:1rem;">${rows}</div>`;
+}
+
+function closeConnDetailModal() {
+    const backdrop = document.getElementById('connDetailBackdrop');
+    if (backdrop) backdrop.classList.remove('open');
+    document.body.style.overflow = '';
 }
 
 // ── Accept / Reject ───────────────────────────────────────────────────────────
@@ -2016,3 +2348,5 @@ window.openArchChatModal    = openArchChatModal;
 window.closeArchChatModal   = closeArchChatModal;
 window.sendArchChatMessage  = sendArchChatMessage;
 window.handleArchChatKeydown= handleArchChatKeydown;
+window.openConnDetailModal  = openConnDetailModal;
+window.closeConnDetailModal = closeConnDetailModal;

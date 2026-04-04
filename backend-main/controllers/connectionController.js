@@ -204,3 +204,64 @@ exports.sendMessage = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error.' });
     }
 };
+
+// ─── GET /api/connections/:id/project-brief ───────────────────────────────────
+// Architect fetches the full ClientProject brief attached to a connection.
+// Only the architect party of the connection may call this.
+//
+// NOTE: Connection.project has ref:'Project' (architect model) but the stored
+// ObjectId is actually a ClientProject ID when the client attaches their brief.
+// We therefore skip mongoose populate and query both models directly by _id.
+// If the raw ObjectId misses both models we fall back to matching ClientProject
+// by (client + title) using the projectName snapshot stored on the connection.
+exports.getProjectBrief = async (req, res) => {
+    try {
+        // Use lean() so conn.project is a raw ObjectId, not null from a failed populate
+        const conn = await Connection.findById(req.params.id)
+            .select('architect client project projectName')
+            .lean();
+
+        if (!conn) {
+            return res.status(404).json({ success: false, message: 'Connection not found.' });
+        }
+
+        // Only the architect on this connection can read the brief
+        if (String(conn.architect) !== String(req.user._id)) {
+            return res.status(403).json({ success: false, message: 'Not authorized.' });
+        }
+
+        const ClientProject = require('../models/ClientProject');
+
+        // ── 1. Try ClientProject by stored ObjectId ───────────────────────────
+        if (conn.project) {
+            const brief = await ClientProject.findById(conn.project)
+                .select('-__v -linkedConnection');
+            if (brief) {
+                return res.json({ success: true, source: 'client', data: brief });
+            }
+
+            // ── 2. Try architect Project model by same ObjectId ───────────────
+            const proj = await Project.findById(conn.project)
+                .select('name type status description metadata floors totalWidth totalDepth');
+            if (proj) {
+                return res.json({ success: true, source: 'architect', data: proj });
+            }
+        }
+
+        // ── 3. Fallback: match ClientProject by client + title snapshot ───────
+        if (conn.projectName && conn.client) {
+            const brief = await ClientProject.findOne({
+                client: conn.client,
+                title:  conn.projectName
+            }).select('-__v -linkedConnection');
+            if (brief) {
+                return res.json({ success: true, source: 'client', data: brief });
+            }
+        }
+
+        return res.status(404).json({ success: false, message: 'Project details not found.' });
+    } catch (err) {
+        console.error('getProjectBrief error:', err);
+        res.status(500).json({ success: false, message: 'Server error.' });
+    }
+};

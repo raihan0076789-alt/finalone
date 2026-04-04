@@ -8,7 +8,8 @@ const {
     getMyConnections,
     respondToRequest,
     getMessages,
-    sendMessage
+    sendMessage,
+    getProjectBrief
 } = require('../controllers/connectionController');
 
 // ── Client routes ──────────────────────────────────────────────────────────────
@@ -24,6 +25,9 @@ router.get('/my', protect, authorize('client', 'architect'), getMyConnections);
 
 // Architect accepts or rejects
 router.put('/:id/respond', protect, authorize('architect'), respondToRequest);
+
+// Architect fetches full project brief for a connection
+router.get('/:id/project-brief', protect, authorize('architect'), getProjectBrief);
 
 // Chat
 router.get('/:id/messages',  protect, authorize('client', 'architect'), getMessages);
