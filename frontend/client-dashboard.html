@@ -5,367 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SmartArch — Client Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-        :root {
-            --ink:      #060a12;
-            --ink-2:    #0d1424;
-            --ink-3:    #111827;
-            --violet:   #8b5cf6;
-            --v-glow:   rgba(139,92,246,0.25);
-            --cyan:     #00d4c8;
-            --amber:    #f59e0b;
-            --slate:    #94a3b8;
-            --slate-2:  #64748b;
-            --white:    #f1f5f9;
-            --border:   rgba(255,255,255,0.07);
-            --card-bg:  rgba(255,255,255,0.04);
-            --sidebar-w: 260px;
-            --topbar-h:  64px;
-            --r:         12px;
-            --r-lg:      18px;
-        }
-
-        html { scroll-behavior: smooth; }
-
-        body {
-            font-family: 'Outfit', sans-serif;
-            background: var(--ink);
-            color: var(--white);
-            overflow-x: hidden;
-            min-height: 100vh;
-        }
-
-        body::before {
-            content: '';
-            position: fixed; inset: 0; z-index: 0; pointer-events: none;
-            background-image:
-                linear-gradient(rgba(139,92,246,0.015) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(139,92,246,0.015) 1px, transparent 1px);
-            background-size: 60px 60px;
-        }
-
-        /* ── SIDEBAR ──────────────────────────────────────────────────── */
-        .sidebar {
-            position: fixed; left: 0; top: 0; bottom: 0;
-            width: var(--sidebar-w);
-            background: rgba(6,10,18,0.95);
-            border-right: 1px solid var(--border);
-            display: flex; flex-direction: column;
-            z-index: 200;
-            backdrop-filter: blur(20px);
-            transition: transform 0.3s ease;
-        }
-
-        .sidebar-header {
-            padding: 1.25rem 1.5rem;
-            border-bottom: 1px solid var(--border);
-            display: flex; align-items: center; gap: 0.75rem;
-        }
-
-        .sidebar-logo {
-            width: 36px; height: 36px;
-            background: linear-gradient(135deg, var(--violet), #6d28d9);
-            border-radius: 9px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 0.95rem; color: #fff;
-            box-shadow: 0 0 18px rgba(139,92,246,0.3);
-            flex-shrink: 0;
-        }
-
-        .sidebar-brand {
-            font-family: 'Syne', sans-serif;
-            font-weight: 800; font-size: 1rem;
-            color: var(--white); letter-spacing: -0.3px;
-        }
-        .sidebar-brand em { font-style: normal; color: var(--cyan); }
-
-        .sidebar-role {
-            display: inline-flex; align-items: center; gap: 4px;
-            background: rgba(139,92,246,0.1);
-            border: 1px solid rgba(139,92,246,0.2);
-            color: var(--violet);
-            padding: 1px 8px; border-radius: 20px;
-            font-size: 0.6rem; font-weight: 700;
-            letter-spacing: 1px; text-transform: uppercase;
-            margin-top: 1px;
-        }
-
-        .sidebar-user {
-            padding: 1rem 1.25rem;
-            border-bottom: 1px solid var(--border);
-            display: flex; align-items: center; gap: 0.75rem;
-        }
-        .sidebar-avatar {
-            width: 38px; height: 38px; border-radius: 50%;
-            border: 2px solid rgba(139,92,246,0.4);
-            object-fit: cover; flex-shrink: 0;
-        }
-        .sidebar-user-info { overflow: hidden; }
-        .sidebar-user-name { font-size: 0.875rem; font-weight: 600; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .sidebar-user-email { font-size: 0.72rem; color: var(--slate); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-        .sidebar-nav { flex: 1; padding: 1rem 0.75rem; overflow-y: auto; }
-
-        .nav-section-label {
-            font-size: 0.62rem; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 1.5px;
-            color: var(--slate-2); padding: 0 0.75rem;
-            margin: 1rem 0 0.4rem;
-        }
-        .nav-section-label:first-child { margin-top: 0; }
-
-        .nav-item {
-            display: flex; align-items: center; gap: 0.75rem;
-            padding: 0.65rem 0.875rem; border-radius: 10px;
-            color: var(--slate); text-decoration: none;
-            font-size: 0.875rem; font-weight: 500;
-            transition: all 0.2s; cursor: pointer;
-            border: 1px solid transparent;
-            margin-bottom: 2px;
-        }
-        .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--white); }
-        .nav-item.active {
-            background: rgba(139,92,246,0.1);
-            border-color: rgba(139,92,246,0.2);
-            color: var(--white);
-        }
-        .nav-item.active .nav-icon { color: var(--violet); }
-        .nav-icon { width: 18px; text-align: center; font-size: 0.875rem; flex-shrink: 0; }
-        .nav-badge {
-            margin-left: auto;
-            background: rgba(139,92,246,0.2); color: var(--violet);
-            border-radius: 20px; padding: 1px 7px;
-            font-size: 0.65rem; font-weight: 700;
-        }
-        .nav-badge.soon { background: rgba(245,158,11,0.1); color: var(--amber); }
-
-        .sidebar-footer {
-            padding: 0.75rem;
-            border-top: 1px solid var(--border);
-        }
-        .sidebar-footer .nav-item { color: #f87171; }
-        .sidebar-footer .nav-item:hover { background: rgba(248,113,113,0.08); color: #fca5a5; }
-
-        /* ── TOPBAR ───────────────────────────────────────────────────── */
-        .topbar {
-            position: fixed; top: 0;
-            left: var(--sidebar-w); right: 0;
-            height: var(--topbar-h);
-            background: rgba(6,10,18,0.85);
-            border-bottom: 1px solid var(--border);
-            backdrop-filter: blur(20px);
-            display: flex; align-items: center;
-            padding: 0 2rem; gap: 1rem;
-            z-index: 100;
-        }
-
-        .topbar-title {
-            font-family: 'Syne', sans-serif;
-            font-size: 1.05rem; font-weight: 700; color: var(--white);
-        }
-        .topbar-sub { font-size: 0.78rem; color: var(--slate); }
-
-        .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 0.875rem; }
-
-        .topbar-btn {
-            width: 36px; height: 36px;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid var(--border);
-            border-radius: 9px;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; color: var(--slate); font-size: 0.875rem;
-            transition: all 0.2s; position: relative;
-        }
-        .topbar-btn:hover { background: rgba(255,255,255,0.08); color: var(--white); }
-
-        .topbar-avatar {
-            width: 36px; height: 36px; border-radius: 50%;
-            border: 2px solid rgba(139,92,246,0.4);
-            object-fit: cover; cursor: pointer;
-        }
-
-        /* ── MAIN CONTENT ─────────────────────────────────────────────── */
-        .main {
-            margin-left: var(--sidebar-w);
-            margin-top: var(--topbar-h);
-            min-height: calc(100vh - var(--topbar-h));
-            padding: 2.5rem;
-            position: relative; z-index: 1;
-        }
-
-        /* ── BLANK DASHBOARD STATE ────────────────────────────────────── */
-        .dashboard-blank {
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            min-height: calc(100vh - var(--topbar-h) - 5rem);
-            text-align: center;
-        }
-
-        .blank-icon-ring {
-            width: 100px; height: 100px; border-radius: 50%;
-            background: rgba(139,92,246,0.08);
-            border: 2px dashed rgba(139,92,246,0.25);
-            display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 2rem;
-            position: relative;
-        }
-        .blank-icon-ring::before {
-            content: '';
-            position: absolute; inset: -8px;
-            border-radius: 50%;
-            border: 1px dashed rgba(139,92,246,0.1);
-        }
-        .blank-icon-ring i { font-size: 2.5rem; color: var(--violet); opacity: 0.7; }
-
-        .blank-title {
-            font-family: 'Syne', sans-serif;
-            font-size: 1.75rem; font-weight: 800;
-            color: var(--white); margin-bottom: 0.875rem;
-            letter-spacing: -0.5px;
-        }
-        .blank-sub {
-            color: var(--slate); font-size: 1rem;
-            line-height: 1.7; max-width: 440px; margin: 0 auto 2.5rem;
-        }
-
-        .blank-actions { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--violet), #6d28d9);
-            color: #fff; border: none;
-            padding: 0.8rem 1.75rem; border-radius: var(--r);
-            font-family: 'Syne', sans-serif; font-size: 0.9rem; font-weight: 700;
-            cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem;
-            transition: all 0.25s; text-decoration: none;
-        }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(139,92,246,0.4); }
-
-        .btn-outline {
-            background: transparent; color: var(--white);
-            border: 1px solid rgba(255,255,255,0.15);
-            padding: 0.8rem 1.75rem; border-radius: var(--r);
-            font-size: 0.9rem; font-weight: 500;
-            cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem;
-            transition: all 0.25s; text-decoration: none;
-        }
-        .btn-outline:hover { border-color: var(--violet); color: var(--violet); background: rgba(139,92,246,0.06); }
-
-        /* Coming Soon cards */
-        .coming-soon-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1rem; margin-top: 3rem; width: 100%; max-width: 900px;
-        }
-
-        .cs-card {
-            background: var(--card-bg);
-            border: 1px dashed rgba(255,255,255,0.07);
-            border-radius: var(--r-lg); padding: 1.5rem;
-            display: flex; flex-direction: column; align-items: center;
-            text-align: center; gap: 0.75rem;
-            transition: all 0.25s;
-        }
-        .cs-card:hover { border-color: rgba(139,92,246,0.2); background: rgba(139,92,246,0.04); }
-        .cs-icon {
-            width: 44px; height: 44px; border-radius: 11px;
-            background: rgba(139,92,246,0.08);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.15rem; color: var(--violet); opacity: 0.7;
-        }
-        .cs-title { font-family: 'Syne', sans-serif; font-size: 0.875rem; font-weight: 700; color: var(--white); }
-        .cs-desc { font-size: 0.78rem; color: var(--slate-2); line-height: 1.5; }
-        .cs-badge {
-            font-size: 0.62rem; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 1px; padding: 2px 10px; border-radius: 20px;
-            background: rgba(245,158,11,0.1); color: var(--amber);
-            border: 1px solid rgba(245,158,11,0.2);
-        }
-
-        /* ── TOAST ────────────────────────────────────────────────────── */
-        .toast-container { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; }
-        .toast {
-            display: flex; align-items: center; gap: 0.75rem;
-            padding: 0.875rem 1.25rem; background: var(--ink-2);
-            border: 1px solid var(--border); border-radius: var(--r);
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5); font-size: 0.875rem;
-            min-width: 260px; animation: toastIn 0.3s ease;
-            border-left: 3px solid var(--violet);
-        }
-        .toast.success { border-left-color: #10b981; }
-        .toast.error   { border-left-color: #ef4444; }
-        .toast i { color: var(--violet); }
-        .toast.success i { color: #10b981; }
-        .toast.error i   { color: #ef4444; }
-        @keyframes toastIn { from{opacity:0;transform:translateX(50px)} to{opacity:1;transform:none} }
-
-        /* Loading */
-        #pageLoader {
-            position: fixed; inset: 0; background: var(--ink);
-            display: flex; align-items: center; justify-content: center;
-            z-index: 9999; flex-direction: column; gap: 1.5rem;
-        }
-        .loader-logo {
-            width: 56px; height: 56px;
-            background: linear-gradient(135deg, var(--violet), #6d28d9);
-            border-radius: 14px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.5rem; color: #fff;
-            box-shadow: 0 0 30px rgba(139,92,246,0.4);
-            animation: logoPulse 1.5s ease-in-out infinite;
-        }
-        @keyframes logoPulse { 0%,100%{box-shadow:0 0 30px rgba(139,92,246,0.4)} 50%{box-shadow:0 0 60px rgba(139,92,246,0.7)} }
-        .loader-text { font-family: 'Syne', sans-serif; font-size: 0.85rem; color: var(--slate); letter-spacing: 0.5px; }
-
-        /* Mobile sidebar toggle */
-        .mobile-sidebar-toggle {
-            display: none;
-            position: fixed; top: 1rem; left: 1rem; z-index: 300;
-            width: 40px; height: 40px;
-            background: rgba(139,92,246,0.15);
-            border: 1px solid rgba(139,92,246,0.3);
-            border-radius: 9px; cursor: pointer; color: var(--white);
-            align-items: center; justify-content: center; font-size: 1.1rem;
-        }
-        .sidebar-overlay {
-            display: none; position: fixed; inset: 0;
-            background: rgba(0,0,0,0.5); z-index: 150; backdrop-filter: blur(3px);
-        }
-
-        @media (max-width: 1024px) {
-            .sidebar { transform: translateX(-100%); }
-            .sidebar.open { transform: translateX(0); }
-            .sidebar-overlay.open { display: block; }
-            .main { margin-left: 0; }
-            .topbar { left: 0; }
-            .mobile-sidebar-toggle { display: flex; }
-        }
-
-        @media (max-width: 640px) {
-            .main { padding: 1.5rem; }
-            .blank-title { font-size: 1.35rem; }
-            .coming-soon-grid { grid-template-columns: 1fr 1fr; }
-        }
-    </style>
+    <link rel="stylesheet" href="css/client-dashboard.css">
 </head>
 <body>
 
-<!-- Page loader -->
+<!-- PAGE LOADER -->
 <div id="pageLoader">
     <div class="loader-logo"><i class="fas fa-users"></i></div>
-    <div class="loader-text">Loading your dashboard…</div>
+    <div class="loader-text">Loading your dashboard...</div>
 </div>
 
-<!-- Mobile sidebar toggle -->
+<!-- MOBILE SIDEBAR TOGGLE -->
 <button class="mobile-sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">
     <i class="fas fa-bars"></i>
 </button>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
-<!-- ═══ SIDEBAR ══════════════════════════════════════════════════════════════ -->
+<!-- SIDEBAR -->
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
         <div class="sidebar-logo"><i class="fas fa-users"></i></div>
@@ -378,24 +36,23 @@
     <div class="sidebar-user">
         <img id="sidebarAvatar" src="" alt="" class="sidebar-avatar">
         <div class="sidebar-user-info">
-            <div class="sidebar-user-name" id="sidebarName">Loading…</div>
-            <div class="sidebar-user-email" id="sidebarEmail">—</div>
+            <div class="sidebar-user-name"  id="sidebarName">Loading...</div>
+            <div class="sidebar-user-email" id="sidebarEmail">-</div>
         </div>
     </div>
 
     <nav class="sidebar-nav">
         <div class="nav-section-label">Main</div>
-        <a href="client-dashboard.html" class="nav-item active">
+        <a href="#" class="nav-item active" id="nav-dashboard" onclick="showView('dashboard', event)">
             <span class="nav-icon"><i class="fas fa-th-large"></i></span>
             Dashboard
         </a>
-
-        <div class="nav-section-label">Coming Soon</div>
-        <a href="#" class="nav-item" onclick="comingSoon(event,'Find Architects')">
+        <a href="#" class="nav-item" id="nav-architects" onclick="showView('architects', event)">
             <span class="nav-icon"><i class="fas fa-search"></i></span>
             Find Architects
-            <span class="nav-badge soon">Soon</span>
         </a>
+
+        <div class="nav-section-label">Coming Soon</div>
         <a href="#" class="nav-item" onclick="comingSoon(event,'My Projects')">
             <span class="nav-icon"><i class="fas fa-folder-open"></i></span>
             My Projects
@@ -442,52 +99,50 @@
     </div>
 </aside>
 
-<!-- ═══ TOPBAR ════════════════════════════════════════════════════════════════ -->
+<!-- TOPBAR -->
 <header class="topbar">
-    <div>
-        <div class="topbar-title">Dashboard</div>
-        <div class="topbar-sub">Welcome to your client portal</div>
+    <div class="topbar-left">
+        <div>
+            <div class="topbar-title" id="topbarTitle">Dashboard</div>
+            <div class="topbar-sub"   id="topbarSub">Welcome to your client portal</div>
+        </div>
     </div>
     <div class="topbar-right">
-        <button class="topbar-btn" title="Notifications" onclick="comingSoonToast('Notifications')">
+        <button class="topbar-btn" id="topbarNotifBtn" title="Notifications" onclick="comingSoonToast('Notifications')">
             <i class="fas fa-bell"></i>
         </button>
-        <button class="topbar-btn" title="Search" onclick="comingSoonToast('Search')">
+        <button class="topbar-btn" id="topbarSearchBtn" title="Search" onclick="comingSoonToast('Search')">
             <i class="fas fa-search"></i>
         </button>
+        <span id="topbarPlan" class="plan-badge plan-free" style="display:none">Free</span>
         <img id="topbarAvatar" src="" alt="" class="topbar-avatar" title="Profile">
     </div>
 </header>
 
-<!-- ═══ MAIN CONTENT ══════════════════════════════════════════════════════════ -->
-<main class="main">
+<!-- VIEW: DASHBOARD -->
+<main class="main" id="view-dashboard">
     <div class="dashboard-blank">
-        <!-- Welcome Icon -->
         <div class="blank-icon-ring">
             <i class="fas fa-compass"></i>
         </div>
-
         <h1 class="blank-title">Your Dashboard is Ready</h1>
         <p class="blank-sub">
             Welcome to your SmartArch client portal. Features like architect discovery,
             project tracking, and messaging are on their way. Stay tuned!
         </p>
-
         <div class="blank-actions">
-            <button class="btn-primary" onclick="comingSoonToast('Find Architects')">
+            <button class="btn-primary" onclick="showView('architects')">
                 <i class="fas fa-search"></i> Find Architects
             </button>
             <a href="client-index.html" class="btn-outline">
                 <i class="fas fa-arrow-left"></i> Back to Home
             </a>
         </div>
-
-        <!-- Coming soon feature cards -->
         <div class="coming-soon-grid">
             <div class="cs-card">
                 <div class="cs-icon"><i class="fas fa-search"></i></div>
                 <div class="cs-title">Architect Search</div>
-                <div class="cs-desc">Browse & filter 500+ verified architects by specialization and location</div>
+                <div class="cs-desc">Browse and filter verified architects by specialization and location</div>
                 <div class="cs-badge">Coming Soon</div>
             </div>
             <div class="cs-card">
@@ -512,48 +167,229 @@
     </div>
 </main>
 
+<!-- VIEW: FIND ARCHITECTS -->
+<div class="architects-main" id="view-architects" style="display:none">
+
+    <!-- Hero + Search -->
+    <div class="hero-strip">
+        <h1>Discover <span>Expert Architects</span></h1>
+        <p>Find the perfect architect for your project - browse profiles, portfolios, and ratings</p>
+        <div class="search-row">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Search by name, specialization or location...">
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-bar">
+        <span class="filter-label">Sort:</span>
+        <select class="filter-select" id="sortFilter">
+            <option value="-rating">Top Rated</option>
+            <option value="-experience">Most Experienced</option>
+            <option value="name">Name A-Z</option>
+            <option value="-createdAt">Newest</option>
+        </select>
+
+        <div class="filter-divider"></div>
+
+        <span class="filter-label">Experience:</span>
+        <button class="filter-chip active" data-exp="" onclick="setExp(this,'','')">All</button>
+        <button class="filter-chip" data-exp="0-5"   onclick="setExp(this,'0','5')">0-5 yrs</button>
+        <button class="filter-chip" data-exp="5-10"  onclick="setExp(this,'5','10')">5-10 yrs</button>
+        <button class="filter-chip" data-exp="10-60" onclick="setExp(this,'10','60')">10+ yrs</button>
+
+        <div class="filter-divider"></div>
+
+        <span class="filter-label">Rating:</span>
+        <button class="filter-chip active" data-rating="0"   onclick="setRating(this,'0')">All</button>
+        <button class="filter-chip" data-rating="3"   onclick="setRating(this,'3')">3+star</button>
+        <button class="filter-chip" data-rating="4"   onclick="setRating(this,'4')">4+star</button>
+        <button class="filter-chip" data-rating="4.5" onclick="setRating(this,'4.5')">4.5+star</button>
+
+        <div class="filter-divider"></div>
+
+        <span class="filter-label">Specialization:</span>
+        <select class="filter-select" id="specFilter">
+            <option value="">All Types</option>
+            <option value="Residential">Residential</option>
+            <option value="Commercial">Commercial</option>
+            <option value="Interior">Interior Design</option>
+            <option value="Landscape">Landscape</option>
+            <option value="Urban">Urban Planning</option>
+            <option value="Sustainable">Sustainable</option>
+            <option value="Industrial">Industrial</option>
+            <option value="Restoration">Restoration</option>
+        </select>
+
+        <span class="results-count" id="resultsCount"></span>
+    </div>
+
+    <!-- Grid -->
+    <div class="grid-area">
+        <div class="architect-grid" id="architectGrid"></div>
+        <div class="pagination"     id="pagination"></div>
+    </div>
+</div>
+
+<!-- MODAL: ARCHITECT PROFILE -->
+<div class="modal-backdrop" id="modalBackdrop" onclick="closeModal(event)">
+    <div class="modal-panel" id="modalPanel">
+        <div class="modal-cover">
+            <div class="modal-cover-grid"></div>
+            <div class="modal-cover-orb"></div>
+            <div class="modal-cover-orb2"></div>
+            <button class="modal-close" onclick="closeModalDirect()"><i class="fas fa-times"></i></button>
+            <div class="modal-avatar-wrap">
+                <img id="modalAvatar" src="" alt="" class="modal-avatar">
+                <div class="modal-avatar-badge"></div>
+            </div>
+        </div>
+        <div class="modal-body" id="modalBody"></div>
+    </div>
+</div>
+
+<!-- TOAST CONTAINER -->
 <div class="toast-container" id="toastContainer"></div>
 
 <script>
+'use strict';
 const CLIENT_API = 'http://localhost:5000/api';
 
-// ── Auth guard ─────────────────────────────────────────────────────────────────
+/* ============================================================
+   VIEW SWITCHER
+   ============================================================ */
+const VIEWS = {
+    dashboard: {
+        el: 'view-dashboard', navId: 'nav-dashboard',
+        title: 'Dashboard', sub: null,
+        showDashBtns: true, showPlan: false
+    },
+    architects: {
+        el: 'view-architects', navId: 'nav-architects',
+        title: 'Find Architects', sub: 'Browse verified architecture professionals',
+        showDashBtns: false, showPlan: true
+    }
+};
+
+let currentView = 'dashboard';
+let architectsLoaded = false;
+
+function showView(name, event) {
+    if (event) event.preventDefault();
+    if (name === currentView) { closeSidebar(); return; }
+
+    const prev = VIEWS[currentView];
+    const next = VIEWS[name];
+
+    document.getElementById(prev.el).style.display = 'none';
+    document.getElementById(next.el).style.display = '';
+
+    document.getElementById(prev.navId).classList.remove('active');
+    document.getElementById(next.navId).classList.add('active');
+
+    document.getElementById('topbarTitle').textContent = next.title;
+    document.getElementById('topbarSub').textContent   = next.sub || '';
+
+    document.getElementById('topbarNotifBtn').style.display  = next.showDashBtns ? '' : 'none';
+    document.getElementById('topbarSearchBtn').style.display = next.showDashBtns ? '' : 'none';
+    document.getElementById('topbarPlan').style.display      = next.showPlan     ? '' : 'none';
+
+    currentView = name;
+    closeSidebar();
+
+    // Lazy-load architects grid on first switch to that view
+    if (name === 'architects' && !architectsLoaded) {
+        architectsLoaded = true;
+        fetchArchitects();
+    }
+}
+
+/* ============================================================
+   AUTH
+   ============================================================ */
 function requireClientAuth() {
     const token = localStorage.getItem('client_token');
-    if (!token) {
-        window.location.href = 'client-index.html?modal=login';
-        return null;
-    }
+    if (!token) { window.location.href = 'client-index.html?modal=login'; return null; }
     return token;
 }
-
-// ── Utilities ──────────────────────────────────────────────────────────────────
-function showToast(msg, type = 'info') {
-    const c = document.getElementById('toastContainer');
-    const t = document.createElement('div');
-    t.className = `toast ${type}`;
-    const icons = { success:'fa-check-circle', error:'fa-exclamation-circle', info:'fa-info-circle' };
-    t.innerHTML = `<i class="fas ${icons[type]||icons.info}"></i><span>${msg}</span>`;
-    c.appendChild(t);
-    setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateX(60px)'; t.style.transition='all 0.3s'; setTimeout(()=>t.remove(),350); },3200);
+function getToken()    { return localStorage.getItem('client_token'); }
+function authHeaders() {
+    return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() };
 }
-
-function comingSoon(e, name) {
-    e.preventDefault();
-    showToast(`${name} — coming soon! We're building this for you. 🚀`, 'info');
-}
-function comingSoonToast(name) {
-    showToast(`${name} — coming soon! 🚀`, 'info');
-}
-
 function logout() {
     localStorage.removeItem('client_token');
     localStorage.removeItem('client_user');
     showToast('Logged out successfully', 'info');
-    setTimeout(()=>{ window.location.href='client-index.html'; },800);
+    setTimeout(function() { window.location.href = 'client-index.html'; }, 800);
 }
 
-// ── Sidebar ────────────────────────────────────────────────────────────────────
+/* ============================================================
+   USER / SIDEBAR
+   ============================================================ */
+function loadUser() {
+    var userStr = localStorage.getItem('client_user');
+    if (!userStr) return;
+    try {
+        var user = JSON.parse(userStr);
+        var avatarUrl = user.avatar ||
+            'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name || 'C') + '&background=8b5cf6&color=fff&bold=true';
+
+        var sname   = document.getElementById('sidebarName');
+        var semail  = document.getElementById('sidebarEmail');
+        var savatar = document.getElementById('sidebarAvatar');
+        if (sname)   sname.textContent  = user.name  || '-';
+        if (semail)  semail.textContent = user.email || '-';
+        if (savatar) savatar.src = avatarUrl;
+
+        var tavatar = document.getElementById('topbarAvatar');
+        if (tavatar) tavatar.src = avatarUrl;
+
+        // Time-based greeting (only shown when dashboard is active)
+        var hour = new Date().getHours();
+        var greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+        var firstName = user.name ? user.name.split(' ')[0] : 'there';
+        document.getElementById('topbarSub').textContent = greeting + ', ' + firstName + '! Welcome back!';
+
+        // Plan badge
+        var pb   = document.getElementById('topbarPlan');
+        var plan = user.plan || 'free';
+        pb.textContent = plan.charAt(0).toUpperCase() + plan.slice(1);
+        pb.className   = 'plan-badge plan-' + plan;
+
+    } catch (e) { console.error('loadUser error', e); }
+}
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+function showToast(msg, type) {
+    type = type || 'info';
+    var c = document.getElementById('toastContainer');
+    var t = document.createElement('div');
+    t.className = 'toast-item ' + type;
+    var icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', info: 'fa-info-circle' };
+    t.innerHTML = '<i class="fas ' + (icons[type] || icons.info) + '"></i><span>' + msg + '</span>';
+    c.appendChild(t);
+    setTimeout(function() {
+        t.style.opacity    = '0';
+        t.style.transform  = 'translateX(60px)';
+        t.style.transition = 'all 0.3s';
+        setTimeout(function() { t.remove(); }, 350);
+    }, 3200);
+}
+function comingSoon(e, name) {
+    e.preventDefault();
+    showToast(name + ' - coming soon! We are building this for you.', 'info');
+}
+function comingSoonToast(name) {
+    showToast(name + ' - coming soon!', 'info');
+}
+
+/* ============================================================
+   MOBILE SIDEBAR
+   ============================================================ */
 function toggleSidebar() {
     document.getElementById('sidebar').classList.toggle('open');
     document.getElementById('sidebarOverlay').classList.toggle('open');
@@ -563,71 +399,347 @@ function closeSidebar() {
     document.getElementById('sidebarOverlay').classList.remove('open');
 }
 
-// ── Load user ──────────────────────────────────────────────────────────────────
-function loadUser() {
-    const userStr = localStorage.getItem('client_user');
-    if (!userStr) return;
+/* ============================================================
+   FIND ARCHITECTS - STATE
+   ============================================================ */
+var archState = {
+    page: 1, limit: 12,
+    sort: '-rating',
+    search: '', minExp: '', maxExp: '',
+    minRating: '0', specialization: '',
+    total: 0, pages: 0, loading: false
+};
+var searchDebounce = null;
+
+/* ============================================================
+   FETCH ARCHITECTS
+   ============================================================ */
+async function fetchArchitects() {
+    if (archState.loading) return;
+    archState.loading = true;
+    renderSkeletons();
+
+    var params = new URLSearchParams({
+        page: archState.page, limit: archState.limit, sort: archState.sort
+    });
+    if (archState.search)         params.set('search',         archState.search);
+    if (archState.specialization) params.set('specialization', archState.specialization);
+    if (archState.minExp)         params.set('minExperience',  archState.minExp);
+    if (archState.maxExp)         params.set('maxExperience',  archState.maxExp);
+    if (parseFloat(archState.minRating) > 0) params.set('minRating', archState.minRating);
+
     try {
-        const user = JSON.parse(userStr);
-        const avatarUrl = user.avatar ||
-            `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name||'C')}&background=8b5cf6&color=fff&bold=true`;
-
-        // Sidebar
-        const sname  = document.getElementById('sidebarName');
-        const semail = document.getElementById('sidebarEmail');
-        const savatar = document.getElementById('sidebarAvatar');
-        if (sname)  sname.textContent  = user.name  || '—';
-        if (semail) semail.textContent = user.email || '—';
-        if (savatar) savatar.src = avatarUrl;
-
-        // Topbar
-        const tavatar = document.getElementById('topbarAvatar');
-        if (tavatar) tavatar.src = avatarUrl;
-
-        // Update topbar greeting
-        const tbar = document.querySelector('.topbar-sub');
-        const hour = new Date().getHours();
-        const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-        if (tbar) tbar.textContent = `${greeting}, ${user.name?.split(' ')[0] || 'there'}! 👋`;
-
-    } catch(e) { console.error('loadUser error', e); }
+        var r = await fetch(CLIENT_API + '/client/architects?' + params, { headers: authHeaders() });
+        if (r.status === 401 || r.status === 403) { logout(); return; }
+        var d = await r.json();
+        if (d.success) {
+            archState.total = d.pagination.total;
+            archState.pages = d.pagination.pages;
+            renderCards(d.data);
+            renderPagination();
+            document.getElementById('resultsCount').innerHTML =
+                '<strong>' + d.pagination.total + '</strong> architect' +
+                (d.pagination.total !== 1 ? 's' : '') + ' found';
+        } else { renderError(); }
+    } catch (err) { renderError(); }
+    finally { archState.loading = false; }
 }
 
-// ── Init ───────────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', async () => {
-    const token = requireClientAuth();
+/* ============================================================
+   RENDER CARDS
+   ============================================================ */
+function renderSkeletons() {
+    document.getElementById('architectGrid').innerHTML = Array.from({ length: 6 }).map(function() {
+        return '<div class="skel-card">' +
+            '<div class="skel-header">' +
+                '<div class="skeleton skel-avatar"></div>' +
+                '<div class="skel-lines">' +
+                    '<div class="skeleton skel-line" style="width:70%"></div>' +
+                    '<div class="skeleton skel-line" style="width:50%"></div>' +
+                    '<div class="skeleton skel-line" style="width:40%"></div>' +
+                '</div>' +
+            '</div>' +
+            '<div class="skel-stats">' +
+                '<div class="skeleton skel-stat"></div>' +
+                '<div class="skeleton skel-stat"></div>' +
+                '<div class="skeleton skel-stat"></div>' +
+            '</div>' +
+            '<div class="skel-footer skeleton"></div>' +
+        '</div>';
+    }).join('');
+    document.getElementById('pagination').innerHTML = '';
+}
+
+function renderCards(architects) {
+    var grid = document.getElementById('architectGrid');
+    if (!architects.length) {
+        grid.innerHTML =
+            '<div class="empty-state">' +
+                '<div class="empty-icon"><i class="fas fa-user-slash"></i></div>' +
+                '<div class="empty-title">No architects found</div>' +
+                '<div class="empty-text">Try adjusting your filters or search terms</div>' +
+            '</div>';
+        return;
+    }
+    grid.innerHTML = architects.map(function(a, i) {
+        var avatar = a.avatar ||
+            'https://ui-avatars.com/api/?name=' + encodeURIComponent(a.name) + '&background=8b5cf6&color=fff&bold=true&size=80';
+        var bio = a.bio || 'Experienced architect ready to bring your vision to life.';
+        var locationHtml = a.location
+            ? '<div class="card-location"><i class="fas fa-map-marker-alt" style="font-size:0.65rem"></i>' + esc(a.location) + '</div>'
+            : '';
+        return '<div class="arch-card" style="animation-delay:' + (i * 0.05) + 's" onclick="openProfile(\'' + a.id + '\')">' +
+            '<div class="card-header">' +
+                '<div class="card-avatar-wrap">' +
+                    '<img class="card-avatar" src="' + avatar + '" alt="' + esc(a.name) + '"' +
+                        ' onerror="this.src=\'https://ui-avatars.com/api/?name=' + encodeURIComponent(a.name) + '&background=8b5cf6&color=fff&bold=true\'">' +
+                    '<div class="card-avatar-badge"></div>' +
+                '</div>' +
+                '<div class="card-info">' +
+                    '<div class="card-name" title="' + esc(a.name) + '">' + esc(a.name) + '</div>' +
+                    '<div class="card-spec">' + esc(a.specialization) + '</div>' +
+                    locationHtml +
+                '</div>' +
+            '</div>' +
+            '<div class="card-stats">' +
+                '<div class="stat-item"><div class="stat-value">' + (a.experience || 0) + '</div><div class="stat-label">Years Exp.</div></div>' +
+                '<div class="stat-item"><div class="stars">' + renderStars(a.rating) + '</div><div class="stat-label">' + (a.rating || 0).toFixed(1) + ' Rating</div></div>' +
+                '<div class="stat-item"><div class="stat-value">' + (a.totalProjects || 0) + '</div><div class="stat-label">Projects</div></div>' +
+            '</div>' +
+            '<div class="card-footer">' +
+                '<div class="card-bio">' + esc(bio) + '</div>' +
+                '<span class="card-cta">View <i class="fas fa-arrow-right" style="font-size:0.7rem"></i></span>' +
+            '</div>' +
+        '</div>';
+    }).join('');
+}
+
+function renderPagination() {
+    var el = document.getElementById('pagination');
+    if (archState.pages <= 1) { el.innerHTML = ''; return; }
+    var html = '<button class="page-btn" onclick="goPage(' + (archState.page - 1) + ')" ' + (archState.page <= 1 ? 'disabled' : '') + '><i class="fas fa-chevron-left"></i></button>';
+    for (var p = 1; p <= archState.pages; p++) {
+        if (archState.pages > 7 && Math.abs(p - archState.page) > 2 && p !== 1 && p !== archState.pages) {
+            if (p === 2 || p === archState.pages - 1) html += '<span style="color:var(--slate);padding:0 4px">...</span>';
+            continue;
+        }
+        html += '<button class="page-btn ' + (p === archState.page ? 'active' : '') + '" onclick="goPage(' + p + ')">' + p + '</button>';
+    }
+    html += '<button class="page-btn" onclick="goPage(' + (archState.page + 1) + ')" ' + (archState.page >= archState.pages ? 'disabled' : '') + '><i class="fas fa-chevron-right"></i></button>';
+    el.innerHTML = html;
+}
+
+function renderError() {
+    document.getElementById('architectGrid').innerHTML =
+        '<div class="empty-state">' +
+            '<div class="empty-icon"><i class="fas fa-exclamation-triangle"></i></div>' +
+            '<div class="empty-title">Failed to load architects</div>' +
+            '<div class="empty-text">Please check that the server is running and try again.</div>' +
+        '</div>';
+}
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+async function openProfile(id) {
+    var backdrop = document.getElementById('modalBackdrop');
+    var body     = document.getElementById('modalBody');
+    var av       = document.getElementById('modalAvatar');
+
+    body.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--slate)">' +
+        '<i class="fas fa-spinner fa-spin" style="font-size:1.5rem;margin-bottom:1rem;display:block"></i>' +
+        'Loading profile...</div>';
+    av.src = '';
+    backdrop.classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    try {
+        var r = await fetch(CLIENT_API + '/client/architects/' + id, { headers: authHeaders() });
+        var d = await r.json();
+        if (!d.success) throw new Error();
+        renderModal(d.data);
+    } catch (err) {
+        body.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--rose)">' +
+            '<i class="fas fa-exclamation-circle" style="font-size:1.5rem;margin-bottom:1rem;display:block"></i>' +
+            'Could not load architect profile.</div>';
+    }
+}
+
+function renderModal(a) {
+    var av = document.getElementById('modalAvatar');
+    var fallback = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(a.name) + '&background=8b5cf6&color=fff&bold=true&size=80';
+    av.src = a.avatar || fallback;
+    av.onerror = function() { av.src = fallback; };
+
+    var stars      = renderStars(a.rating, true);
+    var planBadge  = planBadgeHtml(a.plan);
+    var memberYear = a.memberSince ? new Date(a.memberSince).getFullYear() : '-';
+
+    var portfolioHtml = '';
+    if (a.portfolio && a.portfolio.length) {
+        portfolioHtml = '<div class="modal-section">' +
+            '<div class="modal-section-title"><i class="fas fa-link" style="color:var(--violet)"></i> Portfolio Links</div>' +
+            '<div class="portfolio-links">' +
+            a.portfolio.map(function(url) {
+                return '<a href="' + url + '" target="_blank" rel="noopener" class="portfolio-link">' +
+                    '<i class="fas fa-external-link-alt portfolio-link-icon"></i>' +
+                    '<span class="portfolio-link-text">' + url + '</span>' +
+                    '<i class="fas fa-chevron-right portfolio-link-arrow"></i>' +
+                '</a>';
+            }).join('') +
+            '</div></div>';
+    }
+
+    var projectsHtml = '';
+    if (a.recentProjects && a.recentProjects.length) {
+        projectsHtml = '<div class="modal-section">' +
+            '<div class="modal-section-title"><i class="fas fa-folder" style="color:var(--violet)"></i> Recent Projects</div>' +
+            '<div class="projects-grid">' +
+            a.recentProjects.map(function(p) {
+                var areaHtml = (p.metadata && p.metadata.totalArea)
+                    ? '<div class="project-card-type">' + p.metadata.totalArea.toLocaleString() + ' m2</div>'
+                    : '';
+                return '<div class="project-card">' +
+                    '<div class="project-card-name" title="' + esc(p.name) + '">' + esc(p.name) + '</div>' +
+                    '<div class="project-card-type">' + esc(p.type || 'residential') + '</div>' +
+                    areaHtml +
+                    '<span class="project-tag tag-' + p.status + '">' + p.status.replace('_', ' ') + '</span>' +
+                '</div>';
+            }).join('') +
+            '</div></div>';
+    }
+
+    var emailHtml   = a.email   ? '<div class="contact-item"><div class="contact-icon email"><i class="fas fa-envelope"></i></div><div><div class="contact-lbl">Email</div><div class="contact-val">' + esc(a.email) + '</div></div></div>' : '';
+    var phoneHtml   = a.phone   ? '<div class="contact-item"><div class="contact-icon phone"><i class="fas fa-phone"></i></div><div><div class="contact-lbl">Phone</div><div class="contact-val">' + esc(a.phone) + '</div></div></div>' : '';
+    var companyHtml = a.company ? '<div class="contact-item"><div class="contact-icon company"><i class="fas fa-building"></i></div><div><div class="contact-lbl">Company</div><div class="contact-val">' + esc(a.company) + '</div></div></div>' : '';
+    var memberHtml  = '<div class="contact-item"><div class="contact-icon member"><i class="fas fa-calendar-alt"></i></div><div><div class="contact-lbl">Member Since</div><div class="contact-val">' + memberYear + '</div></div></div>';
+    var contactHtml = '<div class="modal-section"><div class="modal-section-title"><i class="fas fa-id-card" style="color:var(--violet)"></i> Contact &amp; Info</div><div class="contact-grid">' + emailHtml + phoneHtml + companyHtml + memberHtml + '</div></div>';
+
+    var locationHtml = a.location ? '<div class="modal-meta-item"><i class="fas fa-map-marker-alt"></i>' + esc(a.location) + '</div>' : '';
+    var bioHtml = a.bio
+        ? '<div class="modal-bio">' + esc(a.bio) + '</div>'
+        : '<div class="modal-bio"><span class="modal-bio-empty">No bio provided yet.</span></div>';
+
+    document.getElementById('modalBody').innerHTML =
+        '<div class="modal-name">' + esc(a.name) + ' ' + planBadge + '</div>' +
+        '<div class="modal-spec">' + esc(a.specialization) + '</div>' +
+        '<div class="modal-meta">' + locationHtml + '<div class="modal-meta-item">' + stars + '<span style="margin-left:4px;color:var(--white)">' + (a.rating || 0).toFixed(1) + '</span></div></div>' +
+        '<div class="modal-stats">' +
+            '<div class="modal-stat"><div class="modal-stat-val">' + (a.experience || 0) + '</div><div class="modal-stat-lbl">Years Exp.</div></div>' +
+            '<div class="modal-stat"><div class="modal-stat-val">' + (a.totalProjects || 0) + '</div><div class="modal-stat-lbl">Projects</div></div>' +
+            '<div class="modal-stat"><div class="modal-stat-val">' + (a.rating || 0).toFixed(1) + '</div><div class="modal-stat-lbl">Rating</div></div>' +
+        '</div>' +
+        '<div class="modal-section"><div class="modal-section-title"><i class="fas fa-user" style="color:var(--violet)"></i> About</div>' + bioHtml + '</div>' +
+        portfolioHtml + projectsHtml + contactHtml;
+}
+
+function closeModal(e) {
+    if (e && e.target !== document.getElementById('modalBackdrop')) return;
+    closeModalDirect();
+}
+function closeModalDirect() {
+    document.getElementById('modalBackdrop').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+/* ============================================================
+   FILTER CONTROLS
+   ============================================================ */
+function setExp(btn, min, max) {
+    document.querySelectorAll('[data-exp]').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    archState.minExp = min; archState.maxExp = max; archState.page = 1;
+    fetchArchitects();
+}
+function setRating(btn, rating) {
+    document.querySelectorAll('[data-rating]').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    archState.minRating = rating; archState.page = 1;
+    fetchArchitects();
+}
+function goPage(p) {
+    if (p < 1 || p > archState.pages) return;
+    archState.page = p;
+    fetchArchitects();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function renderStars(rating, large) {
+    var sz = large ? '0.85rem' : '0.7rem';
+    var html = '';
+    for (var i = 1; i <= 5; i++) {
+        if (rating >= i)           html += '<i class="fas fa-star star filled" style="font-size:' + sz + '"></i>';
+        else if (rating >= i-0.5)  html += '<i class="fas fa-star-half-alt star half" style="font-size:' + sz + '"></i>';
+        else                       html += '<i class="far fa-star star" style="font-size:' + sz + '"></i>';
+    }
+    return html;
+}
+function planBadgeHtml(plan) {
+    var map   = { pro: 'plan-pro', enterprise: 'plan-enterprise', free: 'plan-free' };
+    var cls   = map[plan] || 'plan-free';
+    var label = (plan || 'free').charAt(0).toUpperCase() + (plan || 'free').slice(1);
+    return '<span class="plan-badge ' + cls + '" style="vertical-align:middle;margin-left:0.4rem">' + label + '</span>';
+}
+function esc(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', async function() {
+    var token = requireClientAuth();
     if (!token) return;
 
-    // Optionally verify token freshness with backend
     try {
-        const resp = await fetch(`${CLIENT_API}/client/me`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+        var resp = await fetch(CLIENT_API + '/client/me', {
+            headers: { 'Authorization': 'Bearer ' + token }
         });
         if (!resp.ok) {
-            // Token expired or invalid
             localStorage.removeItem('client_token');
             localStorage.removeItem('client_user');
             window.location.href = 'client-index.html?modal=login';
             return;
         }
-        const data = await resp.json();
-        if (data.user) {
-            localStorage.setItem('client_user', JSON.stringify(data.user));
-        }
-    } catch(e) {
-        // Network error — still proceed with cached user
+        var data = await resp.json();
+        if (data.user) localStorage.setItem('client_user', JSON.stringify(data.user));
+    } catch (e) {
         console.warn('Could not refresh user data:', e.message);
     }
 
     loadUser();
 
     // Hide loader
-    const loader = document.getElementById('pageLoader');
+    var loader = document.getElementById('pageLoader');
     if (loader) {
-        loader.style.opacity = '0';
+        loader.style.opacity    = '0';
         loader.style.transition = 'opacity 0.4s';
-        setTimeout(()=>loader.remove(), 400);
+        setTimeout(function() { loader.remove(); }, 400);
     }
+
+    // Filter event listeners (safe even if elements not visible yet)
+    document.getElementById('sortFilter').addEventListener('change', function() {
+        archState.sort = this.value; archState.page = 1; fetchArchitects();
+    });
+    document.getElementById('specFilter').addEventListener('change', function() {
+        archState.specialization = this.value; archState.page = 1; fetchArchitects();
+    });
+    document.getElementById('searchInput').addEventListener('input', function() {
+        clearTimeout(searchDebounce);
+        var self = this;
+        searchDebounce = setTimeout(function() {
+            archState.search = self.value.trim(); archState.page = 1; fetchArchitects();
+        }, 350);
+    });
+
+    // Keyboard shortcut
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeModalDirect();
+    });
 });
 </script>
 </body>
