@@ -14,7 +14,8 @@ const {
     getMessages,
     sendMessage,
     sendImageMessage,
-    getProjectBrief
+    getProjectBrief,
+    cancelRequest
 } = require('../controllers/connectionController');
 
 // ── Chat image upload — images only, 8 MB max ─────────────────────────────────
@@ -44,6 +45,7 @@ const chatUpload = multer({
 // ── Client routes ──────────────────────────────────────────────────────────────
 router.post('/request', protect, authorize('client'), sendRequest);
 router.get('/status/:architectId', protect, authorize('client'), getStatusWithArchitect);
+router.delete('/:id', protect, authorize('client'), cancelRequest);  // cancel pending request
 
 // ── Shared routes (client + architect) ────────────────────────────────────────
 router.get('/my', protect, authorize('client', 'architect'), getMyConnections);

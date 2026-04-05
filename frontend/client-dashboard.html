@@ -522,7 +522,18 @@
         <div class="chat-modal-messages" id="chatModalMessages">
             <div style="text-align:center;padding:2rem;color:var(--slate)"><i class="fas fa-spinner fa-spin"></i></div>
         </div>
+        <!-- Image preview strip (hidden until image selected) -->
+        <div class="chat-img-preview" id="clientChatImgPreview" style="display:none;">
+            <img id="clientChatImgThumb" src="" alt="preview">
+            <button class="chat-img-preview-remove" onclick="clearClientChatImg()">✕ Remove</button>
+        </div>
         <div class="chat-modal-input-row">
+            <input type="file" id="clientChatImgInput" accept="image/*" style="display:none"
+                onchange="onClientChatImgSelected(event)">
+            <button class="chat-img-btn" id="clientChatImgBtn" title="Send image"
+                onclick="document.getElementById('clientChatImgInput').click()">
+                <i class="fas fa-image"></i>
+            </button>
             <textarea id="chatModalInput" class="chat-modal-input" rows="1"
                 placeholder="Type a message... (Enter to send)"
                 onkeydown="handleChatKeydown(event)"></textarea>
@@ -531,6 +542,14 @@
             </button>
         </div>
     </div>
+</div>
+
+<!-- Image lightbox (client chat) -->
+<div id="clientChatImgLightbox" onclick="this.classList.remove('open')"
+    style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9999;align-items:center;justify-content:center;cursor:zoom-out;"
+    class="">
+    <img id="clientChatImgLightboxImg" src="" alt="full image"
+        style="max-width:92vw;max-height:88vh;border-radius:12px;box-shadow:0 24px 80px rgba(0,0,0,0.7);">
 </div>
 
 
@@ -1228,6 +1247,51 @@ function updateCardConnectBtn(archId, status, connectionId, archData) {
 }
 
 /* ── Load My Connections View ────────────────────────────────────────── */
+function showCustomConfirm(title, message, onConfirm) {
+    var backdrop = document.getElementById('customConfirmBackdrop');
+    document.getElementById('customConfirmTitle').textContent = title;
+    document.getElementById('customConfirmMsg').textContent   = message;
+    backdrop.style.display = 'flex';
+
+    var okBtn     = document.getElementById('customConfirmOk');
+    var cancelBtn = document.getElementById('customConfirmCancel');
+
+    function cleanup() {
+        backdrop.style.display = 'none';
+        okBtn.replaceWith(okBtn.cloneNode(true));
+        cancelBtn.replaceWith(cancelBtn.cloneNode(true));
+    }
+
+    document.getElementById('customConfirmOk').addEventListener('click', function() {
+        cleanup(); onConfirm();
+    });
+    document.getElementById('customConfirmCancel').addEventListener('click', cleanup);
+    backdrop.addEventListener('click', function handler(e) {
+        if (e.target === backdrop) { cleanup(); backdrop.removeEventListener('click', handler); }
+    });
+}
+
+async function cancelConnectionRequest(connectionId, archName) {
+    showCustomConfirm(
+        'Cancel Request',
+        'Cancel your pending request to ' + archName + '? You can send a new request later.',
+        async function() {
+            try {
+                var r = await fetch(CLIENT_API + '/connections/' + connectionId, {
+                    method:  'DELETE',
+                    headers: authHeaders()
+                });
+                var d = await r.json();
+                if (!d.success) throw new Error(d.message);
+                showToast('Request to ' + archName + ' cancelled.', 'success');
+                await loadConnections();
+            } catch(err) {
+                showToast(err.message || 'Could not cancel request.', 'error');
+            }
+        }
+    );
+}
+
 async function loadConnections() {
     var body = document.getElementById('connectionsBody');
     body.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--slate)"><i class="fas fa-spinner fa-spin" style="font-size:1.5rem"></i><div style="margin-top:1rem">Loading...</div></div>';
@@ -1289,7 +1353,9 @@ function renderConnections(conns) {
             actionBtn = '<button class="conn-chat-btn" onclick="openChatModal(\'' + c._id + '\',\'' + esc(arch.name) + '\',\'' + avatar + '\')">' +
                 '<i class="fas fa-comments"></i> Chat ' + unreadBadge + '</button>';
         } else if (c.status === 'pending') {
-            actionBtn = '<div class="conn-pending-note"><i class="fas fa-clock"></i> Awaiting response</div>';
+            actionBtn = '<div class="conn-pending-note"><i class="fas fa-clock"></i> Awaiting response</div>' +
+                '<button class="conn-cancel-btn" onclick="cancelConnectionRequest(\'' + c._id + '\',\'' + esc(arch.name) + '\')">' +
+                '<i class="fas fa-times"></i> Cancel Request</button>';
         } else {
             actionBtn = '<div class="conn-rejected-note"><i class="fas fa-times-circle"></i> Request not accepted</div>';
         }
@@ -1326,6 +1392,7 @@ function renderConnections(conns) {
 /* ── Chat Modal ──────────────────────────────────────────────────────── */
 function openChatModal(connectionId, archName, archAvatar) {
     activeChatConnectionId = connectionId;
+    clearClientChatImg();
     document.getElementById('chatModalName').textContent   = archName;
     document.getElementById('chatModalAvatar').src         = archAvatar ||
         'https://ui-avatars.com/api/?name=' + encodeURIComponent(archName) + '&background=8b5cf6&color=fff&bold=true';
@@ -1350,6 +1417,8 @@ function closeChatModal(e) {
     clearInterval(chatPollTimer);
     chatPollTimer = null;
     activeChatConnectionId = null;
+    clearClientChatImg();
+    document.getElementById('chatModalInput').value = '';
 }
 
 async function loadChatMessages() {
@@ -1397,6 +1466,7 @@ function renderChatMessages(messages, connection) {
         return;
     }
 
+    var BASE = 'http://localhost:5000';
     var html = '';
     // Show intro message first if any
     if (connection && connection.introMessage) {
@@ -1405,8 +1475,17 @@ function renderChatMessages(messages, connection) {
     messages.forEach(function(m) {
         var isSelf = m.senderRole === 'client';
         var time   = new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        var bubble;
+        if (m.type === 'image' && m.imageUrl) {
+            var src = BASE + m.imageUrl;
+            bubble = '<img src="' + src + '" class="chat-bubble-img" onclick="openClientChatLightbox(\'' + src + '\')" onerror="this.style.display=\'none\'" alt="image">';
+        } else {
+            bubble = '<div class="chat-msg-bubble">' + esc(m.text) + '</div>';
+        }
+
         html += '<div class="chat-msg ' + (isSelf ? 'chat-msg-self' : 'chat-msg-other') + '">' +
-            '<div class="chat-msg-bubble">' + esc(m.text) + '</div>' +
+            bubble +
             '<div class="chat-msg-time">' + time + '</div>' +
         '</div>';
     });
@@ -1415,8 +1494,69 @@ function renderChatMessages(messages, connection) {
     el.scrollTop = el.scrollHeight;
 }
 
+// ── Client chat image helpers ─────────────────────────────────────────────────
+var _clientChatPendingImg = null;
+
+function onClientChatImgSelected(e) {
+    var file = e.target.files[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    _clientChatPendingImg = file;
+    var thumb   = document.getElementById('clientChatImgThumb');
+    var preview = document.getElementById('clientChatImgPreview');
+    if (thumb)   thumb.src = URL.createObjectURL(file);
+    if (preview) preview.style.display = 'flex';
+}
+
+function clearClientChatImg() {
+    _clientChatPendingImg = null;
+    var input   = document.getElementById('clientChatImgInput');
+    var preview = document.getElementById('clientChatImgPreview');
+    if (input)   input.value = '';
+    if (preview) preview.style.display = 'none';
+}
+
+function openClientChatLightbox(src) {
+    var lb  = document.getElementById('clientChatImgLightbox');
+    var img = document.getElementById('clientChatImgLightboxImg');
+    if (!lb || !img) return;
+    img.src = src;
+    lb.classList.add('open');
+}
+
 async function sendChatMessage() {
     if (!activeChatConnectionId) return;
+
+    // ── Image send ────────────────────────────────────────────────────────────
+    if (_clientChatPendingImg) {
+        var file    = _clientChatPendingImg;
+        var imgBtn  = document.getElementById('clientChatImgBtn');
+        var sendBtn = document.querySelector('#chatModalPanel .chat-modal-send-btn');
+        clearClientChatImg();
+        if (imgBtn)  imgBtn.disabled  = true;
+        if (sendBtn) sendBtn.disabled = true;
+
+        try {
+            var form  = new FormData();
+            form.append('image', file);
+            var token = localStorage.getItem('client_token');
+            var r = await fetch(CLIENT_API + '/connections/' + activeChatConnectionId + '/messages/image', {
+                method:  'POST',
+                headers: { 'Authorization': 'Bearer ' + token },
+                body:    form
+            });
+            var d = await r.json();
+            if (!d.success) throw new Error(d.message);
+            await loadChatMessages();
+        } catch(err) {
+            showToast(err.message || 'Could not send image.', 'error');
+        } finally {
+            if (imgBtn)  imgBtn.disabled  = false;
+            if (sendBtn) sendBtn.disabled = false;
+        }
+        return;
+    }
+
+    // ── Text send ─────────────────────────────────────────────────────────────
     var input = document.getElementById('chatModalInput');
     var text  = input.value.trim();
     if (!text) return;
@@ -1949,5 +2089,54 @@ document.addEventListener('DOMContentLoaded', function() {
 
 </script>
 <script src="js/presence.js"></script>
+
+<!-- ── Custom Confirm Modal ───────────────────────────────────────────── -->
+<div id="customConfirmBackdrop" style="
+    display:none;position:fixed;inset:0;z-index:99999;
+    background:rgba(6,10,18,0.75);backdrop-filter:blur(4px);
+    align-items:center;justify-content:center;">
+    <div id="customConfirmBox" style="
+        background:linear-gradient(160deg,#0f1623 0%,#131b2e 100%);
+        border:1px solid rgba(255,255,255,0.08);
+        border-radius:18px;padding:2rem 1.75rem 1.5rem;
+        width:min(92vw,400px);box-shadow:0 32px 80px rgba(0,0,0,0.6);
+        animation:confirmPop 0.18s cubic-bezier(.34,1.56,.64,1) both;">
+        <div style="display:flex;align-items:flex-start;gap:1rem;margin-bottom:1.25rem;">
+            <div id="customConfirmIcon" style="
+                width:42px;height:42px;border-radius:12px;flex-shrink:0;
+                display:flex;align-items:center;justify-content:center;font-size:1.1rem;
+                background:rgba(244,63,94,0.12);border:1px solid rgba(244,63,94,0.25);color:#f43f5e;">
+                <i class="fas fa-exclamation"></i>
+            </div>
+            <div>
+                <div id="customConfirmTitle" style="font-weight:700;font-size:1rem;color:#f1f5f9;margin-bottom:0.3rem;"></div>
+                <div id="customConfirmMsg" style="font-size:0.85rem;color:#94a3b8;line-height:1.55;"></div>
+            </div>
+        </div>
+        <div style="display:flex;gap:0.65rem;justify-content:flex-end;">
+            <button id="customConfirmCancel" style="
+                padding:0.5rem 1.1rem;border-radius:9px;font-size:0.85rem;font-weight:600;
+                background:rgba(255,255,255,0.05);color:#94a3b8;
+                border:1px solid rgba(255,255,255,0.1);cursor:pointer;transition:all 0.2s;">
+                Keep Request
+            </button>
+            <button id="customConfirmOk" style="
+                padding:0.5rem 1.25rem;border-radius:9px;font-size:0.85rem;font-weight:700;
+                background:linear-gradient(135deg,#f43f5e,#e11d48);color:#fff;
+                border:none;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:0.4rem;">
+                <i class="fas fa-times"></i> Cancel Request
+            </button>
+        </div>
+    </div>
+</div>
+<style>
+@keyframes confirmPop {
+    from { opacity:0; transform:scale(0.88) translateY(12px); }
+    to   { opacity:1; transform:scale(1)    translateY(0); }
+}
+#customConfirmCancel:hover { background:rgba(255,255,255,0.1); color:#f1f5f9; }
+#customConfirmOk:hover     { transform:translateY(-1px); box-shadow:0 6px 18px rgba(244,63,94,0.35); }
+</style>
+
 </body>
 </html>

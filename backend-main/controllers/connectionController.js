@@ -310,3 +310,38 @@ exports.getProjectBrief = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error.' });
     }
 };
+
+// ─── DELETE /api/connections/:id ──────────────────────────────────────────────
+// Client cancels their own pending connection request.
+// Only the client who sent the request may cancel it, and only while it is still pending.
+exports.cancelRequest = async (req, res) => {
+    try {
+        const conn = await Connection.findById(req.params.id);
+
+        if (!conn) {
+            return res.status(404).json({ success: false, message: 'Connection request not found.' });
+        }
+
+        // Only the originating client may cancel
+        if (String(conn.client) !== String(req.user._id)) {
+            return res.status(403).json({ success: false, message: 'Not authorized to cancel this request.' });
+        }
+
+        // Only pending requests can be cancelled
+        if (conn.status !== 'pending') {
+            return res.status(400).json({
+                success: false,
+                message: conn.status === 'accepted'
+                    ? 'This request has already been accepted. You cannot cancel an active connection.'
+                    : 'This request has already been responded to.'
+            });
+        }
+
+        await Connection.deleteOne({ _id: conn._id });
+
+        res.json({ success: true, message: 'Connection request cancelled successfully.' });
+    } catch (err) {
+        console.error('cancelRequest error:', err);
+        res.status(500).json({ success: false, message: 'Server error.' });
+    }
+};
