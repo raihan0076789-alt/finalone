@@ -18,6 +18,14 @@ document.addEventListener('DOMContentLoaded', function () {
     // always has the latest architect fields (bio, location, etc.)
     loadUserProfile();
 
+    // ── Heartbeat presence ────────────────────────────────────────────────────
+    if (typeof startHeartbeat === 'function') {
+        startHeartbeat({
+            apiBase:  'http://localhost:5000/api',
+            getToken: () => localStorage.getItem('token')
+        });
+    }
+
     // Pre-fetch connections on load so the badge count is accurate immediately
     if (typeof loadArchConnections === 'function') loadArchConnections();
 
@@ -1842,6 +1850,13 @@ function archConnCardHtml(c) {
             <i class="fas fa-quote-left" style="font-size:0.6rem;color:rgba(139,92,246,0.4);margin-right:0.3rem;"></i>${escHtml(c.introMessage)}
         </div>` : '';
 
+    // ── Online presence badge ─────────────────────────────────────────────────
+    const clientLastSeen = (c.client || {}).lastSeen || null;
+    const isOnlineConn   = typeof isOnline === 'function' ? isOnline(clientLastSeen) : false;
+    const onlineDot = isOnlineConn
+        ? `<span style="display:inline-flex;align-items:center;gap:3px;font-size:0.68rem;color:#10b981;margin-top:3px;"><span style="width:7px;height:7px;border-radius:50%;background:#10b981;box-shadow:0 0 5px #10b981;display:inline-block;flex-shrink:0;"></span>Online</span>`
+        : `<span style="display:inline-flex;align-items:center;gap:3px;font-size:0.68rem;color:#64748b;margin-top:3px;"><span style="width:7px;height:7px;border-radius:50%;background:#475569;display:inline-block;flex-shrink:0;"></span>Offline</span>`;
+
     // ── Unread badge ──────────────────────────────────────────────────────────
     const unreadBadge = c.unreadByArchitect > 0
         ? `<span style="background:#ef4444;color:#fff;border-radius:20px;padding:1px 7px;font-size:0.68rem;font-weight:700;margin-left:0.35rem;">${c.unreadByArchitect} new</span>`
@@ -1898,6 +1913,7 @@ function archConnCardHtml(c) {
                 <div style="min-width:0;">
                     <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(client.name)}</div>
                     <div style="font-size:0.75rem;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(client.email || '')}</div>
+                    ${onlineDot}
                 </div>
                 <div style="margin-left:auto;flex-shrink:0;">${statusChip}</div>
             </div>
@@ -2247,8 +2263,21 @@ function closeArchChatModal(e) {
     clearInterval(archChatPollTimer);
     archChatPollTimer = null;
     activeArchChatId  = null;
-    // Reload connection list to clear unread badge
     loadArchConnections();
+}
+
+function _updateArchChatOnlineBadge(connection) {
+    const statusEl = document.getElementById('archChatStatus');
+    if (!statusEl) return;
+    // connection.client is populated with { name, avatar, lastSeen }
+    const lastSeen = connection && connection.client && connection.client.lastSeen
+        ? connection.client.lastSeen
+        : null;
+    const online = typeof isOnline === 'function' ? isOnline(lastSeen) : false;
+    const dot = `<span style="width:7px;height:7px;border-radius:50%;background:${online ? '#10b981' : '#64748b'};${online ? 'box-shadow:0 0 6px #10b981;' : ''}display:inline-block;flex-shrink:0;"></span>`;
+    statusEl.innerHTML = online
+        ? `${dot} <span style="color:#10b981">Client · Online</span>`
+        : `${dot} <span style="color:#64748b">Client · Offline</span>`;
 }
 
 async function loadArchChatMessages() {
@@ -2257,7 +2286,10 @@ async function loadArchChatMessages() {
         const res  = await fetch(`${CONN_API}/${activeArchChatId}/messages`, { headers: connHeaders() });
         const data = await res.json();
         if (!data.success) return;
-        renderArchChatMessages(data.messages, data.connection);
+        // Backend returns { success, data: { connection, messages } }
+        const payload = data.data || {};
+        renderArchChatMessages(payload.messages, payload.connection);
+        _updateArchChatOnlineBadge(payload.connection);
     } catch (e) {}
 }
 
@@ -2284,11 +2316,27 @@ function renderArchChatMessages(messages, connection) {
         return;
     }
 
+    const BASE = 'http://localhost:5000';
     messages.forEach(m => {
         const isSelf = m.senderRole === 'architect';
         const time   = new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        html += `<div style="display:flex;flex-direction:column;max-width:78%;${isSelf ? 'align-self:flex-end;align-items:flex-end' : 'align-self:flex-start;align-items:flex-start'}">
-            <div style="padding:0.6rem 0.9rem;border-radius:${isSelf ? '14px 14px 4px 14px' : '14px 14px 14px 4px'};font-size:0.875rem;line-height:1.5;word-break:break-word;${isSelf ? 'background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#fff' : 'background:rgba(255,255,255,0.07);color:#f1f5f9'}">${escHtml(m.text)}</div>
+        const align  = isSelf ? 'align-self:flex-end;align-items:flex-end' : 'align-self:flex-start;align-items:flex-start';
+        const bubbleStyle = isSelf
+            ? 'background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#fff;border-radius:14px 14px 4px 14px;'
+            : 'background:rgba(255,255,255,0.07);color:#f1f5f9;border-radius:14px 14px 14px 4px;';
+
+        let bubble;
+        if (m.type === 'image' && m.imageUrl) {
+            const src = BASE + m.imageUrl;
+            bubble = `<img src="${src}" class="chat-bubble-img"
+                onclick="openChatLightbox('${src}')"
+                onerror="this.style.display='none'" alt="image">`;
+        } else {
+            bubble = `<div style="padding:0.6rem 0.9rem;${bubbleStyle}font-size:0.875rem;line-height:1.5;word-break:break-word;">${escHtml(m.text)}</div>`;
+        }
+
+        html += `<div style="display:flex;flex-direction:column;max-width:78%;${align}">
+            ${bubble}
             <div style="font-size:0.68rem;color:#64748b;margin-top:3px">${time}</div>
         </div>`;
     });
@@ -2297,8 +2345,61 @@ function renderArchChatMessages(messages, connection) {
     el.scrollTop = el.scrollHeight;
 }
 
+// ── Image selection & upload helpers ─────────────────────────────────────────
+let _archChatPendingImg = null;
+
+function onArchChatImgSelected(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    _archChatPendingImg = file;
+    const thumb = document.getElementById('archChatImgThumb');
+    const preview = document.getElementById('archChatImgPreview');
+    if (thumb) thumb.src = URL.createObjectURL(file);
+    if (preview) preview.style.display = 'flex';
+}
+
+function clearArchChatImg() {
+    _archChatPendingImg = null;
+    const input   = document.getElementById('archChatImgInput');
+    const preview = document.getElementById('archChatImgPreview');
+    if (input)   input.value = '';
+    if (preview) preview.style.display = 'none';
+}
+
 async function sendArchChatMessage() {
     if (!activeArchChatId) return;
+
+    // ── Image send ────────────────────────────────────────────────────────────
+    if (_archChatPendingImg) {
+        const file    = _archChatPendingImg;
+        const imgBtn  = document.getElementById('archChatImgBtn');
+        const sendBtn = document.querySelector('#archChatPanel .chat-modal-send-btn');
+        clearArchChatImg();
+        if (imgBtn)  imgBtn.disabled  = true;
+        if (sendBtn) sendBtn.disabled = true;
+
+        try {
+            const form = new FormData();
+            form.append('image', file);
+            const token = localStorage.getItem('token');
+            const res   = await fetch(`${CONN_API}/${activeArchChatId}/messages/image`, {
+                method:  'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body:    form
+            });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.message);
+            await loadArchChatMessages();
+        } catch (err) {
+            if (typeof showToast === 'function') showToast(err.message || 'Could not send image.', 'error');
+        } finally {
+            if (imgBtn)  imgBtn.disabled  = false;
+            if (sendBtn) sendBtn.disabled = false;
+        }
+        return;
+    }
+
+    // ── Text send ─────────────────────────────────────────────────────────────
     const inputEl = document.getElementById('archChatInput');
     const text    = (inputEl?.value || '').trim();
     if (!text) return;
@@ -2323,6 +2424,14 @@ async function sendArchChatMessage() {
     }
 }
 
+function openChatLightbox(src) {
+    const lb  = document.getElementById('chatImgLightbox');
+    const img = document.getElementById('chatImgLightboxImg');
+    if (!lb || !img) return;
+    img.src = src;
+    lb.classList.add('open');
+}
+
 function handleArchChatKeydown(e) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendArchChatMessage(); }
 }
@@ -2342,11 +2451,14 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── Expose globals ────────────────────────────────────────────────────────────
-window.loadArchConnections  = loadArchConnections;
-window.respondToConnection  = respondToConnection;
-window.openArchChatModal    = openArchChatModal;
-window.closeArchChatModal   = closeArchChatModal;
-window.sendArchChatMessage  = sendArchChatMessage;
-window.handleArchChatKeydown= handleArchChatKeydown;
-window.openConnDetailModal  = openConnDetailModal;
-window.closeConnDetailModal = closeConnDetailModal;
+window.loadArchConnections   = loadArchConnections;
+window.respondToConnection   = respondToConnection;
+window.openArchChatModal     = openArchChatModal;
+window.closeArchChatModal    = closeArchChatModal;
+window.sendArchChatMessage   = sendArchChatMessage;
+window.handleArchChatKeydown = handleArchChatKeydown;
+window.onArchChatImgSelected = onArchChatImgSelected;
+window.clearArchChatImg      = clearArchChatImg;
+window.openChatLightbox      = openChatLightbox;
+window.openConnDetailModal   = openConnDetailModal;
+window.closeConnDetailModal  = closeConnDetailModal;

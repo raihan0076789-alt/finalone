@@ -87,8 +87,8 @@ exports.getMyConnections = async (req, res) => {
             : { architect: req.user._id };
 
         const conns = await Connection.find(filter)
-            .populate('client',    'name email avatar company')
-            .populate('architect', 'name email avatar specialization')
+            .populate('client',    'name email avatar company lastSeen')
+            .populate('architect', 'name email avatar specialization lastSeen')
             .populate('project',   'name type status')
             .sort('-updatedAt')
             .select('-messages');   // don't send full message history in list
@@ -131,8 +131,8 @@ exports.respondToRequest = async (req, res) => {
 exports.getMessages = async (req, res) => {
     try {
         const conn = await Connection.findById(req.params.id)
-            .populate('client',    'name avatar')
-            .populate('architect', 'name avatar');
+            .populate('client',    'name avatar lastSeen')
+            .populate('architect', 'name avatar lastSeen');
 
         if (!conn) return res.status(404).json({ success: false, message: 'Connection not found.' });
 
@@ -159,7 +159,7 @@ exports.getMessages = async (req, res) => {
 };
 
 // ─── POST /api/connections/:id/messages ──────────────────────────────────────
-// Send a message in an accepted connection.
+// Send a text message in an accepted connection.
 exports.sendMessage = async (req, res) => {
     try {
         const { text } = req.body;
@@ -183,15 +183,13 @@ exports.sendMessage = async (req, res) => {
 
         const role = isClient ? 'client' : 'architect';
 
-        const msg = {
+        conn.messages.push({
             sender:     req.user._id,
             senderRole: role,
+            type:       'text',
             text:       text.trim()
-        };
+        });
 
-        conn.messages.push(msg);
-
-        // Increment unread for the OTHER party
         if (isClient) conn.unreadByArchitect += 1;
         else          conn.unreadByClient    += 1;
 
@@ -201,6 +199,53 @@ exports.sendMessage = async (req, res) => {
         res.status(201).json({ success: true, data: newMsg });
     } catch (err) {
         console.error('sendMessage error:', err);
+        res.status(500).json({ success: false, message: 'Server error.' });
+    }
+};
+
+// ─── POST /api/connections/:id/messages/image ─────────────────────────────────
+// Upload an image and send it as a chat message.
+// Handled by multer (chatUpload) before reaching this handler.
+exports.sendImageMessage = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'No image file provided.' });
+        }
+
+        const conn = await Connection.findById(req.params.id);
+        if (!conn) return res.status(404).json({ success: false, message: 'Connection not found.' });
+
+        const uid = String(req.user._id);
+        const isClient    = String(conn.client)    === uid;
+        const isArchitect = String(conn.architect) === uid;
+
+        if (!isClient && !isArchitect) {
+            return res.status(403).json({ success: false, message: 'Not authorized.' });
+        }
+        if (conn.status !== 'accepted') {
+            return res.status(403).json({ success: false, message: 'Chat is only available for accepted connections.' });
+        }
+
+        const role     = isClient ? 'client' : 'architect';
+        const imageUrl = `/uploads/chat/${req.file.filename}`;
+
+        conn.messages.push({
+            sender:     req.user._id,
+            senderRole: role,
+            type:       'image',
+            text:       '',
+            imageUrl
+        });
+
+        if (isClient) conn.unreadByArchitect += 1;
+        else          conn.unreadByClient    += 1;
+
+        await conn.save();
+
+        const newMsg = conn.messages[conn.messages.length - 1];
+        res.status(201).json({ success: true, data: newMsg });
+    } catch (err) {
+        console.error('sendImageMessage error:', err);
         res.status(500).json({ success: false, message: 'Server error.' });
     }
 };

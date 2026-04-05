@@ -95,6 +95,9 @@ const userSchema = new mongoose.Schema({
     aiMessagesUsed:         { type: Number, default: 0 },
     aiMessagesResetAt:      { type: Date,   default: null },
 
+    // Presence
+    lastSeen:            { type: Date, default: null },
+
     // Account status
     suspended:           { type: Boolean, default: false },
     emailVerified:       { type: Boolean, default: false },

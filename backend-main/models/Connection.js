@@ -5,7 +5,9 @@ const mongoose = require('mongoose');
 const messageSchema = new mongoose.Schema({
     sender:    { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     senderRole:{ type: String, enum: ['client', 'architect'], required: true },
-    text:      { type: String, required: true, trim: true, maxlength: 2000 },
+    type:      { type: String, enum: ['text', 'image'], default: 'text' },
+    text:      { type: String, trim: true, maxlength: 2000, default: '' },
+    imageUrl:  { type: String, default: '' },   // relative URL served from /uploads/chat/
     readAt:    { type: Date, default: null }
 }, { timestamps: true });
 

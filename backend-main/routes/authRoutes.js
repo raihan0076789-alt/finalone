@@ -6,7 +6,8 @@ const {
     updateProfile, updatePassword, logout,
     forgotPassword, resetPassword,
     verifyEmail, resendVerification,
-    googleAuth, googleProfile
+    googleAuth, googleProfile,
+    heartbeat
 } = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
 const {
@@ -22,6 +23,7 @@ router.get('/me', protect, getMe);
 router.put('/profile', protect, updateProfile);
 router.put('/password', protect, updatePassword);
 router.post('/logout', protect, logout);
+router.post('/heartbeat', protect, heartbeat);
 
 // ── Email Verification ────────────────────────────────────────────────────────
 router.post('/verify-otp', verifyEmail);

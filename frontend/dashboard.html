@@ -490,6 +490,38 @@
             transition: all 0.2s; align-self: flex-end;
         }
         .chat-modal-send-btn:hover { transform: scale(1.08); box-shadow: 0 4px 14px rgba(139,92,246,0.4); }
+        .chat-img-btn {
+            width: 38px; height: 38px; flex-shrink: 0;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #94a3b8;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s; align-self: flex-end;
+        }
+        .chat-img-btn:hover { background: rgba(139,92,246,0.15); color: #a78bfa; border-color: rgba(139,92,246,0.3); }
+        .chat-img-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .chat-img-preview {
+            padding: 0.5rem 1rem 0; display: flex; align-items: center; gap: 0.5rem;
+            background: rgba(255,255,255,0.02);
+        }
+        .chat-img-preview img { height: 52px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); object-fit: cover; }
+        .chat-img-preview-remove {
+            background: rgba(244,63,94,0.15); border: 1px solid rgba(244,63,94,0.3);
+            color: #f43f5e; border-radius: 6px; padding: 2px 7px; font-size: 0.72rem;
+            cursor: pointer; font-weight: 600;
+        }
+        .chat-bubble-img {
+            max-width: 220px; border-radius: 12px; cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.08); display: block;
+            transition: opacity 0.2s;
+        }
+        .chat-bubble-img:hover { opacity: 0.88; }
+        /* Lightbox */
+        #chatImgLightbox {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88);
+            z-index: 9999; align-items: center; justify-content: center; cursor: zoom-out;
+        }
+        #chatImgLightbox.open { display: flex; }
+        #chatImgLightbox img { max-width: 92vw; max-height: 88vh; border-radius: 12px; box-shadow: 0 24px 80px rgba(0,0,0,0.7); }
 </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 </head>
@@ -857,7 +889,9 @@
                                 <img id="archChatAvatar" src="" alt="" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid #00d4c8">
                                 <div>
                                     <div style="font-weight:700;color:#f1f5f9;font-size:0.95rem" id="archChatName"></div>
-                                    <div style="font-size:0.72rem;color:#10b981"><i class="fas fa-circle" style="font-size:0.5rem"></i> Client</div>
+                                    <div id="archChatStatus" style="font-size:0.72rem;color:#64748b;display:flex;align-items:center;gap:4px;margin-top:2px;">
+                                        <span style="width:7px;height:7px;border-radius:50%;background:#64748b;display:inline-block;"></span> Client
+                                    </div>
                                 </div>
                             </div>
                             <button onclick="closeArchChatModal()" style="background:none;border:none;color:#94a3b8;font-size:1.1rem;cursor:pointer;margin-left:auto;padding:4px"><i class="fas fa-times"></i></button>
@@ -865,7 +899,18 @@
                         <div class="chat-modal-messages" id="archChatMessages">
                             <div style="text-align:center;padding:2rem;color:#94a3b8"><i class="fas fa-spinner fa-spin"></i></div>
                         </div>
+                        <!-- Image preview strip (hidden until image selected) -->
+                        <div class="chat-img-preview" id="archChatImgPreview" style="display:none;">
+                            <img id="archChatImgThumb" src="" alt="preview">
+                            <button class="chat-img-preview-remove" onclick="clearArchChatImg()">✕ Remove</button>
+                        </div>
                         <div class="chat-modal-input-row">
+                            <input type="file" id="archChatImgInput" accept="image/*" style="display:none"
+                                onchange="onArchChatImgSelected(event)">
+                            <button class="chat-img-btn" id="archChatImgBtn" title="Send image"
+                                onclick="document.getElementById('archChatImgInput').click()">
+                                <i class="fas fa-image"></i>
+                            </button>
                             <textarea id="archChatInput" class="chat-modal-input" rows="1"
                                 placeholder="Reply to client... (Enter to send)"
                                 onkeydown="handleArchChatKeydown(event)"></textarea>
@@ -1589,6 +1634,7 @@
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script src="js/api.js?v=6"></script>
 <script src="js/auth.js?v=5"></script>
+<script src="js/presence.js"></script>
 <script src="js/dashboard.js?v=4"></script>
 <script src="js/dashboard-charts.js"></script>
 <script src="js/dashboard-profile.js"></script>
@@ -1850,5 +1896,9 @@ function togglePassword(inputId, icon) {
   window._updatePlanPill = setPill;
 })();
 </script>
+<!-- Chat image lightbox -->
+<div id="chatImgLightbox" onclick="this.classList.remove('open')">
+    <img id="chatImgLightboxImg" src="" alt="image">
+</div>
 </body>
 </html>

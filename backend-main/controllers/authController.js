@@ -453,7 +453,24 @@ exports.googleAuth = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error during Google sign-in.' });
     }
 };
-// POST /api/auth/resend-verification  Body: { email }
+// ─── HEARTBEAT ────────────────────────────────────────────────────────────────
+// POST /api/auth/heartbeat  (requires auth)
+// Stamps lastSeen on the authenticated user. Called every 30 s by the frontend.
+// Uses updateOne with { strict: false } to bypass full-document validation
+// (no password re-hash, no hooks) for maximum speed.
+exports.heartbeat = async (req, res) => {
+    try {
+        await User.updateOne(
+            { _id: req.user._id },
+            { $set: { lastSeen: new Date() } }
+        );
+        res.json({ success: true });
+    } catch (error) {
+        // Non-critical — swallow silently on client, return 500 so we can debug
+        console.error('heartbeat error:', error.message);
+        res.status(500).json({ success: false });
+    }
+};
 exports.resendVerification = async (req, res) => {
     try {
         const { email } = req.body;
