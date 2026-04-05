@@ -595,7 +595,24 @@
                 <button class="btn btn-primary" id="headerActionBtn" onclick="showNewProjectModal()">
                     <i class="fas fa-plus"></i> New Project
                 </button>
-                
+
+                <!-- NOTIFICATION BELL -->
+                <div class="arch-notif-wrap" id="archNotifWrap">
+                    <button class="arch-notif-btn" id="archNotifBtn" title="Notifications" onclick="archToggleNotif(event)">
+                        <i class="fas fa-bell"></i>
+                        <span class="arch-notif-badge" id="archNotifBadge" style="display:none"></span>
+                    </button>
+                    <div class="arch-notif-dropdown" id="archNotifDropdown" style="display:none">
+                        <div class="arch-notif-header">
+                            <span class="arch-notif-title"><i class="fas fa-bell" style="color:#00d4c8;font-size:0.8rem"></i> Notifications</span>
+                            <button class="arch-notif-clear" id="archNotifClearBtn" onclick="archClearAll()">Clear All</button>
+                        </div>
+                        <div class="arch-notif-list" id="archNotifList">
+                            <div class="arch-notif-empty"><i class="fas fa-check-circle" style="color:#00d4c8;font-size:1.3rem;margin-bottom:0.5rem;display:block"></i>You're all caught up!</div>
+                        </div>
+                    </div>
+                </div>
+
                 <button class="header-avatar-btn" onclick="switchToSettings()">
                     <img src="" alt="Profile" id="headerAvatar">
                 </button>
@@ -1900,5 +1917,254 @@ function togglePassword(inputId, icon) {
 <div id="chatImgLightbox" onclick="this.classList.remove('open')">
     <img id="chatImgLightboxImg" src="" alt="image">
 </div>
+
+<!-- ══════════════════════════════════════════════════
+     ARCHITECT NOTIFICATION BELL — styles + logic
+══════════════════════════════════════════════════ -->
+<style>
+/* ── Bell button ─────────────────────────────────── */
+.arch-notif-wrap { position: relative; }
+
+.arch-notif-btn {
+    width: 36px; height: 36px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: #94a3b8; font-size: 0.875rem;
+    transition: all 0.2s; position: relative;
+}
+.arch-notif-btn:hover { background: rgba(0,212,200,0.1); color: #00d4c8; border-color: rgba(0,212,200,0.3); }
+
+/* ── Badge ───────────────────────────────────────── */
+.arch-notif-badge {
+    position: absolute; top: -4px; right: -4px;
+    min-width: 16px; height: 16px;
+    background: #ef4444; color: #fff;
+    border-radius: 999px; font-size: 0.6rem; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 4px; border: 2px solid #060a12;
+    pointer-events: none; line-height: 1;
+}
+
+/* ── Dropdown panel ──────────────────────────────── */
+.arch-notif-dropdown {
+    position: absolute; top: calc(100% + 10px); right: 0;
+    width: 320px;
+    background: linear-gradient(160deg, #0f1623 0%, #131b2e 100%);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px; box-shadow: 0 24px 60px rgba(0,0,0,0.55);
+    z-index: 9000; overflow: hidden;
+    animation: archNotifSlide 0.18s cubic-bezier(.34,1.3,.64,1) both;
+}
+@keyframes archNotifSlide {
+    from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.arch-notif-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.85rem 1rem 0.75rem;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.arch-notif-title {
+    font-size: 0.8rem; font-weight: 700; color: #f1f5f9;
+    display: flex; align-items: center; gap: 0.45rem;
+}
+.arch-notif-clear {
+    font-size: 0.72rem; font-weight: 600; color: #64748b;
+    background: none; border: none; cursor: pointer;
+    padding: 2px 6px; border-radius: 6px; transition: color 0.15s, background 0.15s;
+}
+.arch-notif-clear:hover { color: #ef4444; background: rgba(239,68,68,0.08); }
+
+/* ── List ────────────────────────────────────────── */
+.arch-notif-list {
+    max-height: 340px; overflow-y: auto;
+    scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+.arch-notif-list::-webkit-scrollbar { width: 4px; }
+.arch-notif-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+.arch-notif-empty {
+    padding: 2rem 1rem; text-align: center;
+    font-size: 0.8rem; color: #64748b;
+}
+
+/* ── Item ────────────────────────────────────────── */
+.arch-notif-item {
+    display: flex; align-items: flex-start; gap: 0.7rem;
+    padding: 0.75rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.05);
+    cursor: pointer; transition: background 0.15s;
+}
+.arch-notif-item:last-child { border-bottom: none; }
+.arch-notif-item:hover { background: rgba(255,255,255,0.03); }
+.arch-notif-item.unread { background: rgba(0,212,200,0.04); }
+.arch-notif-icon {
+    width: 32px; height: 32px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.78rem; flex-shrink: 0; margin-top: 1px;
+}
+.arch-notif-icon.request  { background: rgba(245,158,11,0.12); color: #f59e0b; border: 1px solid rgba(245,158,11,0.25); }
+.arch-notif-icon.message  { background: rgba(0,212,200,0.12);  color: #00d4c8; border: 1px solid rgba(0,212,200,0.25); }
+.arch-notif-icon.accepted { background: rgba(16,185,129,0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.2); }
+.arch-notif-text { flex: 1; min-width: 0; }
+.arch-notif-text-main { font-size: 0.8rem; color: #f1f5f9; font-weight: 500; line-height: 1.4; word-break: break-word; }
+.arch-notif-text-time { font-size: 0.68rem; color: #475569; margin-top: 2px; }
+.arch-notif-dot { width: 7px; height: 7px; border-radius: 50%; background: #00d4c8; flex-shrink: 0; margin-top: 6px; }
+</style>
+
+<script>
+(function () {
+'use strict';
+
+var ARCH_STORAGE_KEY   = 'smartarch_arch_notifications';
+var ARCH_DISMISSED_KEY = 'smartarch_arch_notif_dismissed';
+var _notifs = [], _dismissed = {}, _open = false;
+
+function _load() {
+    try { _notifs    = JSON.parse(localStorage.getItem(ARCH_STORAGE_KEY)   || '[]'); } catch(e) { _notifs = []; }
+    try { _dismissed = JSON.parse(localStorage.getItem(ARCH_DISMISSED_KEY) || '{}'); } catch(e) { _dismissed = {}; }
+}
+function _save()    { try { localStorage.setItem(ARCH_STORAGE_KEY,   JSON.stringify(_notifs.slice(0,50))); } catch(e) {} }
+function _saveDis() { try { localStorage.setItem(ARCH_DISMISSED_KEY, JSON.stringify(_dismissed));           } catch(e) {} }
+
+function _add(id, type, text, time) {
+    if (_dismissed[id]) return false;
+    if (_notifs.some(function(n){ return n.id===id; })) return false;
+    _notifs.unshift({ id:id, type:type, text:text, time:time||new Date().toISOString(), read:false });
+    _save(); return true;
+}
+
+function _relTime(iso) {
+    try {
+        var d = Math.floor((Date.now()-new Date(iso).getTime())/1000);
+        if (d<60)    return 'Just now';
+        if (d<3600)  return Math.floor(d/60)+'m ago';
+        if (d<86400) return Math.floor(d/3600)+'h ago';
+        return Math.floor(d/86400)+'d ago';
+    } catch(e){ return ''; }
+}
+function _esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function _render() {
+    var list  = document.getElementById('archNotifList');
+    var badge = document.getElementById('archNotifBadge');
+    var clear = document.getElementById('archNotifClearBtn');
+    if (!list) return;
+    var unread = _notifs.filter(function(n){ return !n.read; }).length;
+    if (unread > 0) { badge.textContent = unread>99?'99+':String(unread); badge.style.display='flex'; }
+    else { badge.style.display='none'; }
+    if (clear) clear.style.display = _notifs.length ? '' : 'none';
+    if (!_notifs.length) {
+        list.innerHTML = '<div class="arch-notif-empty"><i class="fas fa-check-circle" style="color:#00d4c8;font-size:1.3rem;margin-bottom:0.5rem;display:block"></i>You\'re all caught up!</div>';
+        return;
+    }
+    var iconMap = { request:'fa-user-plus', message:'fa-comment-alt', accepted:'fa-user-check' };
+    list.innerHTML = _notifs.map(function(n){
+        return '<div class="arch-notif-item'+(n.read?'':' unread')+'" onclick="archNotifClick()" style="cursor:pointer">'+
+            '<div class="arch-notif-icon '+(n.type||'message')+'"><i class="fas '+(iconMap[n.type]||'fa-bell')+'"></i></div>'+
+            '<div class="arch-notif-text">'+
+                '<div class="arch-notif-text-main">'+_esc(n.text)+'</div>'+
+                '<div class="arch-notif-text-time">'+_relTime(n.time)+'</div>'+
+            '</div>'+
+            (!n.read?'<div class="arch-notif-dot"></div>':'')+
+        '</div>';
+    }).join('');
+}
+
+function _markRead() { _notifs.forEach(function(n){ n.read=true; }); _save(); _render(); }
+
+window.archToggleNotif = function(e) {
+    e.stopPropagation();
+    var panel = document.getElementById('archNotifDropdown');
+    if (!panel) return;
+    _open = !_open;
+    panel.style.display = _open ? 'block' : 'none';
+    if (_open) { _markRead(); _render(); }
+};
+
+window.archClearAll = function() {
+    _notifs.forEach(function(n){ _dismissed[n.id]=true; });
+    _saveDis(); _notifs=[]; _save(); _render();
+};
+
+window.archNotifClick = function() {
+    var p = document.getElementById('archNotifDropdown');
+    if (p) p.style.display='none';
+    _open = false;
+    if (typeof switchSection==='function') switchSection('connections');
+};
+
+document.addEventListener('click', function(e) {
+    if (!_open) return;
+    var wrap = document.getElementById('archNotifWrap');
+    if (wrap && !wrap.contains(e.target)) {
+        document.getElementById('archNotifDropdown').style.display='none';
+        _open=false;
+    }
+});
+document.addEventListener('keydown', function(e) {
+    if (e.key==='Escape' && _open) {
+        document.getElementById('archNotifDropdown').style.display='none';
+        _open=false;
+    }
+});
+
+/* ── Poll connections ────────────────────────────── */
+var _snap = null;
+
+async function _poll() {
+    var token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+        var r = await fetch('http://localhost:5000/api/connections/my', {
+            headers: { 'Authorization': 'Bearer '+token }
+        });
+        if (!r.ok) return;
+        var d = await r.json();
+        if (!d.success) return;
+        _process(d.data||[]);
+    } catch(e){}
+}
+
+function _process(conns) {
+    var changed = false;
+    conns.forEach(function(c) {
+        var client     = c.client || {};
+        var clientName = client.name || 'A client';
+        var cid        = c._id;
+        var prev       = _snap ? _snap[cid] : null;
+
+        /* New pending request */
+        if (c.status==='pending' && !prev) {
+            var proj = c.projectName ? ' for "'+c.projectName+'"' : '';
+            if (_add('req-'+cid, 'request', clientName+' sent you a connection request'+proj+'.', c.createdAt)) changed=true;
+        }
+
+        /* New messages from client */
+        if (c.unreadByArchitect > 0) {
+            var prevU = prev ? (prev.unreadByArchitect||0) : 0;
+            if (c.unreadByArchitect > prevU) {
+                var cnt   = c.unreadByArchitect - prevU;
+                var msgId = 'msg-'+cid+'-'+c.unreadByArchitect;
+                var txt   = cnt===1 ? clientName+' sent you a message.' : clientName+' sent you '+cnt+' new messages.';
+                if (_add(msgId, 'message', txt, new Date().toISOString())) changed=true;
+            }
+        }
+    });
+
+    var snap={};
+    conns.forEach(function(c){ snap[c._id]={ status:c.status, unreadByArchitect:c.unreadByArchitect||0 }; });
+    _snap=snap;
+    if (changed) _render();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    _load(); _render();
+    setTimeout(function(){ _poll(); setInterval(_poll, 20000); }, 2500);
+});
+
+})();
+</script>
+
 </body>
 </html>

@@ -114,9 +114,23 @@
         </div>
     </div>
     <div class="topbar-right">
-        <button class="topbar-btn" id="topbarNotifBtn" title="Notifications" onclick="comingSoonToast('Notifications')">
-            <i class="fas fa-bell"></i>
-        </button>
+        <!-- NOTIFICATION BELL -->
+        <div class="notif-wrap" id="notifWrap">
+            <button class="topbar-btn" id="topbarNotifBtn" title="Notifications" onclick="toggleNotifDropdown(event)">
+                <i class="fas fa-bell"></i>
+                <span class="notif-badge" id="notifBadge" style="display:none"></span>
+            </button>
+            <!-- DROPDOWN PANEL -->
+            <div class="notif-dropdown" id="notifDropdown" style="display:none">
+                <div class="notif-dropdown-header">
+                    <span class="notif-dropdown-title"><i class="fas fa-bell" style="color:var(--violet);font-size:0.8rem"></i> Notifications</span>
+                    <button class="notif-clear-btn" id="notifClearBtn" onclick="clearAllNotifications()">Clear All</button>
+                </div>
+                <div class="notif-list" id="notifList">
+                    <div class="notif-empty"><i class="fas fa-check-circle" style="color:var(--violet);font-size:1.3rem;margin-bottom:0.5rem;display:block"></i>You're all caught up!</div>
+                </div>
+            </div>
+        </div>
         <button class="topbar-btn" id="topbarSearchBtn" title="Search" onclick="comingSoonToast('Search')">
             <i class="fas fa-search"></i>
         </button>
@@ -603,7 +617,7 @@ function showView(name, event) {
     document.getElementById('topbarTitle').textContent = next.title;
     document.getElementById('topbarSub').textContent   = next.sub || '';
 
-    document.getElementById('topbarNotifBtn').style.display  = next.showDashBtns ? '' : 'none';
+    document.getElementById('notifWrap').style.display       = next.showDashBtns ? '' : 'none';
     document.getElementById('topbarSearchBtn').style.display = next.showDashBtns ? '' : 'none';
     document.getElementById('topbarPlan').style.display      = next.showPlan     ? '' : 'none';
 
@@ -2089,6 +2103,361 @@ document.addEventListener('DOMContentLoaded', function() {
 
 </script>
 <script src="js/presence.js"></script>
+
+<!-- ══════════════════════════════════════════════════
+     NOTIFICATION BELL — styles + logic
+══════════════════════════════════════════════════ -->
+<style>
+/* ── Bell badge ──────────────────────────────────── */
+.notif-wrap { position: relative; }
+
+.notif-badge {
+    position: absolute;
+    top: -4px; right: -4px;
+    min-width: 16px; height: 16px;
+    background: #ef4444;
+    color: #fff;
+    border-radius: 999px;
+    font-size: 0.6rem;
+    font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 4px;
+    border: 2px solid #060a12;
+    pointer-events: none;
+    line-height: 1;
+}
+
+/* ── Dropdown panel ──────────────────────────────── */
+.notif-dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 320px;
+    background: linear-gradient(160deg, #0f1623 0%, #131b2e 100%);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.55);
+    z-index: 9000;
+    overflow: hidden;
+    animation: notifSlideIn 0.18s cubic-bezier(.34,1.3,.64,1) both;
+}
+@keyframes notifSlideIn {
+    from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+.notif-dropdown-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.85rem 1rem 0.75rem;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.notif-dropdown-title {
+    font-size: 0.8rem; font-weight: 700; color: #f1f5f9;
+    display: flex; align-items: center; gap: 0.45rem;
+    letter-spacing: 0.3px;
+}
+.notif-clear-btn {
+    font-size: 0.72rem; font-weight: 600;
+    color: #64748b; background: none; border: none;
+    cursor: pointer; padding: 2px 6px;
+    border-radius: 6px; transition: color 0.15s, background 0.15s;
+}
+.notif-clear-btn:hover { color: #ef4444; background: rgba(239,68,68,0.08); }
+
+/* ── Notification list ───────────────────────────── */
+.notif-list {
+    max-height: 340px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+.notif-list::-webkit-scrollbar { width: 4px; }
+.notif-list::-webkit-scrollbar-track { background: transparent; }
+.notif-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+.notif-empty {
+    padding: 2rem 1rem;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+/* ── Single notification item ────────────────────── */
+.notif-item {
+    display: flex; align-items: flex-start; gap: 0.7rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    cursor: default;
+    transition: background 0.15s;
+}
+.notif-item:last-child { border-bottom: none; }
+.notif-item:hover { background: rgba(255,255,255,0.03); }
+.notif-item.unread { background: rgba(139,92,246,0.05); }
+
+.notif-icon {
+    width: 32px; height: 32px;
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.78rem;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+.notif-icon.accepted  { background: rgba(16,185,129,0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.2); }
+.notif-icon.message   { background: rgba(139,92,246,0.12); color: #8b5cf6; border: 1px solid rgba(139,92,246,0.2); }
+.notif-icon.rejected  { background: rgba(239,68,68,0.10);  color: #ef4444; border: 1px solid rgba(239,68,68,0.2); }
+.notif-icon.pending   { background: rgba(245,158,11,0.10); color: #f59e0b; border: 1px solid rgba(245,158,11,0.2); }
+
+.notif-text { flex: 1; min-width: 0; }
+.notif-text-main {
+    font-size: 0.8rem; color: #f1f5f9; font-weight: 500;
+    line-height: 1.4; word-break: break-word;
+}
+.notif-text-time {
+    font-size: 0.68rem; color: #475569; margin-top: 2px;
+}
+.notif-unread-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #8b5cf6;
+    flex-shrink: 0;
+    margin-top: 6px;
+}
+</style>
+
+<script>
+/* ════════════════════════════════════════════════════
+   NOTIFICATION BELL MODULE
+   ════════════════════════════════════════════════════ */
+(function() {
+'use strict';
+
+/* ── Storage keys ─────────────────────────────────── */
+var STORAGE_KEY   = 'smartarch_client_notifications';
+var DISMISSED_KEY = 'smartarch_client_notif_dismissed';
+
+/* ── In-memory store (also synced to localStorage) ── */
+var _notifications = [];   // [{id, type, text, time, read}]
+var _dismissed     = {};   // {id: true} — survives clear, prevents re-add
+var _dropdownOpen  = false;
+
+/* ── Load persisted notifications ───────────────────── */
+function _load() {
+    try {
+        var raw = localStorage.getItem(STORAGE_KEY);
+        _notifications = raw ? JSON.parse(raw) : [];
+    } catch(e) { _notifications = []; }
+    try {
+        var dis = localStorage.getItem(DISMISSED_KEY);
+        _dismissed = dis ? JSON.parse(dis) : {};
+    } catch(e) { _dismissed = {}; }
+}
+
+function _save() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(_notifications.slice(0, 50))); } catch(e) {}
+}
+
+function _saveDismissed() {
+    try { localStorage.setItem(DISMISSED_KEY, JSON.stringify(_dismissed)); } catch(e) {}
+}
+
+/* ── Add a notification (dedup by id + dismissed check) ── */
+function _add(id, type, text, time) {
+    if (_dismissed[id]) return false;
+    if (_notifications.some(function(n) { return n.id === id; })) return false;
+    _notifications.unshift({ id: id, type: type, text: text, time: time || new Date().toISOString(), read: false });
+    _save();
+    return true;
+}
+
+/* ── Render the dropdown ─────────────────────────────── */
+function _render() {
+    var list  = document.getElementById('notifList');
+    var badge = document.getElementById('notifBadge');
+    var clearBtn = document.getElementById('notifClearBtn');
+    if (!list) return;
+
+    var unread = _notifications.filter(function(n) { return !n.read; }).length;
+
+    /* Badge */
+    if (unread > 0) {
+        badge.textContent = unread > 99 ? '99+' : String(unread);
+        badge.style.display = 'flex';
+    } else {
+        badge.style.display = 'none';
+    }
+
+    /* Clear btn visibility */
+    if (clearBtn) clearBtn.style.display = _notifications.length ? '' : 'none';
+
+    /* List */
+    if (!_notifications.length) {
+        list.innerHTML = '<div class="notif-empty"><i class="fas fa-check-circle" style="color:var(--violet);font-size:1.3rem;margin-bottom:0.5rem;display:block"></i>You\'re all caught up!</div>';
+        return;
+    }
+
+    var iconMap = { accepted: 'fa-user-check', message: 'fa-comment-alt', rejected: 'fa-times-circle', pending: 'fa-clock' };
+
+    list.innerHTML = _notifications.map(function(n) {
+        var iconCls = iconMap[n.type] || 'fa-bell';
+        var timeStr = _relTime(n.time);
+        return '<div class="notif-item' + (n.read ? '' : ' unread') + '" data-id="' + n.id + '" onclick="notifItemClick()" style="cursor:pointer">' +
+            '<div class="notif-icon ' + (n.type || 'message') + '"><i class="fas ' + iconCls + '"></i></div>' +
+            '<div class="notif-text">' +
+                '<div class="notif-text-main">' + _esc(n.text) + '</div>' +
+                '<div class="notif-text-time">' + timeStr + '</div>' +
+            '</div>' +
+            (!n.read ? '<div class="notif-unread-dot"></div>' : '') +
+        '</div>';
+    }).join('');
+}
+
+/* ── Relative time helper ────────────────────────────── */
+function _relTime(iso) {
+    try {
+        var diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+        if (diff < 60)   return 'Just now';
+        if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+        if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+        return Math.floor(diff / 86400) + 'd ago';
+    } catch(e) { return ''; }
+}
+
+function _esc(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── Mark all as read ────────────────────────────────── */
+function _markAllRead() {
+    _notifications.forEach(function(n) { n.read = true; });
+    _save();
+    _render();
+}
+
+/* ── Toggle dropdown ─────────────────────────────────── */
+window.toggleNotifDropdown = function(e) {
+    e.stopPropagation();
+    var panel = document.getElementById('notifDropdown');
+    if (!panel) return;
+    _dropdownOpen = !_dropdownOpen;
+    panel.style.display = _dropdownOpen ? 'block' : 'none';
+    if (_dropdownOpen) {
+        _markAllRead();
+        _render();
+    }
+};
+
+/* ── Clear all ───────────────────────────────────────── */
+window.clearAllNotifications = function() {
+    /* Mark every current notification id as dismissed so polling never re-adds them */
+    _notifications.forEach(function(n) { _dismissed[n.id] = true; });
+    _saveDismissed();
+    _notifications = [];
+    _save();
+    _render();
+};
+
+/* ── Navigate to connections on item click ───────────── */
+window.notifItemClick = function() {
+    document.getElementById('notifDropdown').style.display = 'none';
+    _dropdownOpen = false;
+    if (typeof showView === 'function') showView('connections');
+};
+
+/* ── Outside-click to close ──────────────────────────── */
+document.addEventListener('click', function(e) {
+    if (!_dropdownOpen) return;
+    var wrap = document.getElementById('notifWrap');
+    if (wrap && !wrap.contains(e.target)) {
+        document.getElementById('notifDropdown').style.display = 'none';
+        _dropdownOpen = false;
+    }
+});
+
+/* ── Escape key ──────────────────────────────────────── */
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && _dropdownOpen) {
+        document.getElementById('notifDropdown').style.display = 'none';
+        _dropdownOpen = false;
+    }
+});
+
+/* ════════════════════════════════════════════════════
+   POLL CONNECTIONS & BUILD NOTIFICATIONS
+   ════════════════════════════════════════════════════ */
+var _lastKnownConnections = null;  // Map<id, {status, unreadByClient}>
+
+async function _pollConnections() {
+    var token = localStorage.getItem('client_token');
+    if (!token) return;
+    try {
+        var r = await fetch((window.CLIENT_API || 'http://localhost:5000/api') + '/connections/my', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (!r.ok) return;
+        var d = await r.json();
+        if (!d.success) return;
+        _processConnections(d.data || []);
+    } catch(e) {}
+}
+
+function _processConnections(conns) {
+    var changed = false;
+    conns.forEach(function(c) {
+        var arch     = c.architect || {};
+        var archName = arch.name || 'An architect';
+        var cid      = c._id;
+
+        var prev = _lastKnownConnections ? _lastKnownConnections[cid] : null;
+
+        /* Request accepted */
+        if (c.status === 'accepted' && (!prev || prev.status !== 'accepted')) {
+            if (_add('accepted-' + cid, 'accepted',
+                archName + ' accepted your connection request!', c.updatedAt)) changed = true;
+        }
+
+        /* Request rejected */
+        if (c.status === 'rejected' && (!prev || prev.status !== 'rejected')) {
+            if (_add('rejected-' + cid, 'rejected',
+                archName + ' declined your connection request.', c.updatedAt)) changed = true;
+        }
+
+        /* New unread messages from architect */
+        if (c.unreadByClient > 0) {
+            var prevUnread = prev ? (prev.unreadByClient || 0) : 0;
+            if (c.unreadByClient > prevUnread) {
+                var msgId = 'msg-' + cid + '-' + c.unreadByClient;
+                var count = c.unreadByClient - prevUnread;
+                var txt   = count === 1
+                    ? archName + ' sent you a message.'
+                    : archName + ' sent you ' + count + ' new messages.';
+                if (_add(msgId, 'message', txt, new Date().toISOString())) changed = true;
+            }
+        }
+    });
+
+    /* Build fresh snapshot */
+    var snap = {};
+    conns.forEach(function(c) { snap[c._id] = { status: c.status, unreadByClient: c.unreadByClient || 0 }; });
+    _lastKnownConnections = snap;
+
+    if (changed) _render();
+}
+
+/* ── Boot ──────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', function() {
+    _load();
+    _render();
+
+    /* Start polling after a short delay so auth is ready */
+    setTimeout(function() {
+        _pollConnections();
+        setInterval(_pollConnections, 20000);   // every 20 s
+    }, 2000);
+});
+
+})();
+</script>
 
 <!-- ── Custom Confirm Modal ───────────────────────────────────────────── -->
 <div id="customConfirmBackdrop" style="
