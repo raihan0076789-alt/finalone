@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms of Service — SmartArch Client Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --ink:       #060a12;
+            --ink-2:     #0d1424;
+            --ink-3:     #111827;
+            --violet:    #8b5cf6;
+            --violet-2:  #6d28d9;
+            --violet-glow: rgba(139,92,246,0.25);
+            --cyan:      #00d4c8;
+            --amber:     #f59e0b;
+            --blue:      #3b82f6;
+            --green:     #10b981;
+            --red:       #ef4444;
+            --slate:     #94a3b8;
+            --slate-2:   #64748b;
+            --white:     #f1f5f9;
+            --border:    rgba(255,255,255,0.07);
+            --card-bg:   rgba(255,255,255,0.04);
+            --nav-h:     68px;
+            --r:         12px;
+            --r-lg:      20px;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--ink);
+            color: var(--white);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        body::before {
+            content: '';
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            background-image:
+                linear-gradient(rgba(139,92,246,0.022) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(139,92,246,0.022) 1px, transparent 1px);
+            background-size: 72px 72px;
+        }
+
+        body::after {
+            content: '';
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+            opacity: 0.4;
+        }
+
+        .ambient { position: fixed; pointer-events: none; z-index: 0; border-radius: 50%; filter: blur(130px); }
+        .a1 { width: 700px; height: 700px; top: -200px; left: -150px; background: radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%); }
+        .a2 { width: 600px; height: 600px; bottom: -100px; right: -100px; background: radial-gradient(circle, rgba(0,212,200,0.06) 0%, transparent 70%); }
+        .a3 { width: 500px; height: 500px; top: 40%; left: 50%; transform: translate(-50%,-50%); background: radial-gradient(circle, rgba(139,92,246,0.04) 0%, transparent 70%); }
+
+        /* ── NAVBAR ─────────────────────────────────────────────────────────── */
+        .navbar {
+            position: fixed; top: 0; left: 0; right: 0; height: var(--nav-h);
+            display: flex; align-items: center; padding: 0 5%;
+            background: rgba(6,10,18,0.88); backdrop-filter: blur(24px);
+            border-bottom: 1px solid var(--border); z-index: 1000;
+            transition: background 0.3s;
+        }
+
+        .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+
+        .nav-logo {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, var(--violet), var(--violet-2));
+            border-radius: 9px; display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 1rem;
+            box-shadow: 0 0 20px rgba(139,92,246,0.35);
+        }
+
+        .nav-brand-text {
+            font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.1rem;
+            color: var(--white); letter-spacing: -0.5px;
+        }
+        .nav-brand-text em { font-style: normal; color: var(--cyan); }
+
+        .client-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: rgba(139,92,246,0.12);
+            border: 1px solid rgba(139,92,246,0.25);
+            color: var(--violet);
+            padding: 2px 10px; border-radius: 40px;
+            font-size: 0.65rem; font-weight: 700;
+            letter-spacing: 1.2px; text-transform: uppercase;
+        }
+
+        .nav-right { margin-left: auto; display: flex; gap: 0.75rem; align-items: center; }
+
+        .btn-ghost {
+            background: transparent; border: 1px solid rgba(255,255,255,0.15); color: var(--white);
+            padding: 0.45rem 1.1rem; border-radius: 9px; font-size: 0.875rem; font-weight: 500;
+            cursor: pointer; text-decoration: none; display: inline-flex; align-items: center;
+            gap: 0.4rem; transition: all 0.2s;
+        }
+        .btn-ghost:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05); }
+
+        .btn-cta {
+            background: linear-gradient(135deg, var(--violet), var(--violet-2));
+            color: #fff; border: none;
+            padding: 0.5rem 1.25rem; border-radius: 9px; font-size: 0.875rem;
+            font-weight: 700; cursor: pointer; text-decoration: none;
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            transition: all 0.25s; font-family: 'Syne', sans-serif;
+        }
+        .btn-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(139,92,246,0.4); }
+
+        /* ── PAGE HERO ──────────────────────────────────────────────────────── */
+        .page-hero {
+            padding: calc(var(--nav-h) + 4rem) 5% 3.5rem;
+            position: relative; z-index: 1;
+            max-width: 900px; margin: 0 auto; text-align: center;
+        }
+
+        .hero-eyebrow {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(139,92,246,0.08); border: 1px solid rgba(139,92,246,0.25);
+            color: var(--violet); padding: 5px 14px; border-radius: 40px;
+            font-size: 0.72rem; font-weight: 700; letter-spacing: 1.5px;
+            text-transform: uppercase; margin-bottom: 1.5rem;
+        }
+
+        .page-h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2.2rem, 4.5vw, 3.4rem);
+            font-weight: 800; letter-spacing: -1.5px;
+            color: var(--white); line-height: 1.1; margin-bottom: 1rem;
+        }
+
+        .page-h1 span {
+            background: linear-gradient(120deg, var(--violet) 0%, #a78bfa 60%, var(--cyan) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+
+        .page-sub { color: var(--slate); font-size: 1.05rem; line-height: 1.75; max-width: 580px; margin: 0 auto 1.5rem; }
+
+        .last-updated {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: var(--card-bg); border: 1px solid var(--border);
+            padding: 6px 14px; border-radius: 30px;
+            font-size: 0.8rem; color: var(--slate-2);
+        }
+        .last-updated i { color: var(--violet); }
+
+        /* ── LAYOUT ─────────────────────────────────────────────────────────── */
+        .doc-layout {
+            max-width: 1200px; margin: 0 auto;
+            padding: 0 5% 6rem;
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            gap: 3rem;
+            position: relative; z-index: 1;
+        }
+
+        /* ── SIDEBAR TOC ─────────────────────────────────────────────────────── */
+        .toc {
+            position: sticky; top: calc(var(--nav-h) + 1.5rem);
+            height: fit-content;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--r-lg);
+            padding: 1.25rem;
+        }
+
+        .toc-title {
+            font-family: 'Syne', sans-serif; font-size: 0.72rem; font-weight: 700;
+            color: var(--slate-2); text-transform: uppercase; letter-spacing: 1.5px;
+            margin-bottom: 1rem; display: flex; align-items: center; gap: 6px;
+        }
+        .toc-title i { color: var(--violet); }
+
+        .toc-link {
+            display: flex; align-items: flex-start; gap: 8px;
+            padding: 0.55rem 0.75rem; border-radius: 8px;
+            color: var(--slate-2); text-decoration: none; font-size: 0.82rem;
+            line-height: 1.4; transition: all 0.2s; margin-bottom: 2px;
+        }
+        .toc-link i { color: var(--violet); font-size: 0.65rem; margin-top: 4px; flex-shrink: 0; }
+        .toc-link:hover { color: var(--white); background: rgba(255,255,255,0.06); }
+        .toc-link.active { color: var(--violet); background: rgba(139,92,246,0.08); }
+
+        /* ── CONTENT ─────────────────────────────────────────────────────────── */
+        .doc-content { min-width: 0; }
+
+        .doc-section {
+            margin-bottom: 3rem;
+            padding-bottom: 3rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .doc-section:last-child { border-bottom: none; padding-bottom: 0; }
+
+        .section-num {
+            display: inline-flex; align-items: center; gap: 8px;
+            font-size: 0.72rem; font-weight: 700; letter-spacing: 1.5px;
+            text-transform: uppercase; color: var(--violet); margin-bottom: 0.75rem;
+        }
+        .section-num::before {
+            content: '';
+            display: inline-block; width: 24px; height: 2px;
+            background: var(--violet); border-radius: 2px;
+        }
+
+        .section-h2 {
+            font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800;
+            letter-spacing: -0.5px; color: var(--white); margin-bottom: 1rem;
+        }
+
+        .doc-p {
+            color: var(--slate); font-size: 0.96rem; line-height: 1.85;
+            margin-bottom: 1rem;
+        }
+        .doc-p:last-child { margin-bottom: 0; }
+        .doc-p strong { color: var(--white); font-weight: 600; }
+
+        /* Bullet list */
+        .doc-list {
+            list-style: none; margin: 1rem 0;
+            display: flex; flex-direction: column; gap: 0.5rem;
+        }
+        .doc-list li {
+            display: flex; align-items: flex-start; gap: 0.75rem;
+            color: var(--slate); font-size: 0.95rem; line-height: 1.7;
+        }
+        .doc-list li::before {
+            content: ''; width: 6px; height: 6px; border-radius: 50%;
+            background: var(--violet); flex-shrink: 0; margin-top: 9px;
+        }
+        .doc-list li strong { color: var(--white); }
+
+        /* Highlight box */
+        .highlight-box {
+            background: rgba(139,92,246,0.06);
+            border: 1px solid rgba(139,92,246,0.22);
+            border-left: 3px solid var(--violet);
+            border-radius: var(--r);
+            padding: 1.1rem 1.4rem;
+            margin: 1.5rem 0;
+            font-size: 0.93rem; color: var(--slate); line-height: 1.75;
+        }
+        .highlight-box strong { color: var(--white); }
+        .highlight-box.amber  { background: rgba(245,158,11,0.06); border-color: rgba(245,158,11,0.25); border-left-color: var(--amber); }
+        .highlight-box.red    { background: rgba(239,68,68,0.06);  border-color: rgba(239,68,68,0.25);  border-left-color: var(--red); }
+        .highlight-box.green  { background: rgba(16,185,129,0.06); border-color: rgba(16,185,129,0.25); border-left-color: var(--green); }
+        .highlight-box.cyan   { background: rgba(0,212,200,0.06);  border-color: rgba(0,212,200,0.25);  border-left-color: var(--cyan); }
+
+        /* Allowed / Denied grid */
+        .allowed-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.5rem 0;
+        }
+        .rule-card {
+            background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: var(--r); padding: 1.1rem 1.25rem;
+        }
+        .rule-card.allowed { border-left: 3px solid var(--green); }
+        .rule-card.denied  { border-left: 3px solid var(--red); }
+        .rule-card-header {
+            display: flex; align-items: center; gap: 0.5rem;
+            font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.85rem;
+            margin-bottom: 0.75rem;
+        }
+        .rule-card.allowed .rule-card-header { color: var(--green); }
+        .rule-card.denied  .rule-card-header { color: var(--red); }
+        .rule-list { list-style: none; display: flex; flex-direction: column; gap: 0.3rem; }
+        .rule-list li { font-size: 0.82rem; color: var(--slate); padding-left: 0.875rem; position: relative; line-height: 1.5; }
+        .rule-list li::before { content: '–'; position: absolute; left: 0; color: var(--slate-2); }
+
+        /* Responsibility items */
+        .resp-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 0.875rem; margin: 1.5rem 0;
+        }
+        .resp-item {
+            background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: var(--r); padding: 1.1rem;
+            transition: border-color 0.2s;
+        }
+        .resp-item:hover { border-color: rgba(139,92,246,0.22); }
+        .resp-item-icon { font-size: 1.4rem; display: block; margin-bottom: 0.6rem; }
+        .resp-item-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.875rem; color: var(--white); margin-bottom: 0.3rem; }
+        .resp-item-desc { font-size: 0.8rem; color: var(--slate-2); line-height: 1.55; }
+
+        /* Admin rights */
+        .admin-rights {
+            background: rgba(239,68,68,0.05); border: 1px solid rgba(239,68,68,0.18);
+            border-radius: var(--r-lg); padding: 1.5rem; margin: 1.5rem 0;
+        }
+        .admin-rights-header {
+            display: flex; align-items: center; gap: 0.75rem;
+            font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.95rem;
+            color: var(--red); margin-bottom: 1rem;
+        }
+        .admin-rights-header i { font-size: 1.1rem; }
+
+        /* Contact card */
+        .contact-card {
+            background: linear-gradient(135deg, rgba(139,92,246,0.07), rgba(0,212,200,0.04));
+            border: 1px solid rgba(139,92,246,0.2);
+            border-radius: var(--r-lg); padding: 2rem;
+            text-align: center; margin-top: 1.5rem;
+        }
+        .contact-card i { font-size: 2rem; color: var(--violet); display: block; margin-bottom: 0.75rem; }
+        .contact-card h3 { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1rem; color: var(--white); margin-bottom: 0.4rem; }
+        .contact-card p { color: var(--slate); font-size: 0.875rem; margin-bottom: 0.75rem; }
+        .contact-card a { color: var(--violet); text-decoration: none; font-weight: 600; }
+        .contact-card a:hover { text-decoration: underline; }
+
+        /* ── FOOTER ─────────────────────────────────────────────────────────── */
+        .footer {
+            border-top: 1px solid var(--border);
+            padding: 3.5rem 5%;
+            position: relative; z-index: 1;
+            background: rgba(6,10,18,0.6);
+        }
+
+        .footer-inner {
+            display: grid; grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 3rem; margin-bottom: 2.5rem;
+            max-width: 1400px; margin-left: auto; margin-right: auto;
+        }
+
+        .footer-brand-name {
+            font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 800;
+            color: var(--white); margin: 0.75rem 0 0.5rem;
+        }
+        .footer-brand-desc { color: var(--slate-2); font-size: 0.875rem; line-height: 1.65; max-width: 260px; }
+
+        .footer-col h4 {
+            font-family: 'Syne', sans-serif; font-size: 0.78rem; font-weight: 700;
+            color: var(--slate); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 1.1rem;
+        }
+        .footer-col a {
+            display: block; color: var(--slate-2); text-decoration: none;
+            font-size: 0.875rem; margin-bottom: 0.6rem; transition: color 0.2s;
+        }
+        .footer-col a:hover { color: var(--violet); }
+
+        .footer-bottom {
+            border-top: 1px solid var(--border); padding-top: 1.5rem;
+            display: flex; align-items: center; justify-content: space-between;
+            color: var(--slate-2); font-size: 0.82rem;
+            max-width: 1400px; margin: 0 auto;
+        }
+        .footer-bottom a { color: var(--violet); text-decoration: none; }
+
+        /* ── RESPONSIVE ─────────────────────────────────────────────────────── */
+        @media (max-width: 1024px) {
+            .doc-layout { grid-template-columns: 1fr; }
+            .toc { position: static; }
+            .footer-inner { grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem; }
+        }
+        @media (max-width: 768px) {
+            .allowed-grid { grid-template-columns: 1fr; }
+            .resp-grid { grid-template-columns: 1fr; }
+            .footer-inner { grid-template-columns: 1fr; }
+            .footer-bottom { flex-direction: column; gap: 0.5rem; text-align: center; }
+            .client-badge { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="ambient a1"></div>
+<div class="ambient a2"></div>
+<div class="ambient a3"></div>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+    <a href="client-index.html" class="nav-brand">
+        <div class="nav-logo"><i class="fas fa-users"></i></div>
+        <span class="nav-brand-text">Smart<em>Arch</em></span>
+        <span class="client-badge"><i class="fas fa-circle" style="font-size:0.45rem"></i> Client Portal</span>
+    </a>
+    <div class="nav-right">
+        <a href="client-privacy.html" class="btn-ghost">Privacy Policy</a>
+        <div id="navGuest">
+            <a href="client-index.html" class="btn-ghost">← Back to Home</a>
+        </div>
+        <div id="navUser" style="display:none;">
+            <a href="client-dashboard.html" class="btn-cta">
+                <i class="fas fa-th-large"></i> Dashboard
+            </a>
+        </div>
+    </div>
+</nav>
+
+<!-- PAGE HERO -->
+<div class="page-hero">
+    <div class="hero-eyebrow"><i class="fas fa-balance-scale"></i> Legal &amp; Compliance</div>
+    <h1 class="page-h1">Terms of <span>Service</span></h1>
+    <p class="page-sub">
+        These terms govern your use of the SmartArch Client Portal — how you can use our platform,
+        your responsibilities as a client, and what you can expect from us.
+    </p>
+    <span class="last-updated"><i class="fas fa-calendar-alt"></i> Last updated: December 2025</span>
+</div>
+
+<!-- DOC LAYOUT -->
+<div class="doc-layout">
+
+    <!-- SIDEBAR TOC -->
+    <aside class="toc">
+        <div class="toc-title"><i class="fas fa-list"></i> Contents</div>
+        <a href="#acceptance"    class="toc-link"><i class="fas fa-circle"></i> Acceptance of Terms</a>
+        <a href="#description"   class="toc-link"><i class="fas fa-circle"></i> Service Description</a>
+        <a href="#accounts"      class="toc-link"><i class="fas fa-circle"></i> Client Accounts</a>
+        <a href="#acceptable"    class="toc-link"><i class="fas fa-circle"></i> Acceptable Use</a>
+        <a href="#restrictions"  class="toc-link"><i class="fas fa-circle"></i> Prohibited Activities</a>
+        <a href="#projects"      class="toc-link"><i class="fas fa-circle"></i> Project Briefs</a>
+        <a href="#connections"   class="toc-link"><i class="fas fa-circle"></i> Architect Connections</a>
+        <a href="#ip"            class="toc-link"><i class="fas fa-circle"></i> Intellectual Property</a>
+        <a href="#disclaimer"    class="toc-link"><i class="fas fa-circle"></i> Platform Disclaimer</a>
+        <a href="#admin-rights"  class="toc-link"><i class="fas fa-circle"></i> Admin Rights</a>
+        <a href="#limitations"   class="toc-link"><i class="fas fa-circle"></i> System Limitations</a>
+        <a href="#liability"     class="toc-link"><i class="fas fa-circle"></i> Limitation of Liability</a>
+        <a href="#termination"   class="toc-link"><i class="fas fa-circle"></i> Termination</a>
+        <a href="#updates"       class="toc-link"><i class="fas fa-circle"></i> Terms Updates</a>
+        <a href="#governing"     class="toc-link"><i class="fas fa-circle"></i> Governing Law</a>
+        <a href="#contact"       class="toc-link"><i class="fas fa-circle"></i> Contact</a>
+    </aside>
+
+    <!-- CONTENT -->
+    <main class="doc-content">
+
+        <!-- 1. Acceptance -->
+        <div class="doc-section" id="acceptance">
+            <div class="section-num">Section 01</div>
+            <h2 class="section-h2">Acceptance of Terms</h2>
+            <p class="doc-p">
+                These Terms of Service ("<strong>Terms</strong>") constitute a legally binding agreement between you ("<strong>Client</strong>", "<strong>you</strong>") and SmartArch ("<strong>we</strong>", "<strong>us</strong>", "<strong>our</strong>") governing your access to and use of the SmartArch Client Portal, including all its services, features, APIs, and content.
+            </p>
+            <p class="doc-p">
+                By registering for a client account, logging in, or otherwise using the Client Portal, you confirm that you have read, understood, and agree to be bound by these Terms. If you do not agree with any part of these Terms, you must not use the portal.
+            </p>
+            <div class="highlight-box amber">
+                <strong>Minimum Age:</strong> You must be at least 13 years of age to use the SmartArch Client Portal. Users between 13 and 18 years of age must have parental or guardian consent. By using the portal, you represent that you meet this requirement.
+            </div>
+        </div>
+
+        <!-- 2. Description -->
+        <div class="doc-section" id="description">
+            <div class="section-num">Section 02</div>
+            <h2 class="section-h2">Service Description</h2>
+            <p class="doc-p">
+                The SmartArch Client Portal is a web-based platform that connects homeowners, property developers, and construction clients with verified professional architects. The portal provides the following core services:
+            </p>
+            <ul class="doc-list">
+                <li><strong>Architect Discovery:</strong> Browse verified architect profiles including their specialization, experience, location, portfolio, and ratings to find the right match for your project.</li>
+                <li><strong>Project Brief Management:</strong> Create, edit, and manage detailed project briefs describing your construction or design requirements, including budget, timeline, land size, style preferences, and attachments.</li>
+                <li><strong>Connection Requests:</strong> Send connection requests directly to architects of your choice, with an introductory message and optional project brief context.</li>
+                <li><strong>In-Portal Messaging:</strong> Once an architect accepts your connection, communicate directly through the built-in chat system including text and image messages.</li>
+                <li><strong>File Attachments:</strong> Upload reference images, site plans, and documents to your project briefs to provide architects with comprehensive project context.</li>
+                <li><strong>Support Ticketing:</strong> Submit and track support requests through the integrated ticket system if you need assistance.</li>
+            </ul>
+            <p class="doc-p">
+                We reserve the right to modify, suspend, or discontinue any feature or service component at any time with reasonable notice where practicable.
+            </p>
+        </div>
+
+        <!-- 3. Client Accounts -->
+        <div class="doc-section" id="accounts">
+            <div class="section-num">Section 03</div>
+            <h2 class="section-h2">Client Accounts &amp; Responsibilities</h2>
+            <p class="doc-p">
+                To access the full features of the Client Portal, you must register for a client account. By creating an account, you agree to the following responsibilities:
+            </p>
+
+            <div class="resp-grid">
+                <div class="resp-item">
+                    <span class="resp-item-icon">🔐</span>
+                    <div class="resp-item-title">Account Security</div>
+                    <p class="resp-item-desc">You are responsible for maintaining the confidentiality of your login credentials. Never share your password. You are accountable for all activity under your account.</p>
+                </div>
+                <div class="resp-item">
+                    <span class="resp-item-icon">✅</span>
+                    <div class="resp-item-title">Accurate Information</div>
+                    <p class="resp-item-desc">You must provide truthful, current, and complete information during registration, in your client profile, and in all project briefs you create.</p>
+                </div>
+                <div class="resp-item">
+                    <span class="resp-item-icon">🔔</span>
+                    <div class="resp-item-title">Unauthorized Access</div>
+                    <p class="resp-item-desc">Notify us immediately if you suspect unauthorized access to your account. We are not liable for losses arising from your failure to secure your credentials.</p>
+                </div>
+                <div class="resp-item">
+                    <span class="resp-item-icon">👤</span>
+                    <div class="resp-item-title">One Account Per Person</div>
+                    <p class="resp-item-desc">Each client may maintain one account. Creating multiple accounts to circumvent restrictions, suspensions, or connection limits is prohibited.</p>
+                </div>
+            </div>
+
+            <p class="doc-p">
+                Accounts are personal and non-transferable. You may not sell, transfer, or assign your account or any account rights to another person or entity without our prior written consent.
+            </p>
+        </div>
+
+        <!-- 4. Acceptable Use -->
+        <div class="doc-section" id="acceptable">
+            <div class="section-num">Section 04</div>
+            <h2 class="section-h2">Acceptable Platform Usage</h2>
+            <p class="doc-p">
+                The SmartArch Client Portal is intended for genuine property clients seeking professional architectural services. The following outlines what constitutes acceptable and unacceptable use:
+            </p>
+
+            <div class="allowed-grid">
+                <div class="rule-card allowed">
+                    <div class="rule-card-header"><i class="fas fa-check-circle"></i> Permitted Use</div>
+                    <ul class="rule-list">
+                        <li>Browsing architect profiles and portfolios</li>
+                        <li>Creating genuine project briefs for real construction needs</li>
+                        <li>Sending connection requests to architects of your choice</li>
+                        <li>Exchanging messages with connected architects</li>
+                        <li>Uploading your own reference images and documents</li>
+                        <li>Submitting support tickets for platform assistance</li>
+                        <li>Accessing your account from multiple devices</li>
+                    </ul>
+                </div>
+                <div class="rule-card denied">
+                    <div class="rule-card-header"><i class="fas fa-times-circle"></i> Not Permitted</div>
+                    <ul class="rule-list">
+                        <li>Creating fake or misleading project briefs</li>
+                        <li>Contacting architects for purposes unrelated to architecture</li>
+                        <li>Using the platform for any unlawful purpose</li>
+                        <li>Attempting to circumvent authentication or security systems</li>
+                        <li>Uploading malicious files through the attachment feature</li>
+                        <li>Scraping architect profile data via bots or automated tools</li>
+                        <li>Impersonating another client or platform administrator</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Prohibited Activities -->
+        <div class="doc-section" id="restrictions">
+            <div class="section-num">Section 05</div>
+            <h2 class="section-h2">Prohibited Activities</h2>
+            <p class="doc-p">
+                In addition to the acceptable use guidelines above, the following activities are strictly prohibited and may result in immediate account termination and, where applicable, referral to legal authorities:
+            </p>
+
+            <ul class="doc-list">
+                <li><strong>Security Attacks:</strong> Attempting to gain unauthorized access to admin accounts, other users' accounts, the backend database, or any system component through exploits, credential stuffing, injection attacks, or any other means.</li>
+                <li><strong>Reverse Engineering:</strong> Attempting to decompile, reverse engineer, disassemble, or extract the source code of the platform's backend systems or proprietary algorithms.</li>
+                <li><strong>Denial of Service:</strong> Intentionally overloading platform servers or APIs with excessive requests designed to degrade performance for other users.</li>
+                <li><strong>Data Harvesting:</strong> Using automated tools, scrapers, bots, or scripts to extract architect profile data, user data, or any other platform content without express written permission.</li>
+                <li><strong>Fraudulent Briefs:</strong> Creating project briefs that misrepresent your actual construction needs, budget, or intentions, for the purpose of deceiving architects.</li>
+                <li><strong>Harassment:</strong> Using the messaging system to send abusive, threatening, discriminatory, or spam messages to architects.</li>
+                <li><strong>Malicious Uploads:</strong> Uploading files through the attachment feature that contain malicious code, exploits, or content designed to harm the platform, architects, or other users.</li>
+                <li><strong>Interference with Administration:</strong> Attempting to access, exploit, or interfere with the admin dashboard or any administrative functionality without proper authorization.</li>
+            </ul>
+
+            <div class="highlight-box red">
+                <strong>Zero Tolerance:</strong> Security attacks, unauthorized access attempts, harassment of architects, and fraudulent project briefs will result in immediate and permanent account termination and may be reported to appropriate law enforcement authorities.
+            </div>
+        </div>
+
+        <!-- 6. Project Briefs -->
+        <div class="doc-section" id="projects">
+            <div class="section-num">Section 06</div>
+            <h2 class="section-h2">Project Briefs &amp; Content</h2>
+            <p class="doc-p">
+                Project briefs are the central content you create and manage on the Client Portal. By creating project briefs, you agree to the following:
+            </p>
+
+            <ul class="doc-list">
+                <li><strong>Accuracy:</strong> Project briefs must accurately represent your genuine construction or design requirements. Deliberately misrepresenting project scope, budget, or requirements violates these Terms.</li>
+                <li><strong>Your Content:</strong> You retain ownership of the content in your project briefs. By creating a brief, you grant us a limited license to store, process, and display it for the purpose of providing the service.</li>
+                <li><strong>Attachments:</strong> Files you upload must be your own content or content you have the right to share. Do not upload copyrighted material, confidential third-party documents, or any content that infringes others' intellectual property rights.</li>
+                <li><strong>Content Standards:</strong> All project descriptions and attachments must be appropriate, lawful, and relevant to architectural or construction services. Offensive, illegal, or irrelevant content is prohibited.</li>
+                <li><strong>File Limits:</strong> You may attach up to 10 files per project. Accepted formats include images and documents up to reasonable file size limits enforced by the platform.</li>
+            </ul>
+
+            <div class="highlight-box">
+                <strong>Your content, your control:</strong> You can edit the status, update the details, or delete any project brief at any time from your client dashboard. Deletion is permanent and cannot be undone.
+            </div>
+        </div>
+
+        <!-- 7. Connections -->
+        <div class="doc-section" id="connections">
+            <div class="section-num">Section 07</div>
+            <h2 class="section-h2">Architect Connections &amp; Messaging</h2>
+            <p class="doc-p">
+                The connection system is the primary way you interact with architects on the platform. By using connection and messaging features, you agree to the following:
+            </p>
+
+            <ul class="doc-list">
+                <li><strong>Good Faith Requests:</strong> Connection requests must be sent in good faith and for genuine architectural inquiry. Sending connection requests as spam or for non-architectural purposes is prohibited.</li>
+                <li><strong>Architect Autonomy:</strong> Architects have the sole right to accept or reject connection requests. Rejection does not constitute discrimination and is entirely within the architect's discretion. You may send a new request after a rejection.</li>
+                <li><strong>Professional Communication:</strong> All messages exchanged with architects through the platform must be professional, relevant, and respectful. Abusive, offensive, or harassing messages are grounds for account termination.</li>
+                <li><strong>Image Messages:</strong> Images sent through the chat must be relevant to your project or architectural discussion. Uploading inappropriate or harmful images is strictly prohibited.</li>
+                <li><strong>No External Obligation:</strong> A connection or chat conversation does not constitute a contract, engagement agreement, or obligation on the part of either party. Any formal arrangement with an architect must be established through a separate agreement outside this platform.</li>
+            </ul>
+
+            <div class="highlight-box cyan">
+                <strong>Important:</strong> SmartArch is a connection platform only. We are not a party to any agreement between you and an architect. Any contract, payment, or service arrangement you make with an architect is entirely independent of this platform and subject to your own terms with that architect.
+            </div>
+        </div>
+
+        <!-- 8. IP -->
+        <div class="doc-section" id="ip">
+            <div class="section-num">Section 08</div>
+            <h2 class="section-h2">Intellectual Property</h2>
+            <p class="doc-p">
+                <strong>Platform Ownership:</strong> SmartArch, including its source code, backend architecture, API design, database schema, frontend interface, architect matching algorithms, and all associated documentation, is the intellectual property of SmartArch. All rights are reserved. Unauthorized reproduction, distribution, or commercial use of any platform component is prohibited.
+            </p>
+
+            <p class="doc-p">
+                <strong>Your Project Content:</strong> Project briefs, descriptions, and attachments you create on the platform are your content. You retain full ownership. By using the platform, you grant us a limited, non-exclusive license to store, process, and display your content solely for the purpose of providing the service to you and connected architects.
+            </p>
+
+            <p class="doc-p">
+                <strong>Architect Profiles &amp; Portfolios:</strong> Architect profiles, portfolio links, and design work displayed on the platform belong to the respective architects. You may view this content for the purpose of evaluating potential professional relationships, but may not reproduce, copy, or commercially exploit architect profile content without their explicit consent.
+            </p>
+
+            <p class="doc-p">
+                <strong>Feedback:</strong> Any feedback, suggestions, or ideas you provide about the platform may be used by us to improve our services without obligation or compensation to you.
+            </p>
+        </div>
+
+        <!-- 9. Platform Disclaimer -->
+        <div class="doc-section" id="disclaimer">
+            <div class="section-num">Section 09</div>
+            <h2 class="section-h2">Platform Disclaimer</h2>
+            <p class="doc-p">
+                The SmartArch Client Portal is a connection and communication platform. We provide the tools to find and communicate with architects, but we make the following important disclosures:
+            </p>
+
+            <ul class="doc-list">
+                <li><strong>Not a Professional Services Provider:</strong> SmartArch is not an architectural firm, construction company, or professional services provider. We do not provide architectural advice, structural engineering assessments, or construction guidance. All professional advice must come from qualified, licensed architects you engage independently.</li>
+                <li><strong>Architect Verification:</strong> While architects registered on the platform have agreed to our Terms of Service, we do not independently verify every architect's license, credentials, or claimed experience. You are responsible for conducting your own due diligence before engaging any architect professionally.</li>
+                <li><strong>No Guarantees of Outcome:</strong> We do not guarantee that you will find an architect, receive a response to your connection request, or secure an architectural engagement through the platform.</li>
+                <li><strong>Independent Contracts:</strong> Any professional engagement, service agreement, or payment arrangement between you and an architect is entirely outside the scope of this platform. SmartArch has no involvement in, liability for, or oversight of such arrangements.</li>
+                <li><strong>Accuracy of Profiles:</strong> Architect profile information (experience, specialization, rating) is provided by architects themselves. We display this information in good faith but do not independently verify every claim.</li>
+            </ul>
+
+            <div class="highlight-box amber">
+                <strong>Due Diligence Required:</strong> Always verify an architect's license and credentials through your local professional body or licensing authority before signing any contract or making any payment for professional services.
+            </div>
+        </div>
+
+        <!-- 10. Admin Rights -->
+        <div class="doc-section" id="admin-rights">
+            <div class="section-num">Section 10</div>
+            <h2 class="section-h2">Admin Rights &amp; Account Moderation</h2>
+            <p class="doc-p">
+                Platform administrators have the authority to manage client accounts and content to maintain the safety, integrity, and performance of the Client Portal. By using the platform, you acknowledge the following administrative rights:
+            </p>
+
+            <div class="admin-rights">
+                <div class="admin-rights-header"><i class="fas fa-shield-alt"></i> Administrative Powers</div>
+                <ul class="doc-list" style="margin:0">
+                    <li><strong>Account Suspension:</strong> Administrators may temporarily suspend any client account found to violate these Terms, engage in suspicious activity, or pose a risk to the platform or architects.</li>
+                    <li><strong>Account Termination:</strong> Administrators may permanently delete any client account and all associated data for severe or repeated violations, including security attacks, harassment, or fraud.</li>
+                    <li><strong>Content Removal:</strong> Administrators may delete project briefs or remove attachments that contain harmful, illegal, or policy-violating content.</li>
+                    <li><strong>Connection Moderation:</strong> Administrators may remove connections or message threads if they are found to contain harassing or abusive content.</li>
+                    <li><strong>User Data Access:</strong> Administrators can view client account details, project briefs, and connection records through the admin dashboard for the purposes of moderation, support, and platform management.</li>
+                </ul>
+            </div>
+
+            <p class="doc-p">
+                Where appropriate, we will notify affected clients of significant administrative actions taken against their accounts. Appeals may be submitted by contacting us at the email address provided in the Contact section.
+            </p>
+        </div>
+
+        <!-- 11. System Limitations -->
+        <div class="doc-section" id="limitations">
+            <div class="section-num">Section 11</div>
+            <h2 class="section-h2">System Limitations &amp; Service Availability</h2>
+            <p class="doc-p">
+                The SmartArch Client Portal is provided as-is and we make the following disclosures about system limitations:
+            </p>
+
+            <ul class="doc-list">
+                <li><strong>Service Availability:</strong> We strive to maintain portal availability but do not guarantee 100% uptime. Scheduled maintenance, unexpected outages, or infrastructure failures may cause temporary service interruptions.</li>
+                <li><strong>Message Delivery:</strong> While we make every effort to ensure messages are delivered reliably, we do not guarantee real-time delivery or that architects will read or respond to your messages within any particular timeframe.</li>
+                <li><strong>File Upload Limits:</strong> Project brief attachments are limited to 10 files per project, with individual file size caps enforced by the platform. Files exceeding limits may be rejected.</li>
+                <li><strong>Data Retention:</strong> We maintain your project and connection data for as long as your account is active. We do not guarantee data retention after account deletion or for accounts inactive for extended periods.</li>
+                <li><strong>Browser Compatibility:</strong> The portal is designed for modern web browsers. Performance on older or unsupported browsers is not guaranteed.</li>
+                <li><strong>Connection Uniqueness:</strong> The platform enforces one connection record per client-architect pair. Attempting to create duplicate connections through workarounds violates these Terms.</li>
+            </ul>
+        </div>
+
+        <!-- 12. Liability -->
+        <div class="doc-section" id="liability">
+            <div class="section-num">Section 12</div>
+            <h2 class="section-h2">Limitation of Liability</h2>
+            <p class="doc-p">
+                To the fullest extent permitted by applicable law, SmartArch and its operators shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including but not limited to:
+            </p>
+
+            <ul class="doc-list">
+                <li>Loss of project data or communication history due to system failures, account suspension, or termination</li>
+                <li>Financial losses or construction costs arising from professional engagements with architects found through the platform</li>
+                <li>Damages resulting from unauthorized access to your account due to failure to secure your credentials</li>
+                <li>Business losses or damages arising from portal downtime or service interruptions</li>
+                <li>Any third-party claims arising from your use of the platform or your communications with architects</li>
+                <li>Losses arising from reliance on architect profile information that proves to be inaccurate or outdated</li>
+                <li>Any disputes, damages, or losses arising from professional agreements made between you and an architect outside this platform</li>
+            </ul>
+
+            <p class="doc-p">
+                Our total liability to you for any claim arising from these Terms or your use of the platform shall not exceed the amount you have paid to us (if any) in the twelve months preceding the claim.
+            </p>
+
+            <div class="highlight-box">
+                <strong>Important:</strong> Some jurisdictions do not allow the exclusion of certain warranties or limitation of liability for consequential damages. In such jurisdictions, our liability is limited to the maximum extent permitted by applicable law.
+            </div>
+        </div>
+
+        <!-- 13. Termination -->
+        <div class="doc-section" id="termination">
+            <div class="section-num">Section 13</div>
+            <h2 class="section-h2">Account Termination</h2>
+            <p class="doc-p">
+                Either you or SmartArch may terminate your client account under the following circumstances:
+            </p>
+
+            <p class="doc-p">
+                <strong>Termination by You:</strong> You may request deletion of your account at any time by contacting us. Upon account deletion, all your personal information, project briefs, attachments, and connection data will be permanently erased from our database. This action is irreversible.
+            </p>
+
+            <p class="doc-p">
+                <strong>Termination by Us:</strong> We may suspend or terminate your account and access to the portal immediately, without prior notice or liability, if:
+            </p>
+
+            <ul class="doc-list">
+                <li>You breach any provision of these Terms of Service</li>
+                <li>We determine in our sole discretion that your conduct is harmful to architects, other users, or the platform</li>
+                <li>You engage in any prohibited activity as described in Section 05</li>
+                <li>You use the platform to harass, spam, or abuse architects</li>
+                <li>Your account has been inactive for an extended period</li>
+                <li>We are required to do so by law or a court order</li>
+            </ul>
+
+            <p class="doc-p">
+                Upon termination, your right to use the portal ceases immediately. Provisions of these Terms that by their nature should survive termination — including intellectual property, disclaimer of warranties, and limitation of liability — shall survive.
+            </p>
+        </div>
+
+        <!-- 14. Updates -->
+        <div class="doc-section" id="updates">
+            <div class="section-num">Section 14</div>
+            <h2 class="section-h2">Updates to These Terms</h2>
+            <p class="doc-p">
+                We reserve the right to modify these Terms of Service at any time to reflect changes in portal features, legal requirements, or operational needs. When we make significant changes:
+            </p>
+
+            <ul class="doc-list">
+                <li>The "Last Updated" date at the top of this page will be revised</li>
+                <li>A notification may be displayed within the Client Portal for material changes</li>
+                <li>The updated Terms will be accessible at this URL immediately upon publication</li>
+            </ul>
+
+            <p class="doc-p">
+                Your continued use of the SmartArch Client Portal after any changes to these Terms constitutes your acceptance of the revised Terms. If you do not agree to the updated Terms, you must stop using the portal and may request account deletion.
+            </p>
+        </div>
+
+        <!-- 15. Governing Law -->
+        <div class="doc-section" id="governing">
+            <div class="section-num">Section 15</div>
+            <h2 class="section-h2">Governing Law &amp; Disputes</h2>
+            <p class="doc-p">
+                These Terms of Service shall be governed by and construed in accordance with applicable laws, without regard to conflict of law principles. Any disputes arising from these Terms or your use of the Client Portal that cannot be resolved informally shall be subject to the exclusive jurisdiction of the appropriate courts.
+            </p>
+            <p class="doc-p">
+                Before initiating any formal dispute resolution process, we encourage you to contact us first. We are committed to resolving disputes fairly and efficiently through direct communication.
+            </p>
+        </div>
+
+        <!-- 16. Contact -->
+        <div class="doc-section" id="contact">
+            <div class="section-num">Section 16</div>
+            <h2 class="section-h2">Contact &amp; Appeals</h2>
+            <p class="doc-p">
+                If you have questions about these Terms, wish to appeal an administrative action, or need to make a data request, please contact us:
+            </p>
+            <div class="contact-card">
+                <i class="fas fa-balance-scale"></i>
+                <h3>Legal &amp; Terms Inquiries</h3>
+                <p>For questions about these Terms, account appeals, or legal inquiries:</p>
+                <a href="mailto:legal@smartarch.pro">legal@smartarch.pro</a>
+                <p style="margin-top:0.75rem;font-size:0.8rem;color:var(--slate-2)">
+                    We aim to respond to all legal and compliance inquiries within 5 business days.
+                    For privacy-specific requests, please see our
+                    <a href="client-privacy.html">Privacy Policy</a>.
+                </p>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+    <div class="footer-inner">
+        <div>
+            <div class="nav-logo" style="width:40px;height:40px"><i class="fas fa-users"></i></div>
+            <div class="footer-brand-name">SmartArch — Client Portal</div>
+            <p class="footer-brand-desc">The trusted platform connecting homeowners and clients with verified professional architects.</p>
+        </div>
+        <div class="footer-col">
+            <h4>For Clients</h4>
+            <a href="client-index.html#features">Services</a>
+            <a href="client-index.html#workflow">How It Works</a>
+        </div>
+        <div class="footer-col">
+            <h4>Company</h4>
+            <a href="client-about.html">About</a>
+            <a href="client-contact.html">Contact</a>
+        </div>
+        <div class="footer-col">
+            <h4>Legal</h4>
+            <a href="client-privacy.html">Privacy Policy</a>
+            <a href="client-terms.html" style="color:var(--violet)">Terms of Service</a>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <span>&copy; 2025 SmartArch. All rights reserved.</span>
+        <span>Client Portal — Built with <span style="color:var(--violet)">♥</span> for homeowners</span>
+    </div>
+</footer>
+
+<script>
+    // Highlight active TOC link on scroll
+    const sections = document.querySelectorAll('.doc-section');
+    const tocLinks = document.querySelectorAll('.toc-link');
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                tocLinks.forEach(l => l.classList.remove('active'));
+                const active = document.querySelector(`.toc-link[href="#${entry.target.id}"]`);
+                if (active) active.classList.add('active');
+            }
+        });
+    }, { rootMargin: '-20% 0px -60% 0px', threshold: 0 });
+
+    sections.forEach(s => observer.observe(s));
+
+    function checkAuth() {
+        const token = localStorage.getItem('token');
+        if (token) {
+            document.getElementById('navGuest').style.display = 'none';
+            document.getElementById('navUser').style.display = 'flex';
+        } else {
+            document.getElementById('navGuest').style.display = 'block';
+            document.getElementById('navUser').style.display = 'none';
+        }
+    }
+    document.addEventListener('DOMContentLoaded', checkAuth);
+</script>
+</body>
+</html>
