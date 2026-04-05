@@ -1828,20 +1828,15 @@ function archConnCardHtml(c) {
         ? proj.type.charAt(0).toUpperCase() + proj.type.slice(1)
         : (c.projectName ? 'Project' : '');
     const projectBanner = c.projectName ? `
-        <div style="background:linear-gradient(135deg,rgba(0,212,200,0.13) 0%,rgba(99,102,241,0.13) 100%);border-bottom:1px solid rgba(255,255,255,0.07);padding:0.75rem 1.1rem;display:flex;align-items:center;gap:0.6rem;">
-            <div style="width:32px;height:32px;border-radius:8px;background:rgba(0,212,200,0.12);border:1px solid rgba(0,212,200,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <i class="fas fa-folder-open" style="color:#00d4c8;font-size:0.85rem;"></i>
+        <div style="background:linear-gradient(135deg,rgba(139,92,246,0.13) 0%,rgba(0,212,200,0.08) 100%);border-bottom:1px solid rgba(255,255,255,0.07);padding:0.75rem 1.1rem;display:flex;align-items:center;gap:0.6rem;">
+            <div style="width:32px;height:32px;border-radius:8px;background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.22);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="fas fa-folder-open" style="color:#8b5cf6;font-size:0.85rem;"></i>
             </div>
             <div style="min-width:0;">
                 <div style="font-size:0.82rem;font-weight:700;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(c.projectName)}</div>
                 ${projTypeLabel ? `<div style="font-size:0.7rem;color:#64748b;text-transform:capitalize;">${escHtml(projTypeLabel)}</div>` : ''}
             </div>
-            <button onclick="openConnDetailModal('${c._id}')" title="View full project details"
-                style="margin-left:auto;flex-shrink:0;padding:4px 10px;background:rgba(99,102,241,0.12);color:#818cf8;font-size:0.72rem;font-weight:600;border:1px solid rgba(99,102,241,0.25);border-radius:7px;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:0.3rem;transition:all 0.2s;"
-                onmouseover="this.style.background='rgba(99,102,241,0.22)';this.style.color='#a5b4fc';"
-                onmouseout="this.style.background='rgba(99,102,241,0.12)';this.style.color='#818cf8';">
-                <i class="fas fa-expand-alt" style="font-size:0.65rem;"></i> View Details
-            </button>
+            <i class="fas fa-chevron-right" style="margin-left:auto;color:#475569;font-size:0.7rem;flex-shrink:0;"></i>
         </div>` : '';
 
     // ── Description (intro message, 2-line clamp matching .project-info > p) ──
@@ -1862,44 +1857,10 @@ function archConnCardHtml(c) {
         ? `<span style="background:#ef4444;color:#fff;border-radius:20px;padding:1px 7px;font-size:0.68rem;font-weight:700;margin-left:0.35rem;">${c.unreadByArchitect} new</span>`
         : '';
 
-    // ── Action buttons ────────────────────────────────────────────────────────
-    let actions = '';
-    if (c.status === 'pending') {
-        actions = `
-            <div style="display:flex;gap:0.6rem;padding-top:0.875rem;border-top:1px solid rgba(255,255,255,0.07);">
-                <button onclick="respondToConnection('${c._id}','accept')"
-                    style="flex:1;padding:0.55rem 0;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-weight:700;font-size:0.82rem;border:none;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.4rem;transition:all 0.2s;"
-                    onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 16px rgba(16,185,129,0.3)';"
-                    onmouseout="this.style.transform='';this.style.boxShadow='';">
-                    <i class="fas fa-check"></i> Accept
-                </button>
-                <button onclick="respondToConnection('${c._id}','reject')"
-                    style="flex:1;padding:0.55rem 0;background:rgba(244,63,94,0.08);color:#f43f5e;font-weight:700;font-size:0.82rem;border:1px solid rgba(244,63,94,0.25);border-radius:9px;cursor:pointer;transition:all 0.2s;"
-                    onmouseover="this.style.background='rgba(244,63,94,0.18)';"
-                    onmouseout="this.style.background='rgba(244,63,94,0.08)';">
-                    <i class="fas fa-times"></i> Decline
-                </button>
-            </div>`;
-    } else if (c.status === 'accepted') {
-        actions = `
-            <div style="padding-top:0.875rem;border-top:1px solid rgba(255,255,255,0.07);">
-                <button onclick="openArchChatModal('${c._id}','${escHtml(client.name)}','${avatar}')"
-                    style="width:100%;padding:0.55rem;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-weight:700;font-size:0.85rem;border:none;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;transition:all 0.2s;"
-                    onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 18px rgba(16,185,129,0.3)';"
-                    onmouseout="this.style.transform='';this.style.boxShadow='';">
-                    <i class="fas fa-comments"></i> Chat ${unreadBadge}
-                </button>
-            </div>`;
-    } else {
-        actions = `
-            <div style="padding-top:0.875rem;border-top:1px solid rgba(255,255,255,0.07);text-align:center;font-size:0.8rem;color:#f43f5e;">
-                <i class="fas fa-times-circle"></i> Request declined
-            </div>`;
-    }
-
     return `
-    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:var(--r-lg,14px);overflow:hidden;transition:all 0.25s cubic-bezier(0.22,1,0.36,1);"
-        onmouseover="this.style.transform='translateY(-4px)';this.style.borderColor='rgba(0,212,200,0.2)';this.style.background='rgba(0,212,200,0.03)';this.style.boxShadow='0 20px 60px rgba(0,0,0,0.4),0 0 30px rgba(0,212,200,0.05)';"
+    <div onclick="openConnDetailModal('${c._id}')"
+        style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:var(--r-lg,14px);overflow:hidden;transition:all 0.25s cubic-bezier(0.22,1,0.36,1);cursor:pointer;position:relative;"
+        onmouseover="this.style.transform='translateY(-4px)';this.style.borderColor='rgba(139,92,246,0.28)';this.style.background='rgba(139,92,246,0.04)';this.style.boxShadow='0 20px 60px rgba(0,0,0,0.4),0 0 30px rgba(139,92,246,0.06)';"
         onmouseout="this.style.transform='';this.style.borderColor='rgba(255,255,255,0.07)';this.style.background='rgba(255,255,255,0.04)';this.style.boxShadow='';">
 
         ${projectBanner}
@@ -1908,8 +1869,8 @@ function archConnCardHtml(c) {
             <!-- Client identity row -->
             <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.6rem;">
                 <img src="${avatar}" alt="${escHtml(client.name)}"
-                    style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid rgba(0,212,200,0.3);flex-shrink:0;"
-                    onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(client.name||'C')}&background=00d4c8&color=060a12&bold=true'">
+                    style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid rgba(139,92,246,0.3);flex-shrink:0;"
+                    onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(client.name||'C')}&background=8b5cf6&color=fff&bold=true'">
                 <div style="min-width:0;">
                     <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(client.name)}</div>
                     <div style="font-size:0.75rem;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(client.email || '')}</div>
@@ -1919,19 +1880,47 @@ function archConnCardHtml(c) {
             </div>
 
             ${descHtml}
-            ${actions}
+
+            <!-- Click hint + action buttons row -->
+            <div style="display:flex;align-items:center;gap:0.6rem;padding-top:0.875rem;border-top:1px solid rgba(255,255,255,0.07);">
+                <span style="font-size:0.7rem;color:#475569;display:flex;align-items:center;gap:0.3rem;margin-right:auto;">
+                    <i class="fas fa-expand-alt" style="font-size:0.6rem;"></i> Click to view details
+                </span>
+                ${c.status === 'pending' ? `
+                <button onclick="event.stopPropagation();respondToConnection('${c._id}','accept')"
+                    style="padding:0.45rem 0.9rem;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-weight:700;font-size:0.75rem;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:0.35rem;transition:all 0.2s;"
+                    onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px rgba(16,185,129,0.3)';"
+                    onmouseout="this.style.transform='';this.style.boxShadow='';">
+                    <i class="fas fa-check"></i> Accept
+                </button>
+                <button onclick="event.stopPropagation();respondToConnection('${c._id}','reject')"
+                    style="padding:0.45rem 0.75rem;background:rgba(244,63,94,0.08);color:#f43f5e;font-weight:700;font-size:0.75rem;border:1px solid rgba(244,63,94,0.25);border-radius:8px;cursor:pointer;transition:all 0.2s;"
+                    onmouseover="this.style.background='rgba(244,63,94,0.18)';"
+                    onmouseout="this.style.background='rgba(244,63,94,0.08)';">
+                    <i class="fas fa-times"></i>
+                </button>` : c.status === 'accepted' ? `
+                <button onclick="event.stopPropagation();openArchChatModal('${c._id}','${escHtml(client.name)}','${avatar}')"
+                    style="padding:0.45rem 0.9rem;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-weight:700;font-size:0.75rem;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:0.35rem;transition:all 0.2s;"
+                    onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px rgba(16,185,129,0.3)';"
+                    onmouseout="this.style.transform='';this.style.boxShadow='';">
+                    <i class="fas fa-comments"></i> Chat ${unreadBadge}
+                </button>` : `
+                <span style="font-size:0.75rem;color:#f43f5e;display:flex;align-items:center;gap:0.3rem;">
+                    <i class="fas fa-times-circle"></i> Declined
+                </span>`}
+            </div>
         </div>
     </div>`;
 }
 
-// ── Connection Detail Modal ───────────────────────────────────────────────────
-// Opens the full project-brief modal for a connection.
-// Shows a loading skeleton immediately, then fetches the full ClientProject
-// brief from the new /api/connections/:id/project-brief endpoint.
+// ── Connection Detail Side Panel ──────────────────────────────────────────────
+// Opens a slide-in side panel with full connection + project brief details.
 async function openConnDetailModal(connId) {
     const backdrop = document.getElementById('connDetailBackdrop');
-    const body     = document.getElementById('connDetailBody');
-    if (!backdrop || !body) return;
+    const cover    = document.getElementById('connDetailCover');
+    const scroll   = document.getElementById('connDetailScroll');
+    const footer   = document.getElementById('connDetailFooter');
+    if (!backdrop || !cover || !scroll || !footer) return;
 
     // ── Find base connection from cache ───────────────────────────────────────
     const cached = window._archConnectionsCache || [];
@@ -1940,83 +1929,135 @@ async function openConnDetailModal(connId) {
 
     const client = c.client || {};
     const avatar = client.avatar ||
-        `https://ui-avatars.com/api/?name=${encodeURIComponent(client.name || 'C')}&background=00d4c8&color=060a12&bold=true`;
+        `https://ui-avatars.com/api/?name=${encodeURIComponent(client.name || 'C')}&background=8b5cf6&color=fff&bold=true`;
 
-    // ── Open modal with skeleton loader ───────────────────────────────────────
-    body.innerHTML = _connDetailHeader(c, client, avatar, null) + `
-        <div style="flex:1;overflow-y:auto;padding:1.5rem;">
-            ${_skeletonRows(6)}
-        </div>`;
+    // ── Render cover + skeleton immediately ───────────────────────────────────
+    cover.innerHTML  = _connPanelCover(c, client, avatar, null);
+    scroll.innerHTML = _skeletonRows(6);
+    footer.innerHTML = '';
+
     backdrop.classList.add('open');
     document.body.style.overflow = 'hidden';
 
     // ── Fetch full brief ──────────────────────────────────────────────────────
-    // Trigger on projectName — c.project is null because Connection.project has
-    // ref:'Project' but stores a ClientProject ObjectId, so mongoose populate
-    // silently returns null. The backend resolves via name-snapshot fallback.
     let brief = null;
     if (c.projectName) {
         try {
             const res  = await fetch(`${CONN_API}/${connId}/project-brief`, { headers: connHeaders() });
             const data = await res.json();
             if (data.success) brief = data.data;
-        } catch (e) { /* network error — render without brief */ }
+        } catch (e) { /* render without brief */ }
     }
 
     // ── Re-render with full data ──────────────────────────────────────────────
-    body.innerHTML = _connDetailHeader(c, client, avatar, brief) +
-        `<div style="flex:1;overflow-y:auto;padding:0 1.5rem 1.5rem;" id="connDetailScroll">
-            ${_briefBody(c, client, avatar, brief)}
-        </div>`;
+    cover.innerHTML  = _connPanelCover(c, client, avatar, brief);
+    scroll.innerHTML = _briefBody(c, client, avatar, brief);
+    footer.innerHTML = _connPanelFooter(c, client, avatar);
 }
 
 // ── Sub-renderers ─────────────────────────────────────────────────────────────
 
-function _connDetailHeader(c, client, avatar, brief) {
+function _connPanelCover(c, client, avatar, brief) {
     const statusColor  = c.status === 'pending' ? '#f59e0b' : c.status === 'accepted' ? '#10b981' : '#f43f5e';
-    const statusLabel  = c.status === 'pending' ? 'Pending' : c.status === 'accepted' ? 'Connected' : 'Declined';
+    const statusLabel  = c.status === 'pending' ? 'Pending'  : c.status === 'accepted' ? 'Connected' : 'Declined';
     const statusBorder = c.status === 'pending' ? 'rgba(245,158,11,0.3)' : c.status === 'accepted' ? 'rgba(16,185,129,0.3)' : 'rgba(244,63,94,0.3)';
     const statusBg     = c.status === 'pending' ? 'rgba(245,158,11,0.1)' : c.status === 'accepted' ? 'rgba(16,185,129,0.1)' : 'rgba(244,63,94,0.1)';
+    const projType     = (brief && (brief.projectType || brief.type)) || null;
+    const cap          = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
 
-    // Resolve project type: prefer ClientProject.projectType, fallback to Project.type, fallback to null
-    const projType = (brief && (brief.projectType || brief.type)) || null;
-    const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+    const clientLastSeen = (c.client || {}).lastSeen || null;
+    const online = typeof isOnline === 'function' ? isOnline(clientLastSeen) : false;
+    const onlineDot = online
+        ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:0.7rem;color:#10b981;"><span style="width:7px;height:7px;border-radius:50%;background:#10b981;box-shadow:0 0 6px #10b981;flex-shrink:0;display:inline-block;"></span>Online now</span>`
+        : `<span style="display:inline-flex;align-items:center;gap:4px;font-size:0.7rem;color:#475569;"><span style="width:7px;height:7px;border-radius:50%;background:#475569;flex-shrink:0;display:inline-block;"></span>Offline</span>`;
+
+    const reqDate = c.createdAt ? new Date(c.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : '';
 
     return `
-        <div style="position:relative;padding:1.5rem 1.5rem 1.25rem;background:linear-gradient(135deg,rgba(0,212,200,0.08) 0%,rgba(99,102,241,0.08) 100%);border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0;">
-            <!-- close -->
-            <button onclick="closeConnDetailModal()"
-                style="position:absolute;top:1rem;right:1rem;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#64748b;width:30px;height:30px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.85rem;transition:all 0.2s;z-index:1;"
-                onmouseover="this.style.background='rgba(255,255,255,0.13)';this.style.color='#f1f5f9';"
-                onmouseout="this.style.background='rgba(255,255,255,0.07)';this.style.color='#64748b';">
-                <i class="fas fa-times"></i>
-            </button>
-            <!-- client identity -->
-            <div style="display:flex;align-items:center;gap:0.875rem;margin-bottom:0.875rem;">
+        <button onclick="closeConnDetailModal()"
+            style="position:absolute;top:1rem;right:1rem;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#64748b;width:32px;height:32px;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.9rem;transition:all 0.2s;z-index:2;"
+            onmouseover="this.style.background='rgba(255,255,255,0.14)';this.style.color='#f1f5f9';"
+            onmouseout="this.style.background='rgba(255,255,255,0.07)';this.style.color='#64748b';">
+            <i class="fas fa-times"></i>
+        </button>
+
+        <div style="display:flex;align-items:flex-start;gap:1rem;margin-bottom:1rem;">
+            <div style="position:relative;flex-shrink:0;">
                 <img src="${avatar}" alt="${escHtml(client.name)}"
-                    style="width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid rgba(0,212,200,0.35);flex-shrink:0;"
-                    onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(client.name||'C')}&background=00d4c8&color=060a12&bold=true'">
-                <div style="min-width:0;">
-                    <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;color:#f1f5f9;letter-spacing:-0.2px;">${escHtml(client.name)}</div>
-                    <div style="font-size:0.75rem;color:#64748b;margin-top:1px;">${escHtml(client.email || '')}</div>
-                </div>
+                    style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:3px solid rgba(139,92,246,0.4);display:block;"
+                    onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(client.name||'C')}&background=8b5cf6&color=fff&bold=true'">
+                ${online ? `<span style="position:absolute;bottom:2px;right:2px;width:12px;height:12px;border-radius:50%;background:#10b981;border:2px solid #0b1120;box-shadow:0 0 6px #10b981;"></span>` : ''}
             </div>
-            <!-- project title + type + status row -->
-            ${c.projectName ? `
-            <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
-                <span style="font-family:'Syne',sans-serif;font-size:1.15rem;font-weight:800;color:#f1f5f9;letter-spacing:-0.3px;">${escHtml(c.projectName)}</span>
-                ${projType ? `<span style="font-size:0.72rem;color:#94a3b8;font-weight:500;text-transform:capitalize;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:2px 8px;">${escHtml(cap(projType))}</span>` : ''}
-                <span style="font-size:0.68rem;font-weight:700;padding:2px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:0.4px;background:${statusBg};color:${statusColor};border:1px solid ${statusBorder};margin-left:auto;">${statusLabel}</span>
-            </div>` : `
-            <div style="display:flex;align-items:center;justify-content:space-between;">
-                <span style="font-size:0.82rem;color:#64748b;font-style:italic;">No project attached</span>
-                <span style="font-size:0.68rem;font-weight:700;padding:2px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:0.4px;background:${statusBg};color:${statusColor};border:1px solid ${statusBorder};">${statusLabel}</span>
-            </div>`}
+            <div style="min-width:0;padding-top:0.2rem;">
+                <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.15rem;color:#f1f5f9;letter-spacing:-0.3px;margin-bottom:2px;">${escHtml(client.name)}</div>
+                <div style="font-size:0.78rem;color:#64748b;margin-bottom:5px;">${escHtml(client.email || '')}</div>
+                ${onlineDot}
+            </div>
+        </div>
+
+        ${c.projectName ? `
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(139,92,246,0.18);border-radius:10px;padding:0.7rem 0.875rem;display:flex;align-items:center;gap:0.6rem;margin-bottom:0.875rem;">
+            <div style="width:30px;height:30px;border-radius:7px;background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.22);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="fas fa-folder-open" style="color:#8b5cf6;font-size:0.8rem;"></i>
+            </div>
+            <div style="min-width:0;flex:1;">
+                <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:0.975rem;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(c.projectName)}</div>
+                ${projType ? `<div style="font-size:0.7rem;color:#64748b;text-transform:capitalize;margin-top:1px;">${escHtml(cap(projType))}</div>` : ''}
+            </div>
+        </div>` : ''}
+
+        <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">
+            <span style="font-size:0.68rem;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:0.5px;background:${statusBg};color:${statusColor};border:1px solid ${statusBorder};">
+                ${statusLabel}
+            </span>
+            ${reqDate ? `<span style="font-size:0.72rem;color:#475569;display:flex;align-items:center;gap:0.3rem;"><i class="fas fa-calendar-alt" style="font-size:0.6rem;"></i>${reqDate}</span>` : ''}
+            ${c.unreadByArchitect > 0 ? `<span style="background:#ef4444;color:#fff;border-radius:20px;padding:2px 8px;font-size:0.68rem;font-weight:700;margin-left:auto;"><i class="fas fa-bell" style="font-size:0.6rem;margin-right:3px;"></i>${c.unreadByArchitect} new</span>` : ''}
         </div>`;
+}
+
+// ── Panel footer (action buttons) ─────────────────────────────────────────────
+function _connPanelFooter(c, client, avatar) {
+    const clientName = escHtml(client.name || '');
+    if (c.status === 'pending') {
+        return `
+            <div style="display:flex;gap:0.75rem;">
+                <button onclick="respondToConnection('${c._id}','accept');closeConnDetailModal();"
+                    style="flex:1;padding:0.75rem;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-weight:700;font-size:0.875rem;border:none;border-radius:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;transition:all 0.2s;"
+                    onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 20px rgba(16,185,129,0.35)';"
+                    onmouseout="this.style.transform='';this.style.boxShadow='';">
+                    <i class="fas fa-check"></i> Accept Request
+                </button>
+                <button onclick="respondToConnection('${c._id}','reject');closeConnDetailModal();"
+                    style="flex:1;padding:0.75rem;background:rgba(244,63,94,0.08);color:#f43f5e;font-weight:700;font-size:0.875rem;border:1px solid rgba(244,63,94,0.25);border-radius:11px;cursor:pointer;transition:all 0.2s;"
+                    onmouseover="this.style.background='rgba(244,63,94,0.18)';"
+                    onmouseout="this.style.background='rgba(244,63,94,0.08)';">
+                    <i class="fas fa-times"></i> Decline
+                </button>
+            </div>`;
+    }
+    if (c.status === 'accepted') {
+        return `
+            <div style="display:flex;gap:0.75rem;">
+                <button onclick="openArchChatModal('${c._id}','${clientName}','${avatar}');closeConnDetailModal();"
+                    style="flex:1;padding:0.75rem;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-weight:700;font-size:0.875rem;border:none;border-radius:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;transition:all 0.2s;"
+                    onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 20px rgba(16,185,129,0.3)';"
+                    onmouseout="this.style.transform='';this.style.boxShadow='';">
+                    <i class="fas fa-comments"></i> Chat
+                </button>
+                <button onclick="closeConnDetailModal();"
+                    style="flex:1;padding:0.75rem;background:rgba(139,92,246,0.1);color:#a78bfa;font-weight:700;font-size:0.875rem;border:1px solid rgba(139,92,246,0.25);border-radius:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;transition:all 0.2s;"
+                    onmouseover="this.style.background='rgba(139,92,246,0.2)';this.style.color='#c4b5fd';"
+                    onmouseout="this.style.background='rgba(139,92,246,0.1)';this.style.color='#a78bfa';">
+                    <i class="fas fa-drafting-compass"></i> Open Workspace
+                </button>
+            </div>`;
+    }
+    return `<div style="text-align:center;font-size:0.82rem;color:#f43f5e;padding:0.25rem 0;"><i class="fas fa-times-circle" style="margin-right:0.4rem;"></i>This request was declined</div>`;
 }
 
 function _briefBody(c, client, avatar, brief) {
     const MAIN_API = 'http://localhost:5000';
+
 
     // ── Reusable table row ────────────────────────────────────────────────────
     const trow = (label, value) => (value !== null && value !== undefined && value !== '')
@@ -2157,37 +2198,7 @@ function _briefBody(c, client, avatar, brief) {
         }
     }
 
-    // ── CTA footer ────────────────────────────────────────────────────────────
-    let cta = '';
-    if (c.status === 'pending') {
-        cta = `
-            <div style="display:flex;gap:0.75rem;margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid rgba(255,255,255,0.07);">
-                <button onclick="respondToConnection('${c._id}','accept');closeConnDetailModal();"
-                    style="flex:1;padding:0.7rem;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-weight:700;font-size:0.875rem;border:none;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;transition:all 0.2s;"
-                    onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 20px rgba(16,185,129,0.35)';"
-                    onmouseout="this.style.transform='';this.style.boxShadow='';">
-                    <i class="fas fa-check"></i> Accept Request
-                </button>
-                <button onclick="respondToConnection('${c._id}','reject');closeConnDetailModal();"
-                    style="flex:1;padding:0.7rem;background:rgba(244,63,94,0.08);color:#f43f5e;font-weight:700;font-size:0.875rem;border:1px solid rgba(244,63,94,0.25);border-radius:10px;cursor:pointer;transition:all 0.2s;"
-                    onmouseover="this.style.background='rgba(244,63,94,0.18)';"
-                    onmouseout="this.style.background='rgba(244,63,94,0.08)';">
-                    <i class="fas fa-times"></i> Decline
-                </button>
-            </div>`;
-    } else if (c.status === 'accepted') {
-        cta = `
-            <div style="margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid rgba(255,255,255,0.07);">
-                <button onclick="openArchChatModal('${c._id}','${escHtml(client.name)}','${avatar}');closeConnDetailModal();"
-                    style="width:100%;padding:0.7rem;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-weight:700;font-size:0.875rem;border:none;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;transition:all 0.2s;"
-                    onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 20px rgba(16,185,129,0.3)';"
-                    onmouseout="this.style.transform='';this.style.boxShadow='';">
-                    <i class="fas fa-comments"></i> Open Chat
-                </button>
-            </div>`;
-    }
-
-    return html + cta;
+    return html;
 }
 
 // ── Skeleton loader rows ──────────────────────────────────────────────────────
@@ -2462,3 +2473,13 @@ window.clearArchChatImg      = clearArchChatImg;
 window.openChatLightbox      = openChatLightbox;
 window.openConnDetailModal   = openConnDetailModal;
 window.closeConnDetailModal  = closeConnDetailModal;
+
+// ── Close side panel on Escape ────────────────────────────────────────────────
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const backdrop = document.getElementById('connDetailBackdrop');
+        if (backdrop && backdrop.classList.contains('open')) {
+            closeConnDetailModal();
+        }
+    }
+});
