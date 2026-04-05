@@ -311,7 +311,34 @@ exports.getProjectBrief = async (req, res) => {
     }
 };
 
-// ─── DELETE /api/connections/:id ──────────────────────────────────────────────
+// ─── DELETE /api/connections/:id/rejected ─────────────────────────────────────
+// Client deletes their own rejected connection card to clean up the UI.
+exports.deleteRejected = async (req, res) => {
+    try {
+        const conn = await Connection.findById(req.params.id);
+
+        if (!conn) {
+            return res.status(404).json({ success: false, message: 'Connection not found.' });
+        }
+
+        // Only the originating client may delete
+        if (String(conn.client) !== String(req.user._id)) {
+            return res.status(403).json({ success: false, message: 'Not authorized.' });
+        }
+
+        // Only rejected connections can be deleted via this route
+        if (conn.status !== 'rejected') {
+            return res.status(400).json({ success: false, message: 'Only rejected connections can be deleted this way.' });
+        }
+
+        await Connection.deleteOne({ _id: conn._id });
+
+        res.json({ success: true, message: 'Rejected connection deleted.' });
+    } catch (err) {
+        console.error('deleteRejected error:', err);
+        res.status(500).json({ success: false, message: 'Server error.' });
+    }
+};
 // Client cancels their own pending connection request.
 // Only the client who sent the request may cancel it, and only while it is still pending.
 exports.cancelRequest = async (req, res) => {

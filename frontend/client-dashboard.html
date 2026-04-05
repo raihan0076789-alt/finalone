@@ -1306,6 +1306,53 @@ async function cancelConnectionRequest(connectionId, archName) {
     );
 }
 
+/* ── Delete a rejected connection card ───────────────────────────────── */
+async function deleteRejectedConnection(connectionId, archName) {
+    showCustomConfirm(
+        'Delete Connection',
+        'Remove this rejected request from ' + archName + '? This will permanently delete the card.',
+        async function() {
+            try {
+                var r = await fetch(CLIENT_API + '/connections/' + connectionId + '/rejected', {
+                    method:  'DELETE',
+                    headers: authHeaders()
+                });
+                var d = await r.json();
+                if (!d.success) throw new Error(d.message);
+                showToast('Connection with ' + archName + ' deleted.', 'success');
+                await loadConnections();
+            } catch(err) {
+                showToast(err.message || 'Could not delete connection.', 'error');
+            }
+        }
+    );
+}
+
+/* ── Re-request a rejected connection ────────────────────────────────── */
+async function rerequestConnection(connectionId, archId, archName, archSpec, archAvatar) {
+    showCustomConfirm(
+        'Send New Request',
+        'Send a fresh connection request to ' + archName + '? The previous rejected request will be removed first.',
+        async function() {
+            try {
+                // Delete the old rejected connection first
+                var delR = await fetch(CLIENT_API + '/connections/' + connectionId + '/rejected', {
+                    method:  'DELETE',
+                    headers: authHeaders()
+                });
+                var delD = await delR.json();
+                if (!delD.success) throw new Error(delD.message);
+
+                // Now open the connect modal to send a new request
+                await loadConnections();
+                openConnectModal(archId, archName, archSpec, archAvatar);
+            } catch(err) {
+                showToast(err.message || 'Could not initiate re-request.', 'error');
+            }
+        }
+    );
+}
+
 async function loadConnections() {
     var body = document.getElementById('connectionsBody');
     body.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--slate)"><i class="fas fa-spinner fa-spin" style="font-size:1.5rem"></i><div style="margin-top:1rem">Loading...</div></div>';
@@ -1371,7 +1418,16 @@ function renderConnections(conns) {
                 '<button class="conn-cancel-btn" onclick="cancelConnectionRequest(\'' + c._id + '\',\'' + esc(arch.name) + '\')">' +
                 '<i class="fas fa-times"></i> Cancel Request</button>';
         } else {
-            actionBtn = '<div class="conn-rejected-note"><i class="fas fa-times-circle"></i> Request not accepted</div>';
+            actionBtn =
+                '<div class="conn-rejected-note"><i class="fas fa-times-circle"></i> Request not accepted</div>' +
+                '<div class="conn-rejected-actions">' +
+                    '<button class="conn-rerequest-btn" onclick="rerequestConnection(\'' + c._id + '\',\'' + esc(arch.id || arch._id) + '\',\'' + esc(arch.name) + '\',\'' + esc(arch.specialization || '') + '\',\'' + avatar + '\')">' +
+                        '<i class="fas fa-redo"></i> Re-request' +
+                    '</button>' +
+                    '<button class="conn-delete-btn" onclick="deleteRejectedConnection(\'' + c._id + '\',\'' + esc(arch.name) + '\')">' +
+                        '<i class="fas fa-trash-alt"></i> Delete' +
+                    '</button>' +
+                '</div>';
         }
 
         return `

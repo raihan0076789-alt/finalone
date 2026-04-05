@@ -963,6 +963,35 @@ overflow: hidden;
 .conn-chat-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(16,185,129,0.3); }
 .conn-pending-note  { text-align: center; font-size: 0.8rem; color: var(--amber); padding: 0.4rem; }
 .conn-rejected-note { text-align: center; font-size: 0.8rem; color: var(--rose); padding: 0.4rem; }
+.conn-rejected-actions {
+    display: flex; gap: 0.5rem; margin-top: 0.5rem;
+}
+.conn-rerequest-btn {
+    flex: 1; padding: 0.45rem 0.5rem;
+    background: rgba(139,92,246,0.10);
+    color: #a78bfa; font-weight: 600; font-size: 0.8rem;
+    border: 1px solid rgba(139,92,246,0.30); border-radius: 9px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+    transition: all 0.2s;
+}
+.conn-rerequest-btn:hover {
+    background: rgba(139,92,246,0.22);
+    border-color: rgba(139,92,246,0.55);
+    transform: translateY(-1px);
+}
+.conn-delete-btn {
+    flex: 1; padding: 0.45rem 0.5rem;
+    background: rgba(244,63,94,0.07);
+    color: #f43f5e; font-weight: 600; font-size: 0.8rem;
+    border: 1px solid rgba(244,63,94,0.25); border-radius: 9px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+    transition: all 0.2s;
+}
+.conn-delete-btn:hover {
+    background: rgba(244,63,94,0.18);
+    border-color: rgba(244,63,94,0.45);
+    transform: translateY(-1px);
+}
 .conn-cancel-btn {
     width: 100%; margin-top: 0.5rem; padding: 0.45rem;
     background: rgba(244,63,94,0.07);

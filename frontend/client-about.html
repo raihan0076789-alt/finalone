@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About — SmartArch Client Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --ink:      #060a12;
+            --ink-2:    #0d1424;
+            --ink-3:    #111827;
+            --violet:   #8b5cf6;
+            --v-dark:   #6d28d9;
+            --v-light:  #a78bfa;
+            --v-glow:   rgba(139,92,246,0.25);
+            --cyan:     #00d4c8;
+            --amber:    #f59e0b;
+            --rose:     #f43f5e;
+            --emerald:  #10b981;
+            --blue:     #3b82f6;
+            --slate:    #94a3b8;
+            --slate-2:  #64748b;
+            --white:    #f1f5f9;
+            --border:   rgba(255,255,255,0.07);
+            --card-bg:  rgba(255,255,255,0.04);
+            --nav-h:    68px;
+            --r:        12px;
+            --r-lg:     20px;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--ink);
+            color: var(--white);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Grid background */
+        body::before {
+            content: '';
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            background-image:
+                linear-gradient(rgba(139,92,246,0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(139,92,246,0.025) 1px, transparent 1px);
+            background-size: 72px 72px;
+        }
+
+        .ambient { position: fixed; pointer-events: none; z-index: 0; border-radius: 50%; filter: blur(130px); }
+        .a1 { width: 600px; height: 600px; top: -200px; right: -100px; background: radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%); }
+        .a2 { width: 500px; height: 500px; bottom: 0; left: -100px; background: radial-gradient(circle, rgba(0,212,200,0.05) 0%, transparent 70%); }
+        .a3 { width: 400px; height: 400px; top: 40%; left: 30%; background: radial-gradient(circle, rgba(139,92,246,0.04) 0%, transparent 70%); }
+
+        /* ── NAVBAR ─────────────────────────────────────────────────── */
+        .navbar {
+            position: fixed; top: 0; left: 0; right: 0; height: var(--nav-h);
+            display: flex; align-items: center; padding: 0 5%;
+            background: rgba(6,10,18,0.88);
+            backdrop-filter: blur(24px);
+            border-bottom: 1px solid var(--border);
+            z-index: 1000;
+        }
+
+        .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .nav-logo {
+            width: 34px; height: 34px;
+            background: linear-gradient(135deg, var(--violet), var(--v-dark));
+            border-radius: 9px;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 0.9rem;
+            box-shadow: 0 0 16px rgba(139,92,246,0.3);
+        }
+        .nav-brand-text { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.05rem; color: var(--white); letter-spacing: -0.3px; }
+        .nav-brand-text em { font-style: normal; color: var(--cyan); }
+
+        /* CLIENT badge */
+        .client-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.28);
+            color: var(--v-light); padding: 2px 9px; border-radius: 20px;
+            font-size: 0.65rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+            margin-left: 2px;
+        }
+
+        .nav-center { display: flex; align-items: center; gap: 0.25rem; margin: 0 auto; }
+        .nav-link { text-decoration: none; color: var(--slate); font-size: 0.875rem; font-weight: 500; padding: 0.45rem 0.875rem; border-radius: 8px; transition: all 0.2s; }
+        .nav-link:hover { color: var(--white); background: rgba(255,255,255,0.06); }
+        .nav-link.active { color: var(--violet); background: rgba(139,92,246,0.1); }
+
+        .nav-right { display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0; }
+        .nav-auth { display: flex; align-items: center; gap: 0.75rem; }
+        .nav-user { display: none; align-items: center; gap: 0.75rem; }
+
+        .btn-ghost { background: transparent; color: var(--white); border: 1px solid rgba(255,255,255,0.15); padding: 0.45rem 1.1rem; border-radius: 9px; font-size: 0.875rem; font-weight: 500; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.2s; }
+        .btn-ghost:hover { border-color: rgba(139,92,246,0.5); color: var(--v-light); background: rgba(139,92,246,0.07); }
+
+        .btn-cta { background: linear-gradient(135deg, var(--violet), var(--v-dark)); color: #fff; border: none; padding: 0.5rem 1.25rem; border-radius: 9px; font-size: 0.875rem; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.25s; font-family: 'Syne', sans-serif; }
+        .btn-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(139,92,246,0.45); }
+
+        /* User avatar & dropdown */
+        .user-menu-wrap { position: relative; }
+        .user-avatar { width: 38px; height: 38px; border-radius: 50%; border: 2px solid var(--violet); cursor: pointer; object-fit: cover; transition: all 0.2s; }
+        .user-avatar:hover { border-color: var(--v-light); box-shadow: 0 0 0 3px rgba(139,92,246,0.2); }
+        .user-dropdown { position: absolute; top: calc(100% + 12px); right: 0; background: var(--ink-2); border: 1px solid var(--border); border-radius: 14px; min-width: 220px; padding: 0.4rem; opacity: 0; transform: translateY(-8px) scale(0.97); pointer-events: none; transition: all 0.2s; z-index: 1000; box-shadow: 0 24px 60px rgba(0,0,0,0.55); }
+        .user-menu-wrap.open .user-dropdown { opacity: 1; transform: none; pointer-events: auto; }
+        .user-dropdown-header { display: flex; align-items: center; gap: 0.65rem; padding: 0.7rem 0.875rem 0.6rem; border-bottom: 1px solid rgba(255,255,255,0.07); margin-bottom: 0.3rem; }
+        .user-dropdown-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--violet); flex-shrink: 0; }
+        .user-dropdown-name { font-size: 0.82rem; font-weight: 600; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-dropdown-email { font-size: 0.72rem; color: var(--slate); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-dropdown a { display: flex; align-items: center; gap: 0.6rem; padding: 0.6rem 0.875rem; border-radius: 8px; color: var(--slate); text-decoration: none; font-size: 0.875rem; transition: all 0.15s; }
+        .user-dropdown a:hover { background: rgba(255,255,255,0.06); color: var(--white); }
+        .user-dropdown a.logout-link { color: #f87171; }
+        .user-dropdown a.logout-link:hover { background: rgba(248,113,113,0.08); color: #fca5a5; }
+
+        /* Hamburger */
+        .hamburger { display: none; background: none; border: none; cursor: pointer; color: var(--slate); font-size: 1.3rem; padding: 0.25rem; }
+        .mobile-menu { display: none; position: fixed; top: var(--nav-h); left: 0; right: 0; background: rgba(6,10,18,0.97); border-bottom: 1px solid var(--border); padding: 1rem 5%; z-index: 999; backdrop-filter: blur(20px); }
+        .mobile-menu.open { display: flex; flex-direction: column; gap: 0.5rem; }
+        .mobile-menu .nav-link { padding: 0.75rem 1rem; display: block; }
+
+        @media (max-width: 768px) { .nav-center { display: none; } .hamburger { display: block; } }
+
+        /* ── PORTAL SWITCHER BANNER ──────────────────────────────────── */
+        .portal-banner {
+            position: fixed; top: var(--nav-h); left: 0; right: 0;
+            background: rgba(139,92,246,0.06); border-bottom: 1px solid rgba(139,92,246,0.15);
+            padding: 0.4rem 5%; z-index: 999;
+            display: flex; align-items: center; justify-content: center; gap: 1rem;
+            font-size: 0.78rem; color: var(--slate);
+        }
+        .portal-banner a { color: var(--violet); text-decoration: none; font-weight: 600; }
+        .portal-banner a:hover { color: var(--v-light); }
+        .portal-banner-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--violet); opacity: 0.5; }
+
+        /* ── PAGE HERO ───────────────────────────────────────────────── */
+        .page-hero {
+            padding: calc(var(--nav-h) + 36px + 4.5rem) 5% 4rem;
+            position: relative; z-index: 1;
+            text-align: center;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        .eyebrow {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.25);
+            color: var(--v-light); padding: 5px 14px; border-radius: 40px;
+            font-size: 0.72rem; font-weight: 700; letter-spacing: 1.5px;
+            text-transform: uppercase; margin-bottom: 1.5rem;
+        }
+
+        .page-h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2.4rem, 5vw, 3.8rem);
+            font-weight: 800; letter-spacing: -2px;
+            color: var(--white); line-height: 1.1; margin-bottom: 1.25rem;
+        }
+        .page-h1 span {
+            background: linear-gradient(120deg, var(--violet) 0%, var(--v-light) 50%, var(--cyan) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+
+        .page-sub {
+            color: var(--slate); font-size: 1.05rem; line-height: 1.8;
+            max-width: 760px; margin: 0 auto 1rem;
+        }
+
+        /* ── CONTENT AREA ────────────────────────────────────────────── */
+        .about-content { max-width: 1300px; margin: 0 auto; padding: 0 5% 6rem; position: relative; z-index: 1; }
+        .section-block { margin-bottom: 5rem; }
+
+        .block-eyebrow { display: flex; align-items: center; gap: 10px; color: var(--violet); font-size: 0.72rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 0.875rem; }
+        .block-eyebrow i { font-size: 0.8rem; }
+        .block-h2 { font-family: 'Syne', sans-serif; font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 800; letter-spacing: -0.8px; color: var(--white); margin-bottom: 1rem; }
+        .block-p { color: var(--slate); font-size: 1rem; line-height: 1.8; max-width: 720px; margin-bottom: 1rem; }
+
+        /* ── OVERVIEW CARDS ──────────────────────────────────────────── */
+        .overview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.1rem; margin-top: 2rem; }
+        .overview-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 1.75rem; transition: all 0.3s; }
+        .overview-card:hover { border-color: rgba(139,92,246,0.25); background: rgba(139,92,246,0.05); transform: translateY(-4px); }
+        .ov-icon { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 1rem; }
+        .ov-icon.violet { background: rgba(139,92,246,0.12); color: var(--violet); }
+        .ov-icon.cyan   { background: rgba(0,212,200,0.12); color: var(--cyan); }
+        .ov-icon.amber  { background: rgba(245,158,11,0.12); color: var(--amber); }
+        .ov-icon.emerald{ background: rgba(16,185,129,0.12); color: var(--emerald); }
+        .ov-icon.blue   { background: rgba(59,130,246,0.12); color: var(--blue); }
+        .ov-icon.rose   { background: rgba(244,63,94,0.12);  color: var(--rose); }
+        .ov-title { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--white); margin-bottom: 0.5rem; }
+        .ov-desc  { color: var(--slate); font-size: 0.875rem; line-height: 1.65; }
+
+        /* ── HOW IT WORKS (client journey) ───────────────────────────── */
+        .journey-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-top: 2rem; }
+        .journey-card {
+            background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--r-lg);
+            padding: 1.75rem; position: relative; overflow: hidden; transition: all 0.3s;
+        }
+        .journey-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--violet), var(--cyan)); opacity: 0; transition: opacity 0.3s; }
+        .journey-card:hover { border-color: rgba(139,92,246,0.22); transform: translateY(-4px); }
+        .journey-card:hover::before { opacity: 1; }
+        .journey-num { font-family: 'Syne', sans-serif; font-size: 2.5rem; font-weight: 800; color: rgba(139,92,246,0.15); line-height: 1; margin-bottom: 0.75rem; }
+        .journey-icon { width: 44px; height: 44px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; margin-bottom: 1rem; }
+        .journey-title { font-family: 'Syne', sans-serif; font-size: 0.95rem; font-weight: 700; color: var(--white); margin-bottom: 0.5rem; }
+        .journey-desc  { color: var(--slate); font-size: 0.875rem; line-height: 1.65; }
+
+        /* ── FEATURES LIST ───────────────────────────────────────────── */
+        .features-list { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 2rem; }
+        .feat-row { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--r); padding: 1.25rem 1.5rem; display: flex; align-items: flex-start; gap: 1.25rem; transition: all 0.25s; }
+        .feat-row:hover { border-color: rgba(139,92,246,0.2); background: rgba(139,92,246,0.03); }
+        .feat-row-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+        .feat-row-body { flex: 1; }
+        .feat-row-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem; color: var(--white); margin-bottom: 0.3rem; }
+        .feat-row-desc  { color: var(--slate); font-size: 0.875rem; line-height: 1.6; }
+        .feat-badge { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; padding: 3px 10px; border-radius: 20px; flex-shrink: 0; margin-top: 2px; }
+        .badge-v   { background: rgba(139,92,246,0.12); color: var(--v-light); }
+        .badge-c   { background: rgba(0,212,200,0.1);   color: var(--cyan); }
+        .badge-a   { background: rgba(245,158,11,0.12); color: var(--amber); }
+        .badge-e   { background: rgba(16,185,129,0.1);  color: var(--emerald); }
+        .badge-r   { background: rgba(244,63,94,0.1);   color: var(--rose); }
+
+        /* ── PLATFORM ARCHITECTURE DIAGRAM ───────────────────────────── */
+        .arch-full { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; margin-top: 2rem; }
+        .arch-header { padding: 1.25rem 1.75rem; border-bottom: 1px solid var(--border); font-family: 'Syne', sans-serif; font-size: 0.78rem; font-weight: 700; color: var(--slate-2); text-transform: uppercase; letter-spacing: 1.5px; display: flex; align-items: center; gap: 0.5rem; }
+        .arch-body { padding: 2rem 1.75rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 1rem; }
+        .arch-node { border: 1px solid var(--border); border-radius: var(--r); padding: 1.25rem; text-align: center; transition: all 0.3s; }
+        .arch-node:hover { transform: translateY(-3px); }
+        .arch-node-icon { font-size: 1.8rem; margin-bottom: 0.75rem; display: block; }
+        .arch-node-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.9rem; color: var(--white); margin-bottom: 0.3rem; }
+        .arch-node-sub   { font-size: 0.78rem; color: var(--slate-2); line-height: 1.5; }
+        .n1 { background: rgba(139,92,246,0.05); border-color: rgba(139,92,246,0.18); }
+        .n1:hover { border-color: rgba(139,92,246,0.35); }
+        .n2 { background: rgba(0,212,200,0.05); border-color: rgba(0,212,200,0.15); }
+        .n2:hover { border-color: rgba(0,212,200,0.3); }
+        .n3 { background: rgba(245,158,11,0.05); border-color: rgba(245,158,11,0.15); }
+        .n3:hover { border-color: rgba(245,158,11,0.3); }
+        .n4 { background: rgba(16,185,129,0.05); border-color: rgba(16,185,129,0.15); }
+        .n4:hover { border-color: rgba(16,185,129,0.3); }
+        .arch-arrows { padding: 0.5rem 1.75rem 1.25rem; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 1.5rem; color: var(--slate-2); font-size: 0.8rem; }
+
+        /* ── TIMELINE ────────────────────────────────────────────────── */
+        .timeline { margin-top: 2rem; }
+        .tl-item { display: flex; gap: 1.5rem; padding-bottom: 2rem; position: relative; }
+        .tl-item:not(:last-child)::after { content: ''; position: absolute; left: 21px; top: 48px; width: 2px; height: calc(100% - 30px); background: linear-gradient(to bottom, rgba(139,92,246,0.4), transparent); }
+        .tl-num { width: 44px; height: 44px; border: 1.5px solid rgba(139,92,246,0.4); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.9rem; color: var(--violet); background: rgba(139,92,246,0.07); flex-shrink: 0; }
+        .tl-content { padding-top: 0.25rem; }
+        .tl-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; color: var(--white); margin-bottom: 0.4rem; }
+        .tl-desc  { color: var(--slate); font-size: 0.875rem; line-height: 1.7; }
+
+        /* ── TWO-COL FUTURE CARDS ─────────────────────────────────────── */
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-top: 2rem; }
+        .future-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 1.5rem; transition: all 0.3s; }
+        .future-card:hover { border-color: rgba(139,92,246,0.2); transform: translateY(-3px); }
+        .future-card-icon { font-size: 1.5rem; margin-bottom: 0.875rem; display: block; }
+        .future-card-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem; color: var(--white); margin-bottom: 0.4rem; }
+        .future-card-desc  { color: var(--slate); font-size: 0.875rem; line-height: 1.65; }
+
+        /* ── HIGHLIGHTS ──────────────────────────────────────────────── */
+        .highlights-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.1rem; margin-top: 2rem; }
+        .highlight { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 1.75rem; text-align: center; transition: all 0.3s; position: relative; overflow: hidden; }
+        .highlight::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; opacity: 0; transition: opacity 0.3s; }
+        .highlight:hover { transform: translateY(-4px); }
+        .highlight:hover::before { opacity: 1; }
+        .hl1::before { background: linear-gradient(90deg, var(--violet), transparent); }
+        .hl2::before { background: linear-gradient(90deg, var(--cyan), transparent); }
+        .hl3::before { background: linear-gradient(90deg, var(--emerald), transparent); }
+        .hl4::before { background: linear-gradient(90deg, var(--amber), transparent); }
+        .highlight-icon  { font-size: 2rem; display: block; margin-bottom: 0.875rem; }
+        .highlight-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1rem; color: var(--white); margin-bottom: 0.4rem; }
+        .highlight-desc  { color: var(--slate); font-size: 0.85rem; line-height: 1.65; }
+
+        /* ── STATS BAND ──────────────────────────────────────────────── */
+        .stats-band { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin: 2rem 0; }
+        .stat-box { background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.15); border-radius: var(--r-lg); padding: 1.5rem; text-align: center; }
+        .stat-num { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; color: var(--violet); line-height: 1; margin-bottom: 0.4rem; }
+        .stat-lbl { font-size: 0.8rem; color: var(--slate); }
+
+        /* ── CTA BAND ────────────────────────────────────────────────── */
+        .cta-band {
+            background: linear-gradient(135deg, rgba(139,92,246,0.08), rgba(0,212,200,0.05));
+            border: 1px solid rgba(139,92,246,0.2);
+            border-radius: var(--r-lg); padding: 3.5rem; text-align: center; margin-top: 4rem;
+            position: relative; overflow: hidden;
+        }
+        .cta-band::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 50%; height: 1px; background: linear-gradient(to right, transparent, var(--violet), transparent); }
+        .cta-band h2 { font-family: 'Syne', sans-serif; font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 800; letter-spacing: -1px; color: var(--white); margin-bottom: 0.875rem; }
+        .cta-band p  { color: var(--slate); font-size: 1rem; margin-bottom: 2rem; }
+        .btn-hero-primary { background: linear-gradient(135deg, var(--violet), var(--v-dark)); color: #fff; border: none; padding: 0.9rem 2rem; border-radius: var(--r); font-family: 'Syne', sans-serif; font-size: 0.95rem; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 0.6rem; transition: all 0.3s; }
+        .btn-hero-primary:hover { transform: translateY(-3px); box-shadow: 0 16px 48px rgba(139,92,246,0.45); }
+        .btn-hero-outline { background: transparent; color: var(--white); border: 1px solid rgba(255,255,255,0.2); padding: 0.9rem 2rem; border-radius: var(--r); font-size: 0.95rem; font-weight: 500; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 0.6rem; transition: all 0.3s; margin-left: 0.75rem; }
+        .btn-hero-outline:hover { border-color: var(--violet); color: var(--violet); background: rgba(139,92,246,0.06); }
+
+        /* ── FOOTER ──────────────────────────────────────────────────── */
+        .footer { border-top: 1px solid var(--border); padding: 3.5rem 5%; position: relative; z-index: 1; background: rgba(6,10,18,0.6); }
+        .footer-inner { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 3rem; margin-bottom: 2.5rem; max-width: 1400px; margin-left: auto; margin-right: auto; }
+        .footer-logo-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 0.75rem; }
+        .footer-brand-name { font-family: 'Syne', sans-serif; font-size: 1.05rem; font-weight: 800; color: var(--white); letter-spacing: -0.3px; }
+        .footer-brand-name em { font-style: normal; color: var(--cyan); }
+        .footer-brand-desc { color: var(--slate-2); font-size: 0.875rem; line-height: 1.65; max-width: 260px; }
+        .footer-col h4 { font-family: 'Syne', sans-serif; font-size: 0.78rem; font-weight: 700; color: var(--slate); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 1.1rem; }
+        .footer-col a { display: block; color: var(--slate-2); text-decoration: none; font-size: 0.875rem; margin-bottom: 0.6rem; transition: color 0.2s; }
+        .footer-col a:hover { color: var(--violet); }
+        .footer-bottom { border-top: 1px solid var(--border); padding-top: 1.5rem; display: flex; align-items: center; justify-content: space-between; color: var(--slate-2); font-size: 0.82rem; max-width: 1400px; margin: 0 auto; }
+
+        /* ── SCROLL REVEAL ───────────────────────────────────────────── */
+        .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s ease; }
+        .reveal.visible { opacity: 1; transform: none; }
+        .rd1{transition-delay:0.1s} .rd2{transition-delay:0.2s} .rd3{transition-delay:0.3s} .rd4{transition-delay:0.4s} .rd5{transition-delay:0.5s}
+
+        /* ── RESPONSIVE ──────────────────────────────────────────────── */
+        @media (max-width: 1024px) { .two-col { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) {
+            .arch-body { grid-template-columns: 1fr 1fr; }
+            .highlights-grid { grid-template-columns: 1fr 1fr; }
+            .cta-band { padding: 2rem 1.5rem; }
+            .footer-inner { grid-template-columns: 1fr 1fr; gap: 2rem; }
+            .footer-bottom { flex-direction: column; gap: 0.5rem; text-align: center; }
+        }
+        @media (max-width: 480px) {
+            .arch-body { grid-template-columns: 1fr; }
+            .highlights-grid { grid-template-columns: 1fr; }
+            .stats-band { grid-template-columns: 1fr 1fr; }
+            .footer-inner { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="ambient a1"></div>
+<div class="ambient a2"></div>
+<div class="ambient a3"></div>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+    <a href="client-index.html" class="nav-brand">
+        <div class="nav-logo"><i class="fas fa-users"></i></div>
+        <span class="nav-brand-text">Smart<em> Arch</em></span>
+        <span class="client-badge"><i class="fas fa-user-tie" style="font-size:0.6rem"></i> Client</span>
+    </a>
+
+    <div class="nav-center">
+        <a href="client-index.html#features" class="nav-link">Services</a>
+        <a href="client-index.html#workflow" class="nav-link">How It Works</a>
+        <a href="client-about.html" class="nav-link active">About</a>
+        <a href="client-contact.html" class="nav-link">Contact</a>
+    </div>
+
+    <div class="nav-right">
+        <div class="nav-auth" id="navAuth">
+            <button class="btn-ghost" onclick="redirectToLogin()">Login</button>
+            <button class="btn-cta" onclick="redirectToRegister()">
+                <i class="fas fa-rocket"></i> Get Started
+            </button>
+        </div>
+        <div class="nav-user" id="navUser">
+            <a href="client-dashboard.html" class="btn-cta">
+                <i class="fas fa-th-large"></i> Dashboard
+            </a>
+            <div class="user-menu-wrap" id="userMenuWrap">
+                <img src="" alt="User" id="userAvatar" class="user-avatar">
+                <div class="user-dropdown" id="userDropdown">
+                    <div class="user-dropdown-header">
+                        <img src="" alt="" class="user-dropdown-avatar" id="userDropdownAvatar">
+                        <div class="user-dropdown-info">
+                            <div class="user-dropdown-name" id="userDropdownName">—</div>
+                            <div class="user-dropdown-email" id="userDropdownEmail">—</div>
+                        </div>
+                    </div>
+                    <a href="client-dashboard.html"><i class="fas fa-th-large"></i> Dashboard</a>
+                    <a href="client-dashboard.html#connections"><i class="fas fa-user-friends"></i> My Connections</a>
+                    <a href="#" class="logout-link" onclick="doLogout(); return false;"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="hamburger" id="hamburgerBtn" onclick="toggleMobileMenu()">
+        <i class="fas fa-bars"></i>
+    </button>
+</nav>
+
+<!-- Mobile nav -->
+<div class="mobile-menu" id="mobileMenu">
+    <a href="client-index.html#features" class="nav-link" onclick="closeMobileMenu()">Services</a>
+    <a href="client-index.html#workflow" class="nav-link" onclick="closeMobileMenu()">How It Works</a>
+    <a href="client-about.html" class="nav-link active">About</a>
+    <a href="client-contact.html" class="nav-link" onclick="closeMobileMenu()">Contact</a>
+    <div id="mobileNavAuth">
+        <button class="btn-ghost" onclick="redirectToLogin(); closeMobileMenu()" style="width:100%;margin-top:0.5rem;justify-content:center">Login</button>
+        <button class="btn-cta" onclick="redirectToRegister(); closeMobileMenu()" style="width:100%;margin-top:0.5rem;justify-content:center">Get Started</button>
+    </div>
+    <div id="mobileNavUser" style="display:none">
+        <a href="client-dashboard.html" class="btn-cta" style="width:100%;margin-top:0.5rem;justify-content:center">Dashboard</a>
+        <button class="btn-ghost" onclick="doLogout()" style="width:100%;margin-top:0.5rem;justify-content:center">Logout</button>
+    </div>
+</div>
+
+<!-- Portal switcher banner -->
+<div class="portal-banner">
+    <span>You're viewing the <strong style="color:var(--v-light)">Client Portal</strong></span>
+    <span class="portal-banner-dot"></span>
+    <span>Are you an architect? <a href="about.html">Switch to Architect Portal →</a></span>
+</div>
+
+<!-- PAGE HERO -->
+<div class="page-hero">
+    <div class="eyebrow"><i class="fas fa-users"></i> About the Client Portal</div>
+    <h1 class="page-h1">
+        Your Gateway to<br>
+        <span>World-Class Architects</span>
+    </h1>
+    <p class="page-sub">
+        SmartArch's Client Portal bridges the gap between homeowners, developers, and professional architects.
+        Whether you're planning your dream home, a commercial space, or a renovation — our platform gives you
+        everything you need to find the right architect, share your vision, and manage your project from concept to completion.
+    </p>
+    <p class="page-sub">
+        We believe great architecture should be accessible to everyone. By combining AI-powered tools with a curated
+        network of verified professionals, we make the journey from idea to blueprint seamless, transparent, and stress-free.
+    </p>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="about-content">
+
+    <!-- OVERVIEW -->
+    <div class="section-block">
+        <div class="block-eyebrow reveal"><i class="fas fa-info-circle"></i> Platform Overview</div>
+        <h2 class="block-h2 reveal rd1">What is the SmartArch Client Portal?</h2>
+        <p class="block-p reveal rd2">
+            The Client Portal is a dedicated space designed specifically for people who want to build, renovate, or
+            design spaces. It connects you directly to a curated network of professional architects — letting you
+            browse profiles, review portfolios, send connection requests, and communicate in real time.
+        </p>
+        <p class="block-p reveal rd3">
+            Once connected with an architect, you can share your project brief, upload reference materials, exchange
+            messages, and track progress — all in one secure, easy-to-use platform backed by a robust
+            Node.js + MongoDB infrastructure.
+        </p>
+
+        <div class="overview-grid">
+            <div class="overview-card reveal rd1">
+                <div class="ov-icon violet"><i class="fas fa-search"></i></div>
+                <div class="ov-title">Find Verified Architects</div>
+                <p class="ov-desc">Browse a curated directory of professional architects. Filter by specialization, experience, rating, and location to find your perfect match.</p>
+            </div>
+            <div class="overview-card reveal rd2">
+                <div class="ov-icon cyan"><i class="fas fa-comments"></i></div>
+                <div class="ov-title">Direct Communication</div>
+                <p class="ov-desc">Send connection requests with personalised intro messages. Once accepted, chat directly with your architect — text and image sharing included.</p>
+            </div>
+            <div class="overview-card reveal rd3">
+                <div class="ov-icon amber"><i class="fas fa-folder-open"></i></div>
+                <div class="ov-title">Project Brief Management</div>
+                <p class="ov-desc">Create detailed project briefs covering budget, land size, room requirements, style preferences, and timeline. Attach reference images and documents.</p>
+            </div>
+            <div class="overview-card reveal rd4">
+                <div class="ov-icon emerald"><i class="fas fa-shield-alt"></i></div>
+                <div class="ov-title">Secure & Private</div>
+                <p class="ov-desc">Your project data is protected by JWT authentication, bcrypt password hashing, and role-based access control — only you and your connected architect can see your chat.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- PLATFORM STATS -->
+    <div class="section-block">
+        <div class="block-eyebrow reveal"><i class="fas fa-chart-bar"></i> Platform Scale</div>
+        <h2 class="block-h2 reveal rd1">Built to Grow With You</h2>
+        <p class="block-p reveal rd2">The SmartArch platform supports clients and architects across the full project lifecycle — from first contact to final handover.</p>
+
+        <div class="stats-band reveal rd2">
+            <div class="stat-box">
+                <div class="stat-num">3</div>
+                <div class="stat-lbl">Subscription Tiers</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-num">10</div>
+                <div class="stat-lbl">File Attachments per Brief</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-num">7</div>
+                <div class="stat-lbl">Project Categories</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-num">∞</div>
+                <div class="stat-lbl">Architect Connections</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HOW THE CLIENT JOURNEY WORKS -->
+    <div class="section-block">
+        <div class="block-eyebrow reveal"><i class="fas fa-route"></i> Client Journey</div>
+        <h2 class="block-h2 reveal rd1">From Idea to Architect in Minutes</h2>
+        <p class="block-p reveal rd2">The SmartArch Client Portal is designed to get you from concept to connected architect as smoothly as possible.</p>
+
+        <div class="journey-grid reveal rd2">
+            <div class="journey-card">
+                <div class="journey-num">01</div>
+                <div class="journey-icon" style="background:rgba(139,92,246,0.12);color:var(--violet)"><i class="fas fa-user-plus"></i></div>
+                <div class="journey-title">Create Your Client Account</div>
+                <p class="journey-desc">Register with your name, email, and password. You'll receive an OTP to verify your email — then you're ready to explore.</p>
+            </div>
+            <div class="journey-card">
+                <div class="journey-num">02</div>
+                <div class="journey-icon" style="background:rgba(0,212,200,0.12);color:var(--cyan)"><i class="fas fa-folder-plus"></i></div>
+                <div class="journey-title">Build Your Project Brief</div>
+                <p class="journey-desc">Describe your project — type, budget, land size, style, rooms, and timeline. Upload reference images or floor plans. Save as draft or publish immediately.</p>
+            </div>
+            <div class="journey-card">
+                <div class="journey-num">03</div>
+                <div class="journey-icon" style="background:rgba(245,158,11,0.12);color:var(--amber)"><i class="fas fa-search"></i></div>
+                <div class="journey-title">Browse & Filter Architects</div>
+                <p class="journey-desc">Use the Find Architects view to filter by specialization, experience, rating, and location. View full profiles with portfolios and past projects.</p>
+            </div>
+            <div class="journey-card">
+                <div class="journey-num">04</div>
+                <div class="journey-icon" style="background:rgba(16,185,129,0.12);color:var(--emerald)"><i class="fas fa-paper-plane"></i></div>
+                <div class="journey-title">Send a Connection Request</div>
+                <p class="journey-desc">Click Connect on any architect's profile. Write a personalised intro message and optionally attach one of your project briefs. The architect will be notified immediately.</p>
+            </div>
+            <div class="journey-card">
+                <div class="journey-num">05</div>
+                <div class="journey-icon" style="background:rgba(59,130,246,0.12);color:var(--blue)"><i class="fas fa-comments"></i></div>
+                <div class="journey-title">Chat & Collaborate</div>
+                <p class="journey-desc">Once the architect accepts your request, the chat unlocks. Exchange text messages, share reference images, and discuss your vision in real time.</p>
+            </div>
+            <div class="journey-card">
+                <div class="journey-num">06</div>
+                <div class="journey-icon" style="background:rgba(139,92,246,0.12);color:var(--violet)"><i class="fas fa-drafting-compass"></i></div>
+                <div class="journey-title">Move to Design</div>
+                <p class="journey-desc">Your architect works within their SmartArch dashboard — generating AI floor plans, creating 3D models, and sharing progress directly back to you through the platform.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- KEY FEATURES -->
+    <div class="section-block">
+        <div class="block-eyebrow reveal"><i class="fas fa-star"></i> Key Features</div>
+        <h2 class="block-h2 reveal rd1">Everything You Need as a Client</h2>
+        <p class="block-p reveal rd2">Every feature in the Client Portal is built around one goal: making it effortless for you to work with the right architect.</p>
+
+        <div class="features-list reveal rd2">
+            <div class="feat-row">
+                <div class="feat-row-icon" style="background:rgba(139,92,246,0.12);color:var(--violet)"><i class="fas fa-search"></i></div>
+                <div class="feat-row-body">
+                    <div class="feat-row-title">Architect Discovery & Filtering</div>
+                    <div class="feat-row-desc">Filter the full architect directory by specialization, experience range, minimum rating, and location. Sort by rating, experience, or newest to find the best fit for your project.</div>
+                </div>
+                <div class="feat-badge badge-v">Discovery</div>
+            </div>
+            <div class="feat-row">
+                <div class="feat-row-icon" style="background:rgba(0,212,200,0.12);color:var(--cyan)"><i class="fas fa-folder-open"></i></div>
+                <div class="feat-row-body">
+                    <div class="feat-row-title">Detailed Project Briefs</div>
+                    <div class="feat-row-desc">Create rich project briefs with budget ranges (INR), land size in sqft/sqm/acres, style preferences (modern, traditional, minimalist, etc.), room counts, and construction timeline. Attach up to 10 files per brief.</div>
+                </div>
+                <div class="feat-badge badge-c">Projects</div>
+            </div>
+            <div class="feat-row">
+                <div class="feat-row-icon" style="background:rgba(16,185,129,0.12);color:var(--emerald)"><i class="fas fa-user-check"></i></div>
+                <div class="feat-row-body">
+                    <div class="feat-row-title">Connection Request System</div>
+                    <div class="feat-row-desc">Send personalised connection requests to architects with a custom intro message and an optional project brief attachment. Track status (Pending / Accepted / Rejected) and cancel or re-request as needed.</div>
+                </div>
+                <div class="feat-badge badge-e">Connections</div>
+            </div>
+            <div class="feat-row">
+                <div class="feat-row-icon" style="background:rgba(245,158,11,0.12);color:var(--amber)"><i class="fas fa-comments"></i></div>
+                <div class="feat-row-body">
+                    <div class="feat-row-title">Real-Time Chat with Image Sharing</div>
+                    <div class="feat-row-desc">Once connected, chat directly with your architect. Share text and images (up to 8MB each). Unread message badges keep you up to date. Chat polls automatically every 8 seconds for new messages.</div>
+                </div>
+                <div class="feat-badge badge-a">Chat</div>
+            </div>
+            <div class="feat-row">
+                <div class="feat-row-icon" style="background:rgba(244,63,94,0.12);color:var(--rose)"><i class="fas fa-shield-alt"></i></div>
+                <div class="feat-row-body">
+                    <div class="feat-row-title">Secure Authentication & Privacy</div>
+                    <div class="feat-row-desc">Email verification via OTP, bcrypt-hashed passwords, JWT tokens, Google OAuth support, and a dedicated client role ensure your account and project data remain fully private.</div>
+                </div>
+                <div class="feat-badge badge-r">Security</div>
+            </div>
+            <div class="feat-row">
+                <div class="feat-row-icon" style="background:rgba(59,130,246,0.12);color:var(--blue)"><i class="fas fa-bell"></i></div>
+                <div class="feat-row-body">
+                    <div class="feat-row-title">Unread Badges & Presence Indicators</div>
+                    <div class="feat-row-desc">See which architects are currently online (active in the last 2 minutes via heartbeat). Unread message counts appear on connection cards and the nav badge so you never miss a reply.</div>
+                </div>
+                <div class="feat-badge badge-c">Live Status</div>
+            </div>
+            <div class="feat-row">
+                <div class="feat-row-icon" style="background:rgba(139,92,246,0.12);color:var(--violet)"><i class="fas fa-ticket-alt"></i></div>
+                <div class="feat-row-body">
+                    <div class="feat-row-title">Support Ticket System</div>
+                    <div class="feat-row-desc">Submit support tickets directly from the portal. Choose a category, describe your issue, and receive email confirmation. Track admin replies and full thread history inside the portal.</div>
+                </div>
+                <div class="feat-badge badge-v">Support</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SYSTEM ARCHITECTURE -->
+    <div class="section-block">
+        <div class="block-eyebrow reveal"><i class="fas fa-sitemap"></i> System Architecture</div>
+        <h2 class="block-h2 reveal rd1">How the Platform is Built</h2>
+        <p class="block-p reveal rd2">The SmartArch Client Portal is part of a multi-service architecture — a static frontend talking to two independent backend services and a shared database.</p>
+
+        <div class="arch-full reveal rd2">
+            <div class="arch-header"><i class="fas fa-project-diagram"></i> Architecture Diagram — Client Portal View</div>
+            <div class="arch-body">
+                <div class="arch-node n1">
+                    <span class="arch-node-icon">🖥️</span>
+                    <div class="arch-node-title">Client Frontend</div>
+                    <div class="arch-node-sub">HTML · CSS · Vanilla JS<br>client-dashboard.html</div>
+                </div>
+                <div class="arch-node n2">
+                    <span class="arch-node-icon">⚙️</span>
+                    <div class="arch-node-title">Main API</div>
+                    <div class="arch-node-sub">Node.js + Express<br>Port 5000 · REST</div>
+                </div>
+                <div class="arch-node n1">
+                    <span class="arch-node-icon">🤖</span>
+                    <div class="arch-node-title">AI Service</div>
+                    <div class="arch-node-sub">Ollama phi3:mini<br>Port 3001 · BSP Engine</div>
+                </div>
+                <div class="arch-node n4">
+                    <span class="arch-node-icon">🗄️</span>
+                    <div class="arch-node-title">Database</div>
+                    <div class="arch-node-sub">MongoDB · Mongoose<br>Users · Projects · Chats</div>
+                </div>
+            </div>
+            <div class="arch-arrows">
+                <div><i class="fas fa-arrows-alt-h"></i> Client Frontend ↔ Main API (Port 5000)</div>
+                <span>·</span>
+                <div><i class="fas fa-arrows-alt-h"></i> Architect Frontend ↔ AI Service (Port 3001)</div>
+                <span>·</span>
+                <div><i class="fas fa-database"></i> Both APIs ↔ MongoDB</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CLIENT WORKFLOW TIMELINE -->
+    <div class="section-block">
+        <div class="block-eyebrow reveal"><i class="fas fa-stream"></i> Full Workflow</div>
+        <h2 class="block-h2 reveal rd1">Your Complete Project Lifecycle</h2>
+        <p class="block-p reveal rd2">From account creation to a finished architectural design — here's exactly what happens at each stage of the SmartArch client journey.</p>
+
+        <div class="timeline reveal rd2">
+            <div class="tl-item">
+                <div class="tl-num">01</div>
+                <div class="tl-content">
+                    <div class="tl-title">Registration & Email Verification</div>
+                    <div class="tl-desc">Register with your name, email, and password. A 6-digit OTP is emailed immediately. Verify your account (up to 5 resends per day allowed). Google OAuth is also supported for one-click sign-in.</div>
+                </div>
+            </div>
+            <div class="tl-item">
+                <div class="tl-num">02</div>
+                <div class="tl-content">
+                    <div class="tl-title">Create Your First Project Brief</div>
+                    <div class="tl-desc">Go to "My Projects" in your dashboard and click New Project. Fill in the 3-step wizard: (1) basic info and type, (2) budget, land size, style, rooms, and timeline, (3) attach reference files. Submit to save as Active.</div>
+                </div>
+            </div>
+            <div class="tl-item">
+                <div class="tl-num">03</div>
+                <div class="tl-content">
+                    <div class="tl-title">Discover the Right Architect</div>
+                    <div class="tl-desc">Use the Find Architects section to search and filter the architect directory. Click any card to open a full profile modal showing their bio, specialization, experience, rating, portfolio links, and public projects.</div>
+                </div>
+            </div>
+            <div class="tl-item">
+                <div class="tl-num">04</div>
+                <div class="tl-content">
+                    <div class="tl-title">Send a Connection Request</div>
+                    <div class="tl-desc">Click Connect on any architect profile. Write a personalised introduction and optionally attach one of your project briefs. The architect sees an unread badge in their dashboard and can accept or reject your request.</div>
+                </div>
+            </div>
+            <div class="tl-item">
+                <div class="tl-num">05</div>
+                <div class="tl-content">
+                    <div class="tl-title">Chat & Share Your Vision</div>
+                    <div class="tl-desc">Once the architect accepts, the Chat button activates. Exchange messages, share inspiration images, clarify requirements, and discuss design directions. The architect can view your full project brief directly from their dashboard.</div>
+                </div>
+            </div>
+            <div class="tl-item">
+                <div class="tl-num">06</div>
+                <div class="tl-content">
+                    <div class="tl-title">Architect Designs Your Space</div>
+                    <div class="tl-desc">Your architect uses SmartArch's AI-powered design tools — generating floor plans with BSP algorithms, creating 3D models, running AI feedback analysis, and exporting designs in OBJ, GLTF, CAD, and PDF formats.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FUTURE SCOPE -->
+    <div class="section-block">
+        <div class="block-eyebrow reveal"><i class="fas fa-rocket"></i> Future Scope</div>
+        <h2 class="block-h2 reveal rd1">What's Coming for Clients</h2>
+        <p class="block-p reveal rd2">The Client Portal is being continuously expanded with features that make the client-architect relationship even more powerful and transparent.</p>
+
+        <div class="two-col reveal rd2">
+            <div class="future-card">
+                <span class="future-card-icon">💬</span>
+                <div class="future-card-title">In-App Messaging Notifications</div>
+                <p class="future-card-desc">Real-time push notifications via WebSockets so you know instantly when an architect replies, accepts your request, or shares a new design update — no need to refresh.</p>
+            </div>
+            <div class="future-card">
+                <span class="future-card-icon">📁</span>
+                <div class="future-card-title">Document Management</div>
+                <p class="future-card-desc">A dedicated document vault for each project — organize contracts, design revisions, BOQ documents, and approval letters. Currently marked "Coming Soon" in the sidebar.</p>
+            </div>
+            <div class="future-card">
+                <span class="future-card-icon">💰</span>
+                <div class="future-card-title">Budget Tracker</div>
+                <p class="future-card-desc">A built-in budget tracking tool that lets you set spending limits, log architect fees, material costs, and contractor payments — keeping your entire project finances in one place.</p>
+            </div>
+            <div class="future-card">
+                <span class="future-card-icon">⭐</span>
+                <div class="future-card-title">Architect Reviews & Ratings</div>
+                <p class="future-card-desc">After project completion, leave verified ratings and reviews for architects you've worked with. Helps future clients make informed decisions and rewards high-quality professionals.</p>
+            </div>
+            <div class="future-card">
+                <span class="future-card-icon">📱</span>
+                <div class="future-card-title">Mobile App</div>
+                <p class="future-card-desc">Native iOS and Android apps so you can browse architects, manage your briefs, and chat on the go — with AR features for visualising designs in your actual space.</p>
+            </div>
+            <div class="future-card">
+                <span class="future-card-icon">❤️</span>
+                <div class="future-card-title">Favourites & Shortlists</div>
+                <p class="future-card-desc">Save architects you like to a personal favourites list before sending a request. Currently marked "Coming Soon" — allowing you to shortlist multiple candidates before committing.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- HIGHLIGHTS -->
+    <div class="section-block">
+        <div class="block-eyebrow reveal"><i class="fas fa-gem"></i> Why SmartArch</div>
+        <h2 class="block-h2 reveal rd1">Built Around Your Needs</h2>
+
+        <div class="highlights-grid reveal rd2">
+            <div class="highlight hl1">
+                <span class="highlight-icon">🏠</span>
+                <div class="highlight-title">Client-First Design</div>
+                <p class="highlight-desc">Every feature in the Client Portal was designed from a client's perspective — intuitive project briefs, clear connection statuses, and a clean inbox make it easy for anyone to use.</p>
+            </div>
+            <div class="highlight hl2">
+                <span class="highlight-icon">🔒</span>
+                <div class="highlight-title">Your Privacy, Protected</div>
+                <p class="highlight-desc">Dedicated client role with separate auth flow. Chats are private between you and your connected architect. No third-party data sharing. Files stored securely on-server.</p>
+            </div>
+            <div class="highlight hl3">
+                <span class="highlight-icon">⚡</span>
+                <div class="highlight-title">Fast & Responsive</div>
+                <p class="highlight-desc">The platform auto-polls for new messages, updates connection statuses in real time, and shows presence indicators so you always know who's available to chat.</p>
+            </div>
+            <div class="highlight hl4">
+                <span class="highlight-icon">🌍</span>
+                <div class="highlight-title">All Project Types</div>
+                <p class="highlight-desc">Supports residential, commercial, industrial, interior, renovation, landscape, and custom project types — with budgets in INR and land measurements in sqft, sqm, acres, or cents.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-band reveal">
+        <h2>Ready to Find Your Architect?</h2>
+        <p>Create your free client account and connect with verified architects in minutes.</p>
+        <a href="#" id="ctaGuest" onclick="redirectToRegister()">
+            <span class="btn-hero-primary"><i class="fas fa-rocket"></i> Get Started Free</span>
+        </a>
+        <a href="client-dashboard.html" id="ctaUser" class="btn-hero-primary" style="display:none;">
+            <i class="fas fa-search"></i> Find Architects Now
+        </a>
+        <a href="client-contact.html" class="btn-hero-outline">
+            <i class="fas fa-headset"></i> Contact Support
+        </a>
+    </div>
+
+</div><!-- /about-content -->
+
+<!-- FOOTER -->
+<footer class="footer">
+    <div class="footer-inner">
+        <div>
+            <div class="footer-logo-wrap">
+                <div class="nav-logo"><i class="fas fa-users"></i></div>
+                <span class="footer-brand-name">Smart<em> Arch</em></span>
+            </div>
+            <p class="footer-brand-desc">Connecting clients with professional architects through AI-powered tools and seamless collaboration.</p>
+        </div>
+        <div class="footer-col">
+            <h4>Client Portal</h4>
+            <a href="client-index.html#features">Services</a>
+            <a href="client-index.html#workflow">How It Works</a>
+        </div>
+        <div class="footer-col">
+            <h4>Company</h4>
+            <a href="client-about.html" style="color:var(--violet)">About</a>
+            <a href="client-contact.html">Contact</a>
+        </div>
+        <div class="footer-col">
+            <h4>Legal</h4>
+            <a href="privacy.html">Privacy Policy</a>
+            <a href="terms.html">Terms of Service</a>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <span>&copy; 2025 SmartArch Client Portal. All rights reserved.</span>
+        <span>Built with <span style="color:var(--violet)">♥</span> using Node.js, MongoDB &amp; AI</span>
+    </div>
+</footer>
+
+<script>
+    function redirectToLogin()    { window.location.href = 'client-index.html?modal=login'; }
+    function redirectToRegister() { window.location.href = 'client-index.html?modal=register'; }
+    function doLogout() {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = 'client-index.html';
+    }
+    function toggleMobileMenu() { document.getElementById('mobileMenu').classList.toggle('open'); }
+    function closeMobileMenu()  { document.getElementById('mobileMenu').classList.remove('open'); }
+
+    // Scroll reveal
+    const revealObs = new IntersectionObserver((entries) => {
+        entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); revealObs.unobserve(e.target); } });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+
+    // Auth state check
+    function checkAuthState() {
+        const token   = localStorage.getItem('token');
+        const userStr = localStorage.getItem('user');
+        const navAuth = document.getElementById('navAuth');
+        const navUser = document.getElementById('navUser');
+        const mobileNavAuth = document.getElementById('mobileNavAuth');
+        const mobileNavUser = document.getElementById('mobileNavUser');
+        const ctaGuest = document.getElementById('ctaGuest');
+        const ctaUser  = document.getElementById('ctaUser');
+
+        if (token && userStr) {
+            try {
+                const user = JSON.parse(userStr);
+                if (user.role !== 'client') return; // only show logged-in state for clients
+                if (navAuth) navAuth.style.display = 'none';
+                if (navUser) navUser.style.display = 'flex';
+                if (mobileNavAuth) mobileNavAuth.style.display = 'none';
+                if (mobileNavUser) { mobileNavUser.style.display = 'flex'; mobileNavUser.style.flexDirection = 'column'; }
+                if (ctaGuest) ctaGuest.style.display = 'none';
+                if (ctaUser)  ctaUser.style.display  = 'inline-flex';
+
+                const avatar = document.getElementById('userAvatar');
+                if (avatar) {
+                    const uid = user.id || user._id || 'guest';
+                    const savedPic = localStorage.getItem('user_avatar_' + uid);
+                    avatar.src = savedPic || user.avatar ||
+                        'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name) + '&background=8b5cf6&color=fff&bold=true';
+                }
+                const nameEl  = document.getElementById('userDropdownName');
+                const emailEl = document.getElementById('userDropdownEmail');
+                if (nameEl)  nameEl.textContent  = user.name  || '—';
+                if (emailEl) emailEl.textContent = user.email || '—';
+                const miniAv = document.getElementById('userDropdownAvatar');
+                if (miniAv && avatar) miniAv.src = avatar.src;
+            } catch(e) {}
+        }
+    }
+    document.addEventListener('DOMContentLoaded', checkAuthState);
+
+    // Avatar dropdown toggle
+    (function() {
+        const wrap   = document.getElementById('userMenuWrap');
+        const avatar = document.getElementById('userAvatar');
+        if (!wrap || !avatar) return;
+        avatar.addEventListener('click', function(e) { e.stopPropagation(); wrap.classList.toggle('open'); });
+        document.addEventListener('click', function(e) { if (!wrap.contains(e.target)) wrap.classList.remove('open'); });
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') wrap.classList.remove('open'); });
+    })();
+</script>
+</body>
+</html>
