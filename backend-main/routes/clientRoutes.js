@@ -6,7 +6,8 @@ const {
     login,
     getMe,
     updateProfile,
-    getDashboard
+    getDashboard,
+    deleteAccount
 } = require('../controllers/clientController');
 const { getArchitectListing, getArchitectDetail } = require('../controllers/architectListingController');
 const {
@@ -51,5 +52,8 @@ router.delete('/projects/:id/attachments/:filename',
 // ── Architect Listing (for clients to browse architects) ──────────────────────
 router.get('/architects',       protect, authorize('client'), getArchitectListing);
 router.get('/architects/:id',   protect, authorize('client'), getArchitectDetail);
+
+// ── Delete account ────────────────────────────────────────────────────────────
+router.delete('/account', protect, authorize('client'), deleteAccount);
 
 module.exports = router;

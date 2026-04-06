@@ -130,12 +130,25 @@ exports.getMe = async (req, res) => {
 // ─── PUT /api/client/profile ──────────────────────────────────────────────────
 exports.updateProfile = async (req, res) => {
     try {
-        const { name, phone, company, avatar, preferences } = req.body;
+        const { name, phone, company, avatar, bio, location, preferences } = req.body;
+
+        // Only allow fields that clients may update — role, plan, email etc. are excluded
+        const updateFields = {};
+        if (name     !== undefined) updateFields.name     = name;
+        if (phone    !== undefined) updateFields.phone    = phone;
+        if (company  !== undefined) updateFields.company  = company;
+        if (bio      !== undefined) updateFields.bio      = String(bio).slice(0, 500);
+        if (location !== undefined) updateFields.location = String(location).slice(0, 100);
+        if (avatar   !== undefined) updateFields.avatar   = avatar;
+        if (preferences !== undefined) updateFields.preferences = preferences;
+
         const user = await User.findByIdAndUpdate(
             req.user.id,
-            { name, phone, company, avatar, preferences },
+            { $set: updateFields },
             { new: true, runValidators: true }
-        );
+        ).select('-password');
+
+        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
         res.json({ success: true, user });
     } catch (error) {
         console.error('Client updateProfile error:', error);
@@ -157,6 +170,24 @@ exports.getDashboard = async (req, res) => {
         });
     } catch (error) {
         console.error('Client dashboard error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+// ─── DELETE /api/client/account ──────────────────────────────────────────────
+// Permanently removes the client account and all their data.
+exports.deleteAccount = async (req, res) => {
+    try {
+        const ClientProject = require('../models/ClientProject');
+        const Connection    = require('../models/Connection');
+
+        // Delete all client projects + connections, then the user itself
+        await ClientProject.deleteMany({ client: req.user._id });
+        await Connection.deleteMany({ client: req.user._id });
+        await User.findByIdAndDelete(req.user._id);
+
+        res.json({ success: true, message: 'Account deleted successfully.' });
+    } catch (error) {
+        console.error('Client deleteAccount error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };

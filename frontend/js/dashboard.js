@@ -2044,7 +2044,7 @@ function _connPanelFooter(c, client, avatar) {
                     onmouseout="this.style.transform='';this.style.boxShadow='';">
                     <i class="fas fa-comments"></i> Chat
                 </button>
-                <button onclick="closeConnDetailModal();"
+                <button onclick="openWorkspaceForClient('${c._id}','${clientName}','${escHtml(c.projectName || '')}')"
                     style="flex:1;padding:0.75rem;background:rgba(139,92,246,0.1);color:#a78bfa;font-weight:700;font-size:0.875rem;border:1px solid rgba(139,92,246,0.25);border-radius:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;transition:all 0.2s;"
                     onmouseover="this.style.background='rgba(139,92,246,0.2)';this.style.color='#c4b5fd';"
                     onmouseout="this.style.background='rgba(139,92,246,0.1)';this.style.color='#a78bfa';">
@@ -2213,6 +2213,31 @@ function _skeletonRows(n) {
         </div>`;
     }
     return `<div style="margin-top:1rem;">${rows}</div>`;
+}
+
+// ── Open Workspace for a client connection ────────────────────────────────────
+// Navigates to architect.html, carrying connection context as query params so
+// the workspace can display a client-brief banner without breaking normal flow.
+function openWorkspaceForClient(connId, clientName, projectName) {
+    closeConnDetailModal();
+
+    // Look up the connection to find if it has an architect-side project id
+    const cached = window._archConnectionsCache || [];
+    const conn   = cached.find(x => String(x._id) === String(connId));
+
+    const params = new URLSearchParams();
+    params.set('connectionId', connId);
+    if (clientName)   params.set('clientName',   clientName);
+    if (projectName)  params.set('projectName',  projectName);
+
+    // If the connection carries an architect project, open it directly;
+    // otherwise open a blank workspace pre-tagged to this client brief.
+    const archProjectId = conn?.project?._id || conn?.project || null;
+    if (archProjectId) {
+        params.set('id', archProjectId);
+    }
+
+    window.location.href = `architect.html?${params.toString()}`;
 }
 
 function closeConnDetailModal() {
@@ -2471,8 +2496,9 @@ window.handleArchChatKeydown = handleArchChatKeydown;
 window.onArchChatImgSelected = onArchChatImgSelected;
 window.clearArchChatImg      = clearArchChatImg;
 window.openChatLightbox      = openChatLightbox;
-window.openConnDetailModal   = openConnDetailModal;
-window.closeConnDetailModal  = closeConnDetailModal;
+window.openConnDetailModal      = openConnDetailModal;
+window.closeConnDetailModal     = closeConnDetailModal;
+window.openWorkspaceForClient   = openWorkspaceForClient;
 
 // ── Close side panel on Escape ────────────────────────────────────────────────
 document.addEventListener('keydown', (e) => {

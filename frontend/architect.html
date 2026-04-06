@@ -345,6 +345,54 @@
   font-size: .72rem;
 }
 .aifb-spinner i { font-size: 1.2rem; color: #3a7bd5; }
+    /* ── Client-brief context banner ── */
+    #clientContextBanner {
+        display: none;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 4px 12px 4px 8px;
+        background: linear-gradient(135deg, rgba(139,92,246,0.18), rgba(0,212,200,0.12));
+        border: 1px solid rgba(139,92,246,0.35);
+        border-radius: 8px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: #c4b5fd;
+        white-space: nowrap;
+        max-width: 280px;
+        overflow: hidden;
+        cursor: default;
+        transition: background 0.2s;
+        flex-shrink: 0;
+    }
+    #clientContextBanner.visible { display: flex; }
+    #clientContextBanner:hover { background: linear-gradient(135deg, rgba(139,92,246,0.28), rgba(0,212,200,0.18)); }
+    #clientContextBanner .ccb-icon {
+        width: 22px; height: 22px;
+        border-radius: 6px;
+        background: rgba(139,92,246,0.25);
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+    }
+    #clientContextBanner .ccb-icon i { font-size: 0.65rem; color: #a78bfa; }
+    #clientContextBanner .ccb-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+    #clientContextBanner .ccb-label { font-size: 0.6rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; line-height: 1; }
+    #clientContextBanner .ccb-value { color: #e2e8f0; font-weight: 700; font-size: 0.75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #clientContextBanner .ccb-sep { width: 1px; height: 24px; background: rgba(255,255,255,0.1); flex-shrink: 0; }
+    #clientContextBanner .ccb-back {
+        margin-left: 4px;
+        padding: 3px 8px;
+        background: rgba(139,92,246,0.2);
+        border: 1px solid rgba(139,92,246,0.3);
+        border-radius: 5px;
+        color: #a78bfa;
+        font-size: 0.65rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.15s;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    #clientContextBanner .ccb-back:hover { background: rgba(139,92,246,0.35); color: #c4b5fd; }
     </style>
 </head>
 <body>
@@ -362,6 +410,23 @@
                 <span class="save-badge" id="saveStatus">Saved</span>
             </div>
         </div>
+        <!-- Client-brief context banner — hidden by default, shown via JS when opened from a connection -->
+        <div id="clientContextBanner" title="Opened from client connection">
+            <div class="ccb-icon"><i class="fas fa-user-tie"></i></div>
+            <div class="ccb-text">
+                <span class="ccb-label">Client</span>
+                <span class="ccb-value" id="ccbClientName">—</span>
+            </div>
+            <div class="ccb-sep"></div>
+            <div class="ccb-text">
+                <span class="ccb-label">Project Brief</span>
+                <span class="ccb-value" id="ccbProjectName">—</span>
+            </div>
+            <button class="ccb-back" onclick="window.location.href='dashboard.html'" title="Back to Dashboard">
+                <i class="fas fa-arrow-left"></i> Dashboard
+            </button>
+        </div>
+
         <div class="nav-center">
             <!-- Drawing Tools -->
             <div class="tool-group" style="margin-top: 30px; margin-right: -45px;">

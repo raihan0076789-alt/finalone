@@ -79,7 +79,53 @@ document.addEventListener('DOMContentLoaded',()=>{
   projectId=p.get('id');
   if(projectId) loadProject(); else initNewProject();
   setupCanvas(); setupEventListeners(); initOllamaChat();
+
+  // ── Client-connection context banner ──────────────────────────────────────
+  // When the workspace is opened via "Open Workspace" from a client connection,
+  // the URL contains connectionId / clientName / projectName.
+  // We surface these in a non-intrusive banner in the navbar.
+  _initClientContextBanner(p);
 });
+
+/**
+ * Reads client-connection query params and populates the context banner.
+ * Safe to call even when params are absent — banner stays hidden.
+ */
+function _initClientContextBanner(params) {
+  const connectionId  = params.get('connectionId');
+  const clientName    = params.get('clientName');
+  const projectName   = params.get('projectName');
+
+  if (!connectionId) return;   // not opened from a connection — nothing to do
+
+  const banner      = document.getElementById('clientContextBanner');
+  const nameEl      = document.getElementById('ccbClientName');
+  const projEl      = document.getElementById('ccbProjectName');
+
+  if (!banner) return;
+
+  if (nameEl)  nameEl.textContent  = clientName  || 'Client';
+  if (projEl)  projEl.textContent  = projectName || 'Client Brief';
+
+  banner.classList.add('visible');
+
+  // Store on window so other code (e.g. save flow) can reference it if needed
+  window._clientConnectionContext = { connectionId, clientName, projectName };
+
+  // ── Pre-fill project title when no existing project is loaded ────────────
+  // If no ?id= was in the URL, initNewProject() ran and set "Untitled Project".
+  // Override it with the client's project name so the workspace is pre-labelled.
+  if (!params.get('id') && projectName) {
+    const titleInput = document.getElementById('projectTitle');
+    if (titleInput) {
+      titleInput.value = projectName;
+      // Keep projectData in sync so Save picks up the correct name
+      if (typeof projectData !== 'undefined' && projectData) {
+        projectData.name = projectName;
+      }
+    }
+  }
+}
 
 async function loadProject(){
   try{
@@ -2123,5 +2169,5 @@ Object.assign(window,{
 // expose functions globally for HTML
 window.setTool = setTool;
 window.setView = setView;
-window.generate3DModel = generate3DModel;
+window.generate3DModel = generate3DModel;               
 window.generateAIArchitecture = generateAIArchitecture;

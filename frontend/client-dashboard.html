@@ -53,7 +53,7 @@
         </a>
         <a href="#" class="nav-item" id="nav-connections" onclick="showView('connections', event)">
             <span class="nav-icon"><i class="fas fa-user-check"></i></span>
-            My Connections
+            My Architects
             <span id="connNavBadge" style="display:none;background:#ef4444;color:#fff;border-radius:20px;padding:1px 7px;font-size:0.68rem;font-weight:700;margin-left:auto;"></span>
         </a>
 
@@ -86,10 +86,9 @@
         </a>
 
         <div class="nav-section-label">Account</div>
-        <a href="#" class="nav-item" id="settingsLink" onclick="comingSoon(event,'Settings')">
+        <a href="#" class="nav-item" id="nav-settings" onclick="showView('settings', event)">
             <span class="nav-icon"><i class="fas fa-cog"></i></span>
             Settings
-            <span class="nav-badge soon">Soon</span>
         </a>
         <a href="contact.html" class="nav-item">
             <span class="nav-icon"><i class="fas fa-headset"></i></span>
@@ -256,7 +255,7 @@
 <!-- VIEW: MY CONNECTIONS -->
 <div class="connections-main" id="view-connections" style="display:none">
     <div class="hero-strip">
-        <h1>My <span>Connections</span></h1>
+        <h1>My <span>Network</span></h1>
         <p>Manage your architect connections and chat with accepted contacts</p>
     </div>
     <div class="connections-body" id="connectionsBody">
@@ -587,12 +586,17 @@ const VIEWS = {
     },
     connections: {
         el: 'view-connections', navId: 'nav-connections',
-        title: 'My Connections', sub: 'Manage your architect connections',
+        title: 'My Architects', sub: 'Manage your architect connections',
         showDashBtns: false, showPlan: false
     },
     projects: {
         el: 'view-projects', navId: 'nav-projects',
         title: 'My Projects', sub: 'Manage your construction briefs',
+        showDashBtns: false, showPlan: false
+    },
+    settings: {
+        el: 'view-settings', navId: 'nav-settings',
+        title: 'Settings', sub: 'Manage your account and preferences',
         showDashBtns: false, showPlan: false
     }
 };
@@ -634,6 +638,9 @@ function showView(name, event) {
     }
     if (name === 'projects') {
         loadClientProjects();
+    }
+    if (name === 'settings') {
+        loadClientSettings();
     }
 }
 
@@ -2157,6 +2164,277 @@ document.addEventListener('DOMContentLoaded', function() {
     if (desc && cnt) desc.addEventListener('input', function() { cnt.textContent = desc.value.length; });
 });
 
+/* ============================================================
+   CLIENT SETTINGS
+   ============================================================ */
+
+// ── Panel / Tab switchers ─────────────────────────────────────────────────────
+function switchClientSettingsPanel(name, btn) {
+    document.querySelectorAll('#view-settings .settings-nav-item').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#view-settings .settings-panel').forEach(p => p.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    var panel = document.getElementById('cs-panel-' + name);
+    if (panel) panel.classList.add('active');
+}
+
+function switchClientProfileTab(name, btn) {
+    document.querySelectorAll('#cs-panel-profile .profile-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#cs-panel-profile .profile-content').forEach(p => p.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    var tab = document.getElementById('cs-tab-' + name);
+    if (tab) tab.classList.add('active');
+}
+
+// ── Load settings (called every time view is opened) ──────────────────────────
+var _csUserCache = null;
+
+async function loadClientSettings() {
+    var token = requireClientAuth();
+    if (!token) return;
+    try {
+        var resp = await fetch(CLIENT_API + '/client/me', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        var data = await resp.json();
+        if (!data.user) return;
+        _csUserCache = data.user;
+        localStorage.setItem('client_user', JSON.stringify(data.user));
+        _csPopulateOverview(data.user);
+        _csPopulateEditForm(data.user);
+        _csPopulatePreferences(data.user);
+    } catch (e) {
+        console.error('loadClientSettings error', e);
+        // Fall back to cached user
+        var cached = localStorage.getItem('client_user');
+        if (cached) {
+            var u = JSON.parse(cached);
+            _csUserCache = u;
+            _csPopulateOverview(u);
+            _csPopulateEditForm(u);
+            _csPopulatePreferences(u);
+        }
+    }
+}
+
+function _csPopulateOverview(u) {
+    var avatarUrl = u.avatar ||
+        'https://ui-avatars.com/api/?name=' + encodeURIComponent(u.name || 'C') + '&background=8b5cf6&color=fff&bold=true';
+
+    var el = function(id) { return document.getElementById(id); };
+    var img = el('cs-overviewAvatar');
+    if (img) img.src = avatarUrl;
+    if (el('cs-overviewName'))    el('cs-overviewName').textContent    = u.name    || '—';
+    if (el('cs-overviewEmail'))   el('cs-overviewEmail').textContent   = u.email   || '—';
+    if (el('cs-overviewPhone'))   el('cs-overviewPhone').textContent   = u.phone   || '—';
+    if (el('cs-overviewCompany')) el('cs-overviewCompany').textContent = u.company || '—';
+    if (el('cs-overviewLocation'))el('cs-overviewLocation').textContent= u.location|| '—';
+    if (el('cs-overviewBio'))     el('cs-overviewBio').textContent     = u.bio     || '—';
+    if (el('cs-overviewSince')) {
+        var d = u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) : '—';
+        el('cs-overviewSince').textContent = d;
+    }
+}
+
+function _csPopulateEditForm(u) {
+    var el = function(id) { return document.getElementById(id); };
+    var avatarUrl = u.avatar ||
+        'https://ui-avatars.com/api/?name=' + encodeURIComponent(u.name || 'C') + '&background=8b5cf6&color=fff&bold=true';
+    var img = el('cs-editAvatar');
+    if (img) img.src = avatarUrl;
+    if (el('cs-editName'))     el('cs-editName').value     = u.name     || '';
+    if (el('cs-editEmail'))    el('cs-editEmail').value    = u.email    || '';
+    if (el('cs-editCompany'))  el('cs-editCompany').value  = u.company  || '';
+    if (el('cs-editPhone'))    el('cs-editPhone').value    = u.phone    || '';
+    if (el('cs-editLocation')) el('cs-editLocation').value = u.location || '';
+    if (el('cs-editBio'))      el('cs-editBio').value      = u.bio      || '';
+}
+
+function _csPopulatePreferences(u) {
+    var prefs = u.preferences || {};
+    var stored = {};
+    try { stored = JSON.parse(localStorage.getItem('cs_prefs') || '{}'); } catch(e) {}
+    var merged = Object.assign({}, prefs, stored);
+
+    var emailNotif = document.getElementById('cs-emailNotif');
+    var connAlerts = document.getElementById('cs-connAlerts');
+    var currency   = document.getElementById('cs-currency');
+    if (emailNotif) emailNotif.checked = merged.emailNotif !== false;
+    if (connAlerts) connAlerts.checked = merged.connAlerts !== false;
+    if (currency && merged.currency)   currency.value = merged.currency;
+}
+
+// ── Save profile ──────────────────────────────────────────────────────────────
+async function saveClientProfile(event) {
+    if (event) event.preventDefault();
+    var token = requireClientAuth();
+    if (!token) return;
+
+    var btn = document.getElementById('csEpSaveBtn');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…'; }
+
+    var el = function(id) { return document.getElementById(id); };
+
+    var body = {
+        name:     (el('cs-editName')     ? el('cs-editName').value.trim()     : ''),
+        company:  (el('cs-editCompany')  ? el('cs-editCompany').value.trim()  : ''),
+        phone:    (el('cs-editPhone')    ? el('cs-editPhone').value.trim()    : ''),
+        location: (el('cs-editLocation') ? el('cs-editLocation').value.trim() : ''),
+        bio:      (el('cs-editBio')      ? el('cs-editBio').value.trim()      : '')
+    };
+
+    // Include avatar if it was changed (stored as base64 on the img src)
+    var avatarImg = el('cs-editAvatar');
+    if (avatarImg && avatarImg.src && avatarImg.src.startsWith('data:')) {
+        body.avatar = avatarImg.src;
+    } else if (avatarImg && avatarImg.dataset.removed === 'true') {
+        body.avatar = '';
+    }
+
+    try {
+        var resp = await fetch(CLIENT_API + '/client/profile', {
+            method:  'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body:    JSON.stringify(body)
+        });
+        var data = await resp.json();
+        if (!resp.ok || !data.success) throw new Error(data.message || 'Update failed');
+
+        // Persist updated user
+        var updated = data.user || Object.assign(_csUserCache || {}, body);
+        localStorage.setItem('client_user', JSON.stringify(updated));
+        _csUserCache = updated;
+
+        // Refresh overview + sidebar
+        _csPopulateOverview(updated);
+        loadUser();
+
+        showToast('Profile updated successfully!', 'success');
+        // Switch back to overview tab
+        var overviewBtn = document.querySelector('#cs-panel-profile .profile-tab');
+        switchClientProfileTab('overview', overviewBtn);
+
+    } catch (e) {
+        showToast(e.message || 'Could not save profile.', 'error');
+    } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> Save Changes'; }
+    }
+}
+
+function discardClientProfileChanges() {
+    if (_csUserCache) {
+        _csPopulateEditForm(_csUserCache);
+    }
+    var overviewBtn = document.querySelector('#cs-panel-profile .profile-tab');
+    switchClientProfileTab('overview', overviewBtn);
+    showToast('Changes discarded.', 'info');
+}
+
+// ── Avatar upload / remove ────────────────────────────────────────────────────
+function handleClientAvatarUpload(event) {
+    var file = event.target.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { showToast('Image must be under 5 MB.', 'error'); return; }
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        var img = document.getElementById('cs-editAvatar');
+        if (img) {
+            img.src = e.target.result;
+            img.dataset.removed = 'false';
+        }
+        // Also update overview avatar live
+        var ov = document.getElementById('cs-overviewAvatar');
+        if (ov) ov.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeClientAvatar() {
+    var fallback = 'https://ui-avatars.com/api/?name=' +
+        encodeURIComponent((_csUserCache && _csUserCache.name) || 'C') +
+        '&background=8b5cf6&color=fff&bold=true';
+    var img = document.getElementById('cs-editAvatar');
+    if (img) { img.src = fallback; img.dataset.removed = 'true'; }
+    var ov = document.getElementById('cs-overviewAvatar');
+    if (ov) ov.src = fallback;
+}
+
+// ── Change password ───────────────────────────────────────────────────────────
+async function updateClientPassword(event) {
+    if (event) event.preventDefault();
+    var token = requireClientAuth();
+    if (!token) return;
+
+    var cur  = document.getElementById('cs-currentPw');
+    var nw   = document.getElementById('cs-newPw');
+    var conf = document.getElementById('cs-confirmPw');
+
+    if (!cur || !nw || !conf) return;
+    if (nw.value.length < 8) { showToast('New password must be at least 8 characters.', 'error'); return; }
+    if (nw.value !== conf.value) { showToast('Passwords do not match.', 'error'); return; }
+
+    try {
+        var resp = await fetch(CLIENT_API + '/auth/password', {
+            method:  'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body:    JSON.stringify({ currentPassword: cur.value, newPassword: nw.value })
+        });
+        var data = await resp.json();
+        if (!resp.ok || !data.success) throw new Error(data.message || 'Password update failed');
+
+        cur.value = ''; nw.value = ''; conf.value = '';
+        showToast('Password updated successfully!', 'success');
+    } catch (e) {
+        showToast(e.message || 'Could not update password.', 'error');
+    }
+}
+
+// ── Password eye toggle ───────────────────────────────────────────────────────
+function csTogglePw(inputId, icon) {
+    var inp = document.getElementById(inputId);
+    if (!inp) return;
+    var show = inp.type === 'password';
+    inp.type = show ? 'text' : 'password';
+    icon.classList.toggle('fa-eye',      !show);
+    icon.classList.toggle('fa-eye-slash', show);
+}
+
+// ── Preferences (persisted to localStorage) ───────────────────────────────────
+function saveClientPreference(key, value) {
+    var stored = {};
+    try { stored = JSON.parse(localStorage.getItem('cs_prefs') || '{}'); } catch(e) {}
+    stored[key] = value;
+    localStorage.setItem('cs_prefs', JSON.stringify(stored));
+    showToast('Preference saved.', 'success');
+}
+
+// ── Delete account ────────────────────────────────────────────────────────────
+async function deleteClientAccount() {
+    var confirmed = window.confirm(
+        'This will permanently delete your account, all your projects, and connections.\n\nThis cannot be undone. Are you sure?'
+    );
+    if (!confirmed) return;
+
+    var token = requireClientAuth();
+    if (!token) return;
+
+    try {
+        var resp = await fetch(CLIENT_API + '/client/account', {
+            method:  'DELETE',
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        var data = await resp.json();
+        if (!resp.ok && resp.status !== 404) throw new Error(data.message || 'Could not delete account.');
+        localStorage.removeItem('client_token');
+        localStorage.removeItem('client_user');
+        localStorage.removeItem('cs_prefs');
+        showToast('Account deleted. Redirecting…', 'info');
+        setTimeout(function() { window.location.href = 'client-index.html'; }, 1800);
+    } catch (e) {
+        showToast(e.message || 'Could not delete account.', 'error');
+    }
+}
+
+
 </script>
 <script src="js/presence.js"></script>
 
@@ -2562,6 +2840,292 @@ document.addEventListener('DOMContentLoaded', function() {
 #customConfirmCancel:hover { background:rgba(255,255,255,0.1); color:#f1f5f9; }
 #customConfirmOk:hover     { transform:translateY(-1px); box-shadow:0 6px 18px rgba(244,63,94,0.35); }
 </style>
+
+
+<!-- =====================================================================
+     SETTINGS VIEW
+     ===================================================================== -->
+<div class="settings-main" id="view-settings" style="display:none; margin-top: 55px;">
+    <div class="settings-body">
+        <div class="settings-layout" style="margin-left: -85px;">
+
+            <!-- Left nav -->
+            <nav class="settings-nav">
+                <button class="settings-nav-item active" data-panel="profile" onclick="switchClientSettingsPanel('profile', this)">
+                    <i class="fas fa-user"></i> Profile
+                </button>
+                <button class="settings-nav-item" data-panel="security" onclick="switchClientSettingsPanel('security', this)">
+                    <i class="fas fa-shield-alt"></i> Security
+                </button>
+                <button class="settings-nav-item" data-panel="preferences" onclick="switchClientSettingsPanel('preferences', this)">
+                    <i class="fas fa-sliders-h"></i> Preferences
+                </button>
+                <button class="settings-nav-item" data-panel="danger" onclick="switchClientSettingsPanel('danger', this)">
+                    <i class="fas fa-exclamation-triangle"></i> Danger Zone
+                </button>
+            </nav>
+
+            <!-- Right panels -->
+            <div class="settings-panels">
+
+                <!-- ── PROFILE PANEL ── -->
+                <div class="settings-panel active" id="cs-panel-profile">
+
+                    <div class="profile-tabs">
+                        <button class="profile-tab active" onclick="switchClientProfileTab('overview', this)">Overview</button>
+                        <button class="profile-tab"        onclick="switchClientProfileTab('edit', this)">Edit Profile</button>
+                    </div>
+
+                    <!-- Overview Tab -->
+                    <div class="profile-content active" id="cs-tab-overview">
+                        <div class="profile-overview-card">
+                            <div class="profile-overview-header">
+                                <div class="profile-overview-avatar">
+                                    <img src="" id="cs-overviewAvatar" alt="Avatar">
+                                </div>
+                            </div>
+                            <div class="profile-overview-body">
+                                <h2 id="cs-overviewName">—</h2>
+                                <p class="profile-role">Client</p>
+                            </div>
+                            <div class="profile-overview-divider"></div>
+                            <div class="profile-overview-meta">
+                                <div class="meta-row">
+                                    <i class="fas fa-envelope meta-icon"></i>
+                                    <span id="cs-overviewEmail" class="profile-email">—</span>
+                                </div>
+                            </div>
+                            <div class="profile-overview-grid">
+                                <div class="info-box">
+                                    <span>Phone</span>
+                                    <p id="cs-overviewPhone">—</p>
+                                </div>
+                                <div class="info-box">
+                                    <span>Company</span>
+                                    <p id="cs-overviewCompany">—</p>
+                                </div>
+                                <div class="info-box">
+                                    <span>Location</span>
+                                    <p id="cs-overviewLocation">—</p>
+                                </div>
+                                <div class="info-box">
+                                    <span>Member Since</span>
+                                    <p id="cs-overviewSince">—</p>
+                                </div>
+                                <div class="info-box full">
+                                    <span>Bio</span>
+                                    <p id="cs-overviewBio" style="white-space:pre-line;">—</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Edit Tab -->
+                    <div class="profile-content" id="cs-tab-edit">
+                        <div class="edit-profile-shell">
+                            <form id="csEditProfileForm" onsubmit="saveClientProfile(event)">
+
+                                <!-- Avatar Strip -->
+                                <div class="ep-avatar-strip">
+                                    <div class="ep-avatar-wrap">
+                                        <img src="" alt="Profile" id="cs-editAvatar" class="ep-avatar-img">
+                                        <label for="csProfilePicInput" class="ep-avatar-badge" title="Change photo">
+                                            <i class="fas fa-camera"></i>
+                                        </label>
+                                    </div>
+                                    <div class="ep-avatar-meta">
+                                        <p class="ep-avatar-hint">JPG, PNG or GIF · max 5 MB</p>
+                                        <div class="ep-avatar-actions">
+                                            <label for="csProfilePicInput" class="btn btn-primary btn-sm">
+                                                <i class="fas fa-upload"></i> Upload Photo
+                                            </label>
+                                            <button type="button" class="btn btn-ghost btn-sm" onclick="removeClientAvatar()">
+                                                <i class="fas fa-trash"></i> Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <input type="file" id="csProfilePicInput" accept="image/*" onchange="handleClientAvatarUpload(event)" style="display:none">
+                                </div>
+
+                                <!-- Personal Info -->
+                                <div class="ep-section">
+                                    <div class="ep-section-label">
+                                        <span class="ep-section-icon"><i class="fas fa-user"></i></span>
+                                        <div>
+                                            <div class="ep-section-title">Personal Information</div>
+                                            <div class="ep-section-desc">Name, contact details and company</div>
+                                        </div>
+                                    </div>
+                                    <div class="ep-form-grid">
+                                        <div class="ep-field">
+                                            <label class="ep-label">Full Name</label>
+                                            <input type="text" id="cs-editName" class="ep-input" placeholder="Your full name">
+                                        </div>
+                                        <div class="ep-field">
+                                            <label class="ep-label">Email Address</label>
+                                            <input type="email" id="cs-editEmail" class="ep-input" placeholder="you@example.com" disabled title="Email cannot be changed here">
+                                        </div>
+                                        <div class="ep-field">
+                                            <label class="ep-label">Company</label>
+                                            <input type="text" id="cs-editCompany" class="ep-input" placeholder="Your company or organisation">
+                                        </div>
+                                        <div class="ep-field">
+                                            <label class="ep-label">Phone Number</label>
+                                            <input type="tel" id="cs-editPhone" class="ep-input" placeholder="+91 9876543210" pattern="^\+91\s?[6-9]\d{9}$" title="Enter a valid Indian phone number (+91 9876543210)" required >
+                                        </div>
+                                        <div class="ep-field">
+                                            <label class="ep-label">Location</label>
+                                            <input type="text" id="cs-editLocation" class="ep-input" placeholder="e.g. Chennai, India">
+                                        </div>
+                                    </div>
+                                    <div class="ep-field ep-field-full" style="margin-top:1rem;">
+                                        <label class="ep-label">Bio <span class="ep-label-hint">max 500 chars</span></label>
+                                        <textarea id="cs-editBio" class="ep-input ep-textarea" rows="3" maxlength="500" placeholder="A short description about yourself…"></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="ep-divider"></div>
+
+                                <div class="ep-footer-bar">
+                                    <button type="submit" class="ep-btn-save" id="csEpSaveBtn">
+                                        <i class="fas fa-check"></i> Save Changes
+                                    </button>
+                                    <button type="button" class="ep-btn-reset" onclick="discardClientProfileChanges()">
+                                        Discard
+                                    </button>
+                                </div>
+
+                            </form>
+                        </div>
+                    </div>
+
+                </div><!-- /cs-panel-profile -->
+
+                <!-- ── SECURITY PANEL ── -->
+                <div class="settings-panel" id="cs-panel-security">
+                    <div class="settings-card">
+                        <div class="settings-card-header">
+                            <div class="settings-card-title">Change Password</div>
+                            <div class="settings-card-desc">Use a strong, unique password to keep your account secure.</div>
+                        </div>
+                        <form onsubmit="updateClientPassword(event)">
+                            <div class="form-group">
+                                <label class="form-label">Current Password</label>
+                                <div class="cs-pw-wrap">
+                                    <input type="password" id="cs-currentPw" class="form-control" placeholder="Enter current password">
+                                    <i class="fas fa-eye cs-toggle-eye" onclick="csTogglePw('cs-currentPw', this)"></i>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">New Password</label>
+                                <div class="cs-pw-wrap">
+                                    <input type="password" id="cs-newPw" class="form-control" placeholder="Min. 8 characters" minlength="8">
+                                    <i class="fas fa-eye cs-toggle-eye" onclick="csTogglePw('cs-newPw', this)"></i>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Confirm New Password</label>
+                                <div class="cs-pw-wrap">
+                                    <input type="password" id="cs-confirmPw" class="form-control" placeholder="Repeat new password">
+                                    <i class="fas fa-eye cs-toggle-eye" onclick="csTogglePw('cs-confirmPw', this)"></i>
+                                </div>
+                            </div>
+                            <div style="margin-top:1.25rem;">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-key"></i> Update Password
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="settings-card">
+                        <div class="settings-card-header">
+                            <div class="settings-card-title">Active Sessions</div>
+                            <div class="settings-card-desc">Manage where you are logged in.</div>
+                        </div>
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem;background:rgba(0,212,200,0.05);border:1px solid rgba(0,212,200,0.1);border-radius:var(--r);">
+                            <div style="display:flex;align-items:center;gap:0.875rem;">
+                                <div style="width:36px;height:36px;background:rgba(0,212,200,0.12);border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--cyan);">
+                                    <i class="fas fa-desktop"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight:600;font-size:0.9rem;color:var(--white);">Current Session</div>
+                                    <div style="font-size:0.78rem;color:var(--slate-2);">Active now · This browser</div>
+                                </div>
+                            </div>
+                            <span style="font-size:0.72rem;background:rgba(16,185,129,0.1);color:#10b981;padding:3px 9px;border-radius:99px;font-weight:700;">Active</span>
+                        </div>
+                    </div>
+                </div><!-- /cs-panel-security -->
+
+                <!-- ── PREFERENCES PANEL ── -->
+                <div class="settings-panel" id="cs-panel-preferences">
+                    <div class="settings-card">
+                        <div class="settings-card-header">
+                            <div class="settings-card-title">Notifications</div>
+                            <div class="settings-card-desc">Control how SmartArch communicates with you.</div>
+                        </div>
+                        <div class="toggle-row">
+                            <div class="toggle-row-info">
+                                <span class="toggle-label">Email Notifications</span>
+                                <span class="toggle-desc">Receive updates about your connections and projects via email.</span>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="cs-emailNotif" onchange="saveClientPreference('emailNotif', this.checked)">
+                                <span class="toggle-switch-track"></span>
+                            </label>
+                        </div>
+                        <div class="toggle-row">
+                            <div class="toggle-row-info">
+                                <span class="toggle-label">Connection Request Alerts</span>
+                                <span class="toggle-desc">Get notified when architects respond to your connection requests.</span>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="cs-connAlerts" checked onchange="saveClientPreference('connAlerts', this.checked)">
+                                <span class="toggle-switch-track"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="settings-card">
+                        <div class="settings-card-header">
+                            <div class="settings-card-title">Display</div>
+                            <div class="settings-card-desc">Set your preferred currency and units.</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Currency</label>
+                            <select class="form-control" id="cs-currency" onchange="saveClientPreference('currency', this.value)">
+                                <option value="INR">Indian Rupee (₹)</option>
+                                <option value="USD">US Dollar ($)</option>
+                                <option value="EUR">Euro (€)</option>
+                                <option value="GBP">British Pound (£)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div><!-- /cs-panel-preferences -->
+
+                <!-- ── DANGER ZONE PANEL ── -->
+                <div class="settings-panel" id="cs-panel-danger">
+                    <div class="danger-zone-card">
+                        <h3><i class="fas fa-exclamation-triangle" style="margin-right:0.5rem;"></i>Danger Zone</h3>
+                        <p>These actions are permanent and cannot be undone. Please proceed with caution.</p>
+                        <div style="display:flex;flex-direction:column;gap:1rem;">
+                            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;padding:1rem;background:rgba(239,68,68,0.04);border:1px solid rgba(239,68,68,0.1);border-radius:var(--r);">
+                                <div>
+                                    <div style="font-weight:600;color:var(--white);font-size:0.9rem;margin-bottom:0.2rem;">Delete Account</div>
+                                    <div style="font-size:0.8rem;color:var(--slate-2);">Permanently remove your account and all associated data including projects and connections.</div>
+                                </div>
+                                <button class="btn btn-danger btn-sm" onclick="deleteClientAccount()">
+                                    <i class="fas fa-user-times"></i> Delete Account
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- /cs-panel-danger -->
+
+            </div><!-- /settings-panels -->
+        </div><!-- /settings-layout -->
+    </div><!-- /settings-body -->
+</div><!-- /view-settings -->
 
 </body>
 </html>
