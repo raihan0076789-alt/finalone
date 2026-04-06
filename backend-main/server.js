@@ -45,6 +45,10 @@ app.use('/api/ai',             require('./routes/aiChatRoutes'));       // AI ch
 app.use('/api/architect',     require('./routes/architectRoutes'));    // Architect profile (new)
 app.use('/api/client',        require('./routes/clientRoutes'));        // Client module (new)
 app.use('/api/connections',   require('./routes/connectionRoutes'));    // Connect feature
+// Project sharing — must be mounted at /api so both /api/projects/:id/share
+// and /api/shares/* resolve correctly from a single router file.
+const projectShareRoutes = require('./routes/projectShareRoutes');
+app.use('/api', projectShareRoutes);
 
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });

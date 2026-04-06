@@ -282,6 +282,9 @@ function renderProjects() {
                     <button class="btn btn-sm btn-primary" onclick="openProject('${project._id}')">
                         <i class="fas fa-edit"></i> Edit
                     </button>
+                    <button class="btn btn-sm btn-share-proj" onclick="openShareModal('${project._id}','${escHtml(project.name)}')" title="Share with client">
+                        <i class="fas fa-share-alt"></i> Share
+                    </button>
                     <button class="btn btn-sm btn-danger" onclick="confirmDelete('${project._id}')">
                         <i class="fas fa-trash"></i>
                     </button>
@@ -399,6 +402,9 @@ function filterProjects() {
                 <div class="project-actions" onclick="event.stopPropagation()">
                     <button class="btn btn-sm btn-primary" onclick="openProject('${project._id}')">
                         <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button class="btn btn-sm btn-share-proj" onclick="openShareModal('${project._id}','${escHtml(project.name)}')" title="Share with client">
+                        <i class="fas fa-share-alt"></i> Share
                     </button>
                     <button class="btn btn-sm btn-danger" onclick="confirmDelete('${project._id}')">
                         <i class="fas fa-trash"></i>
@@ -2507,5 +2513,140 @@ document.addEventListener('keydown', (e) => {
         if (backdrop && backdrop.classList.contains('open')) {
             closeConnDetailModal();
         }
+        // Close share modal on Escape too
+        closeShareModal();
     }
 });
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  PROJECT SHARING  —  architect shares a completed project with a client
+// ═══════════════════════════════════════════════════════════════════════════════
+
+let _shareProjectId   = null;
+let _shareProjectName = null;
+
+async function openShareModal(projectId, projectName) {
+    _shareProjectId   = projectId;
+    _shareProjectName = projectName;
+
+    const modal = document.getElementById('shareProjectModal');
+    if (!modal) return;
+
+    // Reset state
+    document.getElementById('shareClientSelect').innerHTML = '<option value="">Loading clients…</option>';
+    document.getElementById('shareMessage').value = '';
+    document.getElementById('shareLinkBox').style.display = 'none';
+    document.getElementById('shareLinkInput').value = '';
+    document.getElementById('shareTabConnection').classList.add('active');
+    document.getElementById('shareTabLink').classList.remove('active');
+    document.getElementById('shareConnectionPane').style.display = '';
+    document.getElementById('shareLinkPane').style.display = 'none';
+    document.getElementById('shareModalProjectName').textContent = projectName;
+
+    modal.style.display = 'flex';
+
+    // Load connected clients
+    try {
+        const token = localStorage.getItem('token');
+        const res   = await fetch('http://localhost:5000/api/shares/connected-clients', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data  = await res.json();
+        const sel   = document.getElementById('shareClientSelect');
+        if (data.success && data.data.length) {
+            sel.innerHTML = '<option value="">— Select a client —</option>' +
+                data.data.map(c =>
+                    `<option value="${c.client._id}">${escHtml(c.client.name)} (${escHtml(c.client.email)})</option>`
+                ).join('');
+        } else {
+            sel.innerHTML = '<option value="">No accepted connections yet</option>';
+        }
+    } catch (e) {
+        document.getElementById('shareClientSelect').innerHTML = '<option value="">Could not load clients</option>';
+    }
+}
+
+function closeShareModal() {
+    const modal = document.getElementById('shareProjectModal');
+    if (modal) modal.style.display = 'none';
+    _shareProjectId   = null;
+    _shareProjectName = null;
+}
+
+function switchShareTab(tab) {
+    const isConn = tab === 'connection';
+    document.getElementById('shareTabConnection').classList.toggle('active', isConn);
+    document.getElementById('shareTabLink').classList.toggle('active', !isConn);
+    document.getElementById('shareConnectionPane').style.display = isConn ? '' : 'none';
+    document.getElementById('shareLinkPane').style.display       = isConn ? 'none' : '';
+}
+
+async function submitShareWithClient() {
+    const clientId = document.getElementById('shareClientSelect').value;
+    const message  = document.getElementById('shareMessage').value.trim();
+    if (!clientId) { showToast('Please select a client.', 'error'); return; }
+    if (!_shareProjectId) return;
+
+    try {
+        const token = localStorage.getItem('token');
+        const res   = await fetch(`http://localhost:5000/api/projects/${_shareProjectId}/share`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body:    JSON.stringify({ mode: 'connection', clientId, message })
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message || 'Share failed');
+        showToast('Project shared successfully! Client will see it in their dashboard.', 'success');
+        closeShareModal();
+    } catch (e) {
+        showToast(e.message || 'Failed to share project.', 'error');
+    }
+}
+
+async function generateShareLink() {
+    if (!_shareProjectId) return;
+    const message = document.getElementById('shareLinkMessage').value.trim();
+    const btn     = document.getElementById('generateLinkBtn');
+    btn.disabled  = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating…';
+
+    try {
+        const token = localStorage.getItem('token');
+        const res   = await fetch(`http://localhost:5000/api/projects/${_shareProjectId}/share`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body:    JSON.stringify({ mode: 'link', message })
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message || 'Failed');
+        const viewerUrl = `${window.location.origin}/project-viewer.html?token=${data.data.shareToken}`;
+        document.getElementById('shareLinkInput').value = viewerUrl;
+        document.getElementById('shareLinkBox').style.display = 'flex';
+        showToast('Shareable link generated!', 'success');
+    } catch (e) {
+        showToast(e.message || 'Could not generate link.', 'error');
+    } finally {
+        btn.disabled  = false;
+        btn.innerHTML = '<i class="fas fa-link"></i> Generate Link';
+    }
+}
+
+function copyShareLink() {
+    const input = document.getElementById('shareLinkInput');
+    if (!input || !input.value) return;
+    navigator.clipboard.writeText(input.value)
+        .then(() => showToast('Link copied to clipboard!', 'success'))
+        .catch(() => {
+            input.select();
+            document.execCommand('copy');
+            showToast('Link copied!', 'success');
+        });
+}
+
+// Expose to global scope (called from inline onclick)
+window.openShareModal       = openShareModal;
+window.closeShareModal      = closeShareModal;
+window.switchShareTab       = switchShareTab;
+window.submitShareWithClient = submitShareWithClient;
+window.generateShareLink    = generateShareLink;
+window.copyShareLink        = copyShareLink;

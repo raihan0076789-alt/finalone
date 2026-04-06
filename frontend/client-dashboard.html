@@ -62,6 +62,11 @@
             <span class="nav-icon"><i class="fas fa-folder-open"></i></span>
             My Projects
         </a>
+        <a href="#" class="nav-item" id="nav-shared" onclick="showView('shared', event)">
+            <span class="nav-icon"><i class="fas fa-drafting-compass"></i></span>
+            Delivered Projects
+            <span id="sharedNavBadge" style="display:none;background:linear-gradient(135deg,#00d4c8,#7c3aed);color:#fff;border-radius:20px;padding:1px 7px;font-size:0.68rem;font-weight:700;margin-left:auto;"></span>
+        </a>
 
         
         <a href="#" class="nav-item" onclick="comingSoon(event,'Messages')">
@@ -90,7 +95,7 @@
             <span class="nav-icon"><i class="fas fa-cog"></i></span>
             Settings
         </a>
-        <a href="contact.html" class="nav-item">
+        <a href="#" class="nav-item">
             <span class="nav-icon"><i class="fas fa-headset"></i></span>
             Support
         </a>
@@ -594,6 +599,11 @@ const VIEWS = {
         title: 'My Projects', sub: 'Manage your construction briefs',
         showDashBtns: false, showPlan: false
     },
+    shared: {
+        el: 'view-shared', navId: 'nav-shared',
+        title: 'Design Submissions', sub: 'Review designs submitted by your architects',
+        showDashBtns: false, showPlan: false
+    },
     settings: {
         el: 'view-settings', navId: 'nav-settings',
         title: 'Settings', sub: 'Manage your account and preferences',
@@ -638,6 +648,9 @@ function showView(name, event) {
     }
     if (name === 'projects') {
         loadClientProjects();
+    }
+    if (name === 'shared') {
+        loadSharedProjects();
     }
     if (name === 'settings') {
         loadClientSettings();
@@ -2791,6 +2804,114 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 })();
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  SHARED WITH ME  —  projects sent by architects to this client
+// ═══════════════════════════════════════════════════════════════════════════════
+
+async function loadSharedProjects() {
+    var grid = document.getElementById('sharedProjectsGrid');
+    if (!grid) return;
+    grid.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--slate)"><i class="fas fa-spinner fa-spin" style="font-size:1.5rem"></i><div style="margin-top:1rem">Loading shared projects…</div></div>';
+
+    try {
+        var r = await fetch(CLIENT_API + '/shares/my', { headers: authHeaders() });
+        var d = await r.json();
+        if (!d.success) throw new Error();
+        renderSharedProjects(d.data);
+    } catch(e) {
+        grid.innerHTML = '<div class="shared-empty"><div class="shared-empty-icon"><i class="fas fa-exclamation-circle"></i></div><div>Could not load shared projects.</div></div>';
+    }
+}
+
+function renderSharedProjects(shares) {
+    var grid  = document.getElementById('sharedProjectsGrid');
+    var badge = document.getElementById('sharedNavBadge');
+
+    // Badge: count unviewed shares
+    var unviewed = shares.filter(function(s){ return !s.viewedAt; }).length;
+    if (unviewed > 0) {
+        badge.textContent = unviewed;
+        badge.style.display = '';
+    } else {
+        badge.style.display = 'none';
+    }
+
+    if (!shares.length) {
+        grid.innerHTML =
+            '<div class="shared-empty">' +
+                '<div class="shared-empty-icon"><i class="fas fa-share-alt"></i></div>' +
+                '<div style="font-size:1rem;font-weight:600;color:#f1f5f9;margin-bottom:0.5rem;">No shared projects yet</div>' +
+                '<div style="font-size:0.85rem;color:#64748b;">When an architect shares a completed project with you, it will appear here.</div>' +
+            '</div>';
+        return;
+    }
+
+    var viewModes = [
+        { icon: 'fa-th-large',      label: '2D Plan'    },
+        { icon: 'fa-cube',          label: '3D View'    },
+        { icon: 'fa-vector-square', label: 'Wireframe'  },
+        { icon: 'fa-walking',       label: 'Walkthrough'},
+        { icon: 'fa-home',          label: 'Dollhouse'  }
+    ];
+
+    grid.innerHTML = '<div class="shared-grid">' + shares.map(function(share) {
+        var proj  = share.project || {};
+        var arch  = share.sharedBy || {};
+        var isNew = !share.viewedAt;
+
+        var archAvatar = arch.avatar ||
+            'https://ui-avatars.com/api/?name=' + encodeURIComponent(arch.name || 'A') + '&background=7c3aed&color=fff&bold=true&size=40';
+
+        var metaHtml =
+            '<div class="shared-meta-chip"><i class="fas fa-ruler-combined"></i>' + (proj.metadata && proj.metadata.totalArea ? proj.metadata.totalArea.toLocaleString() + ' m²' : '—') + '</div>' +
+            '<div class="shared-meta-chip"><i class="fas fa-layer-group"></i>' + ((proj.floors && proj.floors.length) || 0) + ' floors</div>' +
+            '<div class="shared-meta-chip"><i class="fas fa-door-open"></i>' + (proj.metadata && proj.metadata.totalRooms || 0) + ' rooms</div>';
+
+        var viewModesHtml = '<div class="view-mode-grid">' +
+            viewModes.map(function(m){
+                return '<div class="view-mode-chip"><i class="fas ' + m.icon + '" style="font-size:0.6rem"></i>' + m.label + '</div>';
+            }).join('') + '</div>';
+
+        var msgHtml = share.message
+            ? '<div class="shared-card-msg">' + esc(share.message) + '</div>'
+            : '';
+
+        var newBadge = isNew ? '<span class="shared-new-badge">New</span>' : '';
+
+        var sharedDate = share.createdAt
+            ? new Date(share.createdAt).toLocaleDateString(undefined, { day:'numeric', month:'short', year:'numeric' })
+            : '';
+
+        return '<div class="shared-card" onclick="openSharedProject(\'' + share.shareToken + '\')">' +
+            '<div class="shared-card-top"></div>' +
+            '<div class="shared-card-body">' +
+                '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.5rem;">' +
+                    '<div class="shared-card-title">' + esc(proj.name || 'Untitled Project') + '</div>' +
+                    newBadge +
+                '</div>' +
+                '<div class="shared-card-arch">' +
+                    '<img src="' + archAvatar + '" alt="' + esc(arch.name || '') + '" style="width:20px;height:20px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.src=\'https://ui-avatars.com/api/?name=A&background=7c3aed&color=fff&bold=true\'">' +
+                    esc(arch.name || 'Architect') +
+                    (arch.specialization ? ' · ' + esc(arch.specialization) : '') +
+                    (sharedDate ? '<span style="margin-left:auto;color:#475569;font-size:0.7rem;">' + sharedDate + '</span>' : '') +
+                '</div>' +
+                '<div class="shared-card-meta">' + metaHtml + '</div>' +
+                viewModesHtml +
+                msgHtml +
+                '<div class="shared-card-footer">' +
+                    '<button class="shared-view-btn" onclick="event.stopPropagation();openSharedProject(\'' + share.shareToken + '\')">' +
+                        '<i class="fas fa-eye"></i> Open Project Viewer' +
+                    '</button>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    }).join('') + '</div>';
+}
+
+function openSharedProject(token) {
+    window.open('project-viewer.html?token=' + token, '_blank');
+}
 </script>
 
 <!-- ── Custom Confirm Modal ───────────────────────────────────────────── -->
@@ -2841,6 +2962,44 @@ document.addEventListener('DOMContentLoaded', function() {
 #customConfirmOk:hover     { transform:translateY(-1px); box-shadow:0 6px 18px rgba(244,63,94,0.35); }
 </style>
 
+
+<!-- =====================================================================
+     SHARED WITH ME VIEW
+     ===================================================================== -->
+<div class="proj-main" id="view-shared" style="display:none">
+    <div class="hero-strip">
+        <h1>Shared <span>With Me</span></h1>
+        <p>Projects your architects have shared for your review</p>
+    </div>
+    <div class="proj-body">
+        <div id="sharedProjectsGrid">
+            <div style="text-align:center;padding:3rem;color:var(--slate)">
+                <i class="fas fa-spinner fa-spin" style="font-size:1.5rem"></i>
+                <div style="margin-top:1rem">Loading shared projects…</div>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+.shared-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:1.25rem;padding:0.25rem 0 2rem;}
+.shared-card{background:#0f172a;border:1px solid #1e293b;border-radius:14px;overflow:hidden;cursor:pointer;transition:transform 0.18s,box-shadow 0.18s;}
+.shared-card:hover{transform:translateY(-3px);box-shadow:0 8px 32px rgba(0,212,200,0.12);}
+.shared-card-top{height:6px;background:linear-gradient(90deg,#00d4c8,#7c3aed);}
+.shared-card-body{padding:1.1rem 1.25rem;}
+.shared-card-title{font-size:1rem;font-weight:700;color:#f1f5f9;margin-bottom:0.25rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.shared-card-arch{font-size:0.78rem;color:#94a3b8;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.4rem;}
+.shared-card-meta{display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.85rem;}
+.shared-meta-chip{background:#1e293b;color:#94a3b8;border-radius:6px;padding:2px 8px;font-size:0.72rem;display:flex;align-items:center;gap:4px;}
+.shared-card-msg{font-size:0.8rem;color:#64748b;font-style:italic;border-left:2px solid #7c3aed;padding-left:0.6rem;margin-bottom:0.9rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-clamp:2;}
+.shared-card-footer{display:flex;gap:0.5rem;align-items:center;}
+.shared-view-btn{flex:1;background:linear-gradient(135deg,#00d4c8,#7c3aed);color:#fff;border:none;border-radius:8px;padding:0.55rem;font-size:0.82rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.4rem;transition:opacity 0.15s;}
+.shared-view-btn:hover{opacity:0.88;}
+.shared-new-badge{background:#ef4444;color:#fff;border-radius:20px;padding:1px 8px;font-size:0.68rem;font-weight:700;}
+.shared-empty{text-align:center;padding:4rem 2rem;color:var(--slate);}
+.shared-empty-icon{font-size:3rem;margin-bottom:1rem;opacity:0.3;}
+.view-mode-grid{display:flex;gap:0.35rem;flex-wrap:wrap;margin-bottom:0.75rem;}
+.view-mode-chip{background:#1a2744;color:#7c3aed;border:1px solid #2d1b69;border-radius:6px;padding:2px 8px;font-size:0.68rem;font-weight:600;display:flex;align-items:center;gap:3px;}
+</style>
 
 <!-- =====================================================================
      SETTINGS VIEW

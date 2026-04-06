@@ -1732,6 +1732,97 @@
 </div>
 
 <!-- DELETE MODAL -->
+<!-- ── Share Project Modal ─────────────────────────────────── -->
+<div class="modal" id="shareProjectModal" style="display:none;align-items:center;justify-content:center;">
+    <div class="modal-content" style="max-width:520px;width:95%;">
+        <div class="modal-top-bar" style="background:linear-gradient(90deg,#00d4c8,#7c3aed);"></div>
+        <div class="modal-inner" style="padding:1.5rem 1.75rem;">
+            <!-- Header -->
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;">
+                <div>
+                    <div style="font-size:1.1rem;font-weight:700;color:#f1f5f9;display:flex;align-items:center;gap:0.5rem;">
+                        <i class="fas fa-share-alt" style="color:#00d4c8;"></i> Share Project
+                    </div>
+                    <div id="shareModalProjectName" style="font-size:0.8rem;color:#64748b;margin-top:2px;"></div>
+                </div>
+                <button onclick="closeShareModal()" style="background:none;border:none;color:#64748b;font-size:1.2rem;cursor:pointer;padding:4px;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Tabs -->
+            <div style="display:flex;gap:0;border:1px solid #1e293b;border-radius:8px;overflow:hidden;margin-bottom:1.25rem;">
+                <button id="shareTabConnection" class="active" onclick="switchShareTab('connection')"
+                    style="flex:1;padding:0.55rem;font-size:0.8rem;font-weight:600;border:none;cursor:pointer;background:#0f172a;color:#94a3b8;transition:all 0.2s;"
+                    onmouseover="if(!this.classList.contains('active'))this.style.background='#1e293b'"
+                    onmouseout="if(!this.classList.contains('active'))this.style.background='#0f172a'">
+                    <i class="fas fa-user-check"></i> Send to Client
+                </button>
+                <button id="shareTabLink" onclick="switchShareTab('link')"
+                    style="flex:1;padding:0.55rem;font-size:0.8rem;font-weight:600;border:none;cursor:pointer;background:#0f172a;color:#94a3b8;transition:all 0.2s;"
+                    onmouseover="if(!this.classList.contains('active'))this.style.background='#1e293b'"
+                    onmouseout="if(!this.classList.contains('active'))this.style.background='#0f172a'">
+                    <i class="fas fa-link"></i> Public Link
+                </button>
+            </div>
+            <style>
+                #shareTabConnection.active,#shareTabLink.active{background:linear-gradient(135deg,#00d4c8,#7c3aed)!important;color:#fff!important;}
+                .btn-share-proj{background:linear-gradient(135deg,#00d4c8,#7c3aed);color:#fff;border:none;}
+                .btn-share-proj:hover{opacity:0.9;}
+                .share-field-label{display:block;font-size:0.78rem;font-weight:600;color:#94a3b8;margin-bottom:0.4rem;}
+                .share-select,.share-textarea{width:100%;background:#0f172a;border:1px solid #1e293b;color:#f1f5f9;border-radius:8px;padding:0.6rem 0.75rem;font-size:0.875rem;box-sizing:border-box;}
+                .share-select:focus,.share-textarea:focus{outline:none;border-color:#00d4c8;}
+                .share-link-box{display:flex;gap:0.5rem;align-items:center;background:#0f172a;border:1px solid #00d4c8;border-radius:8px;padding:0.5rem 0.75rem;margin-top:0.75rem;}
+                .share-link-box input{flex:1;background:none;border:none;color:#00d4c8;font-size:0.8rem;font-family:monospace;outline:none;}
+            </style>
+
+            <!-- Connection Pane -->
+            <div id="shareConnectionPane">
+                <div style="margin-bottom:1rem;">
+                    <label class="share-field-label">Select Connected Client</label>
+                    <select id="shareClientSelect" class="share-select"></select>
+                </div>
+                <div style="margin-bottom:1.25rem;">
+                    <label class="share-field-label">Note to Client <span style="color:#475569;">(optional)</span></label>
+                    <textarea id="shareMessage" class="share-textarea" rows="3"
+                        placeholder="e.g. Here's the completed floorplan — feel free to explore all view modes!"></textarea>
+                </div>
+                <div style="display:flex;gap:0.75rem;justify-content:flex-end;">
+                    <button class="btn btn-ghost" onclick="closeShareModal()">Cancel</button>
+                    <button class="btn" style="background:linear-gradient(135deg,#00d4c8,#7c3aed);color:#fff;border:none;font-weight:700;padding:0.6rem 1.4rem;border-radius:8px;cursor:pointer;"
+                        onclick="submitShareWithClient()">
+                        <i class="fas fa-paper-plane"></i> Share Project
+                    </button>
+                </div>
+            </div>
+
+            <!-- Link Pane -->
+            <div id="shareLinkPane" style="display:none;">
+                <div style="background:#0f172a;border:1px solid #1e293b;border-radius:8px;padding:0.9rem;margin-bottom:1rem;font-size:0.82rem;color:#94a3b8;">
+                    <i class="fas fa-info-circle" style="color:#00d4c8;margin-right:6px;"></i>
+                    Anyone with this link can view the project — no login required.
+                </div>
+                <div style="margin-bottom:1.25rem;">
+                    <label class="share-field-label">Note (optional)</label>
+                    <textarea id="shareLinkMessage" class="share-textarea" rows="2"
+                        placeholder="Add an optional note…"></textarea>
+                </div>
+                <button id="generateLinkBtn"
+                    style="width:100%;background:linear-gradient(135deg,#00d4c8,#7c3aed);color:#fff;border:none;font-weight:700;padding:0.65rem;border-radius:8px;cursor:pointer;font-size:0.9rem;"
+                    onclick="generateShareLink()">
+                    <i class="fas fa-link"></i> Generate Link
+                </button>
+                <div id="shareLinkBox" class="share-link-box" style="display:none;">
+                    <input id="shareLinkInput" type="text" readonly />
+                    <button onclick="copyShareLink()" title="Copy"
+                        style="background:none;border:none;color:#00d4c8;cursor:pointer;font-size:1rem;padding:0 4px;">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <div class="modal" id="deleteModal">
     <div class="modal-content">
         <div class="modal-top-bar" style="background:linear-gradient(90deg,#ef4444,#dc2626);"></div>
