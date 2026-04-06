@@ -34,6 +34,12 @@ const VIEWS = {
         el: 'view-settings', navId: 'nav-settings',
         title: 'Settings', sub: 'Manage your account and preferences',
         showDashBtns: false, showPlan: false
+    },
+    support: {
+        el: 'view-support', navId: 'nav-support',
+        title: 'Support', sub: 'Get help from the SmartArch team',
+        showDashBtns: false, showPlan: false,
+        displayType: 'flex'
     }
 };
 
@@ -49,7 +55,7 @@ function showView(name, event) {
     const next = VIEWS[name];
 
     document.getElementById(prev.el).style.display = 'none';
-    document.getElementById(next.el).style.display = '';
+    document.getElementById(next.el).style.display = next.displayType || '';
 
     document.getElementById(prev.navId).classList.remove('active');
     document.getElementById(next.navId).classList.add('active');
@@ -80,6 +86,9 @@ function showView(name, event) {
     }
     if (name === 'settings') {
         loadClientSettings();
+    }
+    if (name === 'support') {
+        clientSupportInit();
     }
 }
 
@@ -2211,3 +2220,440 @@ function renderSharedProjects(shares) {
 function openSharedProject(token) {
     window.open('project-viewer.html?token=' + token, '_blank');
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   CLIENT SUPPORT — Ticket System
+   Mirrors architect dashboard.js chat logic, adapted for the client role.
+   API base: /api/client/support  (requires client JWT)
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+const CLIENT_SUPPORT_API = CLIENT_API + '/client/support';
+
+// ── Module state ──────────────────────────────────────────────────────────────
+var clientSupportState = {
+    tickets:    [],
+    activeId:   null,
+    composing:  false,
+    initialised: false,
+    pollTimer:  null
+};
+
+// ── Auth header helper ────────────────────────────────────────────────────────
+function clientSupportHeaders() {
+    var token = localStorage.getItem('clientToken') || localStorage.getItem('token');
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+    };
+}
+
+// ── Init (called once when view first becomes active) ────────────────────────
+function clientSupportInit() {
+    clientSupportLoadTickets();
+    // Start unread polling (every 60s)
+    if (!clientSupportState.pollTimer) {
+        clientSupportPollUnread();
+        clientSupportState.pollTimer = setInterval(clientSupportPollUnread, 60000);
+    }
+}
+
+// ── Poll unread count and update sidebar badge ────────────────────────────────
+async function clientSupportPollUnread() {
+    try {
+        var res  = await fetch(CLIENT_SUPPORT_API + '/unread', { headers: clientSupportHeaders() });
+        if (!res.ok) return;
+        var data = await res.json();
+        var badge = document.getElementById('clientSupportBadge');
+        if (!badge) return;
+        if (data.count > 0) {
+            badge.textContent    = data.count;
+            badge.style.display  = 'inline-block';
+        } else {
+            badge.style.display  = 'none';
+        }
+    } catch (e) { /* silent */ }
+}
+
+// ── Load and render ticket list ───────────────────────────────────────────────
+async function clientSupportLoadTickets() {
+    var listEl = document.getElementById('clientChatThreadList');
+    if (!listEl) return;
+
+    listEl.innerHTML = '<div class="client-chat-list-loading"><i class="fas fa-spinner fa-spin"></i></div>';
+
+    try {
+        var res  = await fetch(CLIENT_SUPPORT_API, { headers: clientSupportHeaders() });
+        var data = await res.json();
+
+        if (!data.success) {
+            listEl.innerHTML = '<div class="client-chat-list-empty"><i class="fas fa-exclamation-circle"></i><p>Failed to load tickets</p></div>';
+            return;
+        }
+
+        clientSupportState.tickets = data.tickets || [];
+        clientSupportRenderList();
+
+        // Clear nav badge now that user is looking at the list
+        var badge = document.getElementById('clientSupportBadge');
+        if (badge) badge.style.display = 'none';
+
+        // Re-render active thread if one was open
+        if (clientSupportState.activeId) {
+            var active = clientSupportState.tickets.find(function(t) { return t._id === clientSupportState.activeId; });
+            if (active) clientSupportRenderThread(active);
+        }
+    } catch (e) {
+        listEl.innerHTML = '<div class="client-chat-list-empty"><i class="fas fa-wifi"></i><p>Network error.<br>Check your connection.</p></div>';
+    }
+}
+
+// ── Render thread list in sidebar ─────────────────────────────────────────────
+function clientSupportRenderList() {
+    var listEl = document.getElementById('clientChatThreadList');
+    if (!listEl) return;
+
+    if (!clientSupportState.tickets.length) {
+        listEl.innerHTML = '<div class="client-chat-list-empty">' +
+            '<i class="fas fa-comment-slash"></i>' +
+            '<p>No tickets yet.<br>Tap <i class="fas fa-edit"></i> to open one.</p>' +
+            '</div>';
+        return;
+    }
+
+    var statusColors = { open: '#f59e0b', replied: '#10b981', closed: '#64748b' };
+
+    listEl.innerHTML = clientSupportState.tickets.map(function(t) {
+        var unread  = !t.userRead && t.replies && t.replies.length > 0;
+        var color   = statusColors[t.status] || '#64748b';
+        var lastMsg = (t.replies && t.replies.length)
+            ? t.replies[t.replies.length - 1].message
+            : t.message;
+        var preview = lastMsg ? lastMsg.slice(0, 55) + (lastMsg.length > 55 ? '…' : '') : '';
+        var time    = clientSupportRelTime(t.updatedAt || t.createdAt);
+        var isActive = t._id === clientSupportState.activeId;
+
+        return '<div class="client-chat-list-item' +
+            (unread   ? ' unread' : '') +
+            (isActive ? ' active' : '') +
+            '" onclick="clientSupportOpenThread(\'' + t._id + '\')" data-stid="' + t._id + '">' +
+            '<div class="client-chat-list-subject">' +
+            (unread ? '<span class="client-chat-unread-dot"></span>' : '') +
+            clientSupportEsc(t.subject) +
+            '</div>' +
+            '<div class="client-chat-list-meta">' +
+            '<span class="client-chat-list-preview">' + clientSupportEsc(preview) + '</span>' +
+            '<span class="client-chat-list-time">' + time + '</span>' +
+            '</div>' +
+            '<span class="client-chat-status-pill" style="background:' + color + '22;color:' + color + ';border:1px solid ' + color + '44;">' +
+            t.status + '</span>' +
+            '</div>';
+    }).join('');
+}
+
+// ── Open a ticket thread ──────────────────────────────────────────────────────
+function clientSupportOpenThread(id) {
+    clientSupportState.activeId = id;
+
+    // Update active state in sidebar
+    document.querySelectorAll('.client-chat-list-item').forEach(function(el) {
+        el.classList.remove('active');
+    });
+    var item = document.querySelector('.client-chat-list-item[data-stid="' + id + '"]');
+    if (item) item.classList.add('active');
+
+    // Dismiss compose if open
+    clientSupportHideCompose(false);
+
+    var ticket = clientSupportState.tickets.find(function(t) { return t._id === id; });
+    if (ticket) {
+        clientSupportRenderThread(ticket);
+        // Mark read via GET single ticket (fires server-side userRead = true)
+        if (!ticket.userRead) {
+            fetch(CLIENT_SUPPORT_API + '/' + id, { headers: clientSupportHeaders() })
+                .then(function(r) { return r.json(); })
+                .then(function(d) {
+                    if (d.success) {
+                        // Update local state
+                        var idx = clientSupportState.tickets.findIndex(function(t) { return t._id === id; });
+                        if (idx !== -1) clientSupportState.tickets[idx] = d.ticket;
+                        clientSupportRenderList();
+                        clientSupportPollUnread();
+                    }
+                })
+                .catch(function() {});
+        }
+    }
+}
+
+// ── Render a ticket thread in the main pane ───────────────────────────────────
+function clientSupportRenderThread(ticket) {
+    var emptyEl   = document.getElementById('clientChatEmpty');
+    var composeEl = document.getElementById('clientChatCompose');
+    var threadEl  = document.getElementById('clientChatThread');
+
+    if (emptyEl)   emptyEl.style.display   = 'none';
+    if (composeEl) composeEl.style.display = 'none';
+    if (threadEl)  threadEl.style.display  = 'flex';
+
+    // Header
+    var statusColors = { open: '#f59e0b', replied: '#10b981', closed: '#64748b' };
+    var color = statusColors[ticket.status] || '#64748b';
+
+    var subjectEl = document.getElementById('clientThreadSubject');
+    var metaEl    = document.getElementById('clientThreadMeta');
+    var statusEl  = document.getElementById('clientThreadStatus');
+
+    if (subjectEl) subjectEl.textContent = ticket.subject;
+    if (metaEl)    metaEl.textContent    = new Date(ticket.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    if (statusEl)  statusEl.innerHTML   = '<span class="client-chat-status-pill" style="background:' + color + '22;color:' + color + ';border:1px solid ' + color + '44;">' + ticket.status + '</span>';
+
+    // Reply box vs closed notice
+    var replyBox     = document.getElementById('clientChatReplyBox');
+    var closedNotice = document.getElementById('clientChatClosedNotice');
+    if (ticket.status === 'closed') {
+        if (replyBox)     replyBox.style.display     = 'none';
+        if (closedNotice) closedNotice.style.display = 'flex';
+    } else {
+        if (replyBox)     replyBox.style.display     = 'flex';
+        if (closedNotice) closedNotice.style.display = 'none';
+        // Focus reply input
+        setTimeout(function() {
+            var inp = document.getElementById('clientChatReplyInput');
+            if (inp) inp.focus();
+        }, 80);
+    }
+
+    // Build message thread: original message + replies
+    var allMsgs = [
+        { sender: 'client', senderName: ticket.clientName, message: ticket.message, createdAt: ticket.createdAt }
+    ].concat(ticket.replies || []);
+
+    var msgsEl = document.getElementById('clientChatMessages');
+    if (msgsEl) {
+        msgsEl.innerHTML = allMsgs.map(function(msg) {
+            var isAdmin     = msg.sender === 'admin';
+            var rowClass    = isAdmin ? 'from-admin' : 'from-client';
+            var senderLabel = isAdmin ? '🛡 SmartArch Support' : '👤 You';
+            var time        = new Date(msg.createdAt).toLocaleString('en-US', {
+                month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+            return '<div class="client-bubble-row ' + rowClass + '">' +
+                '<span class="client-bubble-sender">' + senderLabel + '</span>' +
+                '<div class="client-bubble">' + clientSupportEsc(msg.message) + '</div>' +
+                '<span class="client-bubble-time">' + time + '</span>' +
+                '</div>';
+        }).join('');
+
+        // Scroll to latest message
+        setTimeout(function() { msgsEl.scrollTop = msgsEl.scrollHeight; }, 40);
+    }
+}
+
+// ── Show compose panel ────────────────────────────────────────────────────────
+function clientSupportShowCompose() {
+    clientSupportState.composing = true;
+    clientSupportState.activeId  = null;
+
+    // Deselect sidebar items
+    document.querySelectorAll('.client-chat-list-item').forEach(function(el) {
+        el.classList.remove('active');
+    });
+
+    var emptyEl   = document.getElementById('clientChatEmpty');
+    var threadEl  = document.getElementById('clientChatThread');
+    var composeEl = document.getElementById('clientChatCompose');
+
+    if (emptyEl)   emptyEl.style.display   = 'none';
+    if (threadEl)  threadEl.style.display  = 'none';
+    if (composeEl) composeEl.style.display = 'flex';
+
+    // Reset form
+    var subjectEl = document.getElementById('clientComposeSubject');
+    var msgEl     = document.getElementById('clientComposeMessage');
+    var cntEl     = document.getElementById('clientComposeCharCount');
+    if (subjectEl) subjectEl.value    = '';
+    if (msgEl)     msgEl.value        = '';
+    if (cntEl)     cntEl.textContent  = '0';
+
+    // Focus
+    setTimeout(function() { if (subjectEl) subjectEl.focus(); }, 80);
+}
+
+// ── Hide compose panel ────────────────────────────────────────────────────────
+function clientSupportHideCompose(showEmpty) {
+    if (showEmpty === undefined) showEmpty = true;
+    clientSupportState.composing = false;
+
+    var composeEl = document.getElementById('clientChatCompose');
+    var emptyEl   = document.getElementById('clientChatEmpty');
+    var threadEl  = document.getElementById('clientChatThread');
+
+    if (composeEl) composeEl.style.display = 'none';
+
+    if (showEmpty && !clientSupportState.activeId) {
+        if (emptyEl)  emptyEl.style.display  = 'flex';
+        if (threadEl) threadEl.style.display = 'none';
+    }
+}
+
+// ── Submit a new ticket ───────────────────────────────────────────────────────
+async function clientSupportSubmitTicket() {
+    var subject = (document.getElementById('clientComposeSubject')?.value || '').trim();
+    var message = (document.getElementById('clientComposeMessage')?.value || '').trim();
+
+    if (!subject)               { clientSupportToast('Subject is required.', 'error'); return; }
+    if (message.length < 10)    { clientSupportToast('Message must be at least 10 characters.', 'error'); return; }
+
+    var btn = document.getElementById('clientComposeSendBtn');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending…'; }
+
+    try {
+        var res  = await fetch(CLIENT_SUPPORT_API, {
+            method:  'POST',
+            headers: clientSupportHeaders(),
+            body:    JSON.stringify({ subject: subject, message: message })
+        });
+        var data = await res.json();
+
+        if (data.success) {
+            clientSupportToast('Ticket submitted! We\'ll reply soon.', 'success');
+            await clientSupportLoadTickets();
+            // Open the new ticket (first in list = most recent)
+            if (clientSupportState.tickets.length) {
+                clientSupportOpenThread(clientSupportState.tickets[0]._id);
+            }
+        } else {
+            clientSupportToast(data.message || 'Failed to submit ticket.', 'error');
+        }
+    } catch (e) {
+        clientSupportToast('Network error. Please try again.', 'error');
+    } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Ticket'; }
+    }
+}
+
+// ── Send a reply inside an open thread ───────────────────────────────────────
+async function clientSupportSendReply() {
+    var inputEl = document.getElementById('clientChatReplyInput');
+    var message = (inputEl ? inputEl.value : '').trim();
+    if (!message) return;
+
+    var id = clientSupportState.activeId;
+    if (!id) return;
+
+    var btn = document.getElementById('clientChatReplySend');
+    if (btn) btn.disabled = true;
+
+    try {
+        var res  = await fetch(CLIENT_SUPPORT_API + '/' + id + '/reply', {
+            method:  'POST',
+            headers: clientSupportHeaders(),
+            body:    JSON.stringify({ message: message })
+        });
+        var data = await res.json();
+
+        if (data.success) {
+            if (inputEl) inputEl.value = '';
+            // Update local ticket and re-render thread immediately
+            var idx = clientSupportState.tickets.findIndex(function(t) { return t._id === id; });
+            if (idx !== -1) clientSupportState.tickets[idx] = data.ticket;
+            clientSupportRenderList();
+            clientSupportRenderThread(data.ticket);
+        } else {
+            clientSupportToast(data.message || 'Failed to send reply.', 'error');
+        }
+    } catch (e) {
+        clientSupportToast('Network error. Please try again.', 'error');
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+}
+
+// ── Keyboard shortcut: Enter sends, Shift+Enter newline ──────────────────────
+function clientSupportReplyKeydown(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        clientSupportSendReply();
+    }
+}
+
+// ── Mobile: show sidebar list ─────────────────────────────────────────────────
+function clientSupportShowList() {
+    clientSupportState.activeId = null;
+    var threadEl  = document.getElementById('clientChatThread');
+    var composeEl = document.getElementById('clientChatCompose');
+    var emptyEl   = document.getElementById('clientChatEmpty');
+    var sidebar   = document.getElementById('clientChatSidebar');
+
+    if (threadEl)  threadEl.style.display  = 'none';
+    if (composeEl) composeEl.style.display = 'none';
+    if (emptyEl)   emptyEl.style.display   = 'flex';
+    if (sidebar)   sidebar.classList.add('mobile-visible');
+
+    document.querySelectorAll('.client-chat-list-item').forEach(function(el) {
+        el.classList.remove('active');
+    });
+}
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+function clientSupportEsc(str) {
+    return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function clientSupportRelTime(dateStr) {
+    var diff = Date.now() - new Date(dateStr).getTime();
+    var mins = Math.floor(diff / 60000);
+    if (mins < 1)   return 'just now';
+    if (mins < 60)  return mins + 'm ago';
+    var hrs = Math.floor(mins / 60);
+    if (hrs < 24)   return hrs + 'h ago';
+    var days = Math.floor(hrs / 24);
+    if (days < 7)   return days + 'd ago';
+    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function clientSupportToast(message, type) {
+    type = type || 'info';
+    // Prefer existing toast system
+    if (typeof showToast === 'function')       { showToast(message, type); return; }
+    if (typeof clientShowToast === 'function') { clientShowToast(message, type); return; }
+    var colors = { success: '#10b981', error: '#ef4444', info: '#3b82f6' };
+    var toast  = document.createElement('div');
+    toast.style.cssText = [
+        'position:fixed', 'bottom:1.5rem', 'right:1.5rem', 'z-index:9999',
+        'background:#0d1424', 'border:1px solid rgba(255,255,255,0.1)',
+        'border-left:3px solid ' + (colors[type] || colors.info),
+        'border-radius:10px', 'padding:0.875rem 1.25rem',
+        'color:#f1f5f9', 'font-size:0.875rem', 'min-width:260px',
+        'box-shadow:0 20px 40px rgba(0,0,0,0.4)'
+    ].join(';');
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(function() {
+        toast.style.transition = 'opacity 0.3s';
+        toast.style.opacity    = '0';
+        setTimeout(function() { toast.remove(); }, 300);
+    }, 3500);
+}
+
+// ── Bootstrap unread polling on page load ─────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+    // Start polling regardless of which view is active
+    clientSupportPollUnread();
+    setInterval(clientSupportPollUnread, 60000);
+});
+
+// ── Expose to inline HTML handlers ───────────────────────────────────────────
+window.clientSupportInit          = clientSupportInit;
+window.clientSupportShowCompose   = clientSupportShowCompose;
+window.clientSupportHideCompose   = clientSupportHideCompose;
+window.clientSupportSubmitTicket  = clientSupportSubmitTicket;
+window.clientSupportOpenThread    = clientSupportOpenThread;
+window.clientSupportSendReply     = clientSupportSendReply;
+window.clientSupportReplyKeydown  = clientSupportReplyKeydown;
+window.clientSupportShowList      = clientSupportShowList;

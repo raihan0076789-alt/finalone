@@ -96,9 +96,10 @@
             <span class="nav-icon"><i class="fas fa-cog"></i></span>
             Settings
         </a>
-        <a href="#" class="nav-item">
+        <a href="#" class="nav-item" id="nav-support" onclick="showView('support', event)">
             <span class="nav-icon"><i class="fas fa-headset"></i></span>
             Support
+            <span class="client-support-badge" id="clientSupportBadge"></span>
         </a>
     </nav>
 
@@ -905,6 +906,132 @@
         </div><!-- /settings-layout -->
     </div><!-- /settings-body -->
 </div><!-- /view-settings -->
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     SUPPORT VIEW — Client ticket system
+     ══════════════════════════════════════════════════════════════════════════ -->
+<div class="support-main" id="view-support" style="display:none; margin-left: 250px;margin-top: 60px;">
+
+    <!-- Support section header bar -->
+    <div class="support-header-bar" style="margin-left: 15px;">
+        <div class="support-header-left" >
+            <h2>Support <span>Center</span></h2>
+            <p>Ask a question, report an issue, or send feedback — we reply within 1–2 business days.</p>
+        </div>
+        <button class="support-new-ticket-btn" onclick="clientSupportShowCompose()">
+            <i class="fas fa-edit"></i> New Ticket
+        </button>
+    </div>
+
+    <div class="client-chat-shell">
+
+        <!-- ── Left: Thread List ────────────────────────────────────────── -->
+        <div class="client-chat-sidebar" id="clientChatSidebar">
+            <div class="client-chat-sidebar-header">
+                <span class="client-chat-sidebar-title">
+                    <i class="fas fa-headset"></i> Support
+                </span>
+                <button class="client-chat-new-btn" title="New Ticket"
+                    onclick="clientSupportShowCompose()">
+                    <i class="fas fa-edit"></i>
+                </button>
+            </div>
+            <div class="client-chat-thread-list" id="clientChatThreadList">
+                <div class="client-chat-list-loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Right: Main Pane ──────────────────────────────────────────── -->
+        <div class="client-chat-main" id="clientChatMain">
+
+            <!-- Empty state -->
+            <div class="client-chat-empty" id="clientChatEmpty">
+                <div class="client-chat-empty-icon">
+                    <i class="fas fa-comment-dots"></i>
+                </div>
+                <h3>SmartArch Support</h3>
+                <p>Select a conversation or start a new one.<br>We typically respond within 1–2 business days.</p>
+                <button class="client-chat-empty-btn" onclick="clientSupportShowCompose()">
+                    <i class="fas fa-edit"></i> New Ticket
+                </button>
+            </div>
+
+            <!-- Compose Panel -->
+            <div class="client-chat-compose" id="clientChatCompose" style="display:none;">
+                <div class="client-chat-compose-header">
+                    <button class="client-chat-back-btn" onclick="clientSupportHideCompose()">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <span>New Support Ticket</span>
+                </div>
+                <div class="client-chat-compose-body">
+                    <div class="client-chat-field">
+                        <label>Subject</label>
+                        <input type="text" id="clientComposeSubject"
+                            placeholder="Briefly describe your issue…" maxlength="200">
+                    </div>
+                    <div class="client-chat-field">
+                        <label>Message</label>
+                        <textarea id="clientComposeMessage" rows="7"
+                            placeholder="Describe your issue or question in detail…"
+                            maxlength="5000"
+                            oninput="document.getElementById('clientComposeCharCount').textContent=this.value.length"></textarea>
+                        <div class="client-chat-char-count">
+                            <span id="clientComposeCharCount">0</span> / 5000
+                        </div>
+                    </div>
+                </div>
+                <div class="client-chat-compose-actions">
+                    <button class="client-chat-cancel-btn" onclick="clientSupportHideCompose()">
+                        Cancel
+                    </button>
+                    <button class="client-chat-send-btn" id="clientComposeSendBtn"
+                        onclick="clientSupportSubmitTicket()">
+                        <i class="fas fa-paper-plane"></i> Send Ticket
+                    </button>
+                </div>
+            </div>
+
+            <!-- Thread View -->
+            <div class="client-chat-thread-view" id="clientChatThread" style="display:none;">
+                <div class="client-chat-thread-header">
+                    <button class="client-chat-back-btn" id="clientChatMobileBack"
+                        onclick="clientSupportShowList()">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <div class="client-chat-thread-info">
+                        <h4 id="clientThreadSubject"></h4>
+                        <span id="clientThreadMeta"></span>
+                    </div>
+                    <span id="clientThreadStatus"></span>
+                </div>
+                <div class="client-chat-messages" id="clientChatMessages"></div>
+                <!-- Reply box (hidden for closed tickets) -->
+                <div class="client-chat-reply-box" id="clientChatReplyBox" style="display:none;">
+                    <textarea id="clientChatReplyInput"
+                        placeholder="Continue the conversation… (Shift+Enter for new line, Enter to send)"
+                        rows="2"
+                        onkeydown="clientSupportReplyKeydown(event)"></textarea>
+                    <button class="client-chat-reply-send" id="clientChatReplySend"
+                        onclick="clientSupportSendReply()" title="Send">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                <div class="client-chat-closed-notice" id="clientChatClosedNotice" style="display:none;">
+                    <i class="fas fa-lock"></i>
+                    This ticket is closed.
+                    <button onclick="clientSupportShowCompose()"
+                        style="background:none;border:none;color:#00d4c8;cursor:pointer;font-weight:700;text-decoration:underline;padding:0;margin-left:4px;">
+                        Open a new one →
+                    </button>
+                </div>
+            </div>
+
+        </div><!-- /client-chat-main -->
+    </div><!-- /client-chat-shell -->
+</div><!-- /view-support -->
 
 <!-- Scripts -->
 <script src="js/presence.js"></script>
