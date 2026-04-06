@@ -221,3 +221,85 @@ exports.replyToTicket = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error.' });
     }
 };
+
+// ─── ADMIN endpoints for Client Support ──────────────────────────────────────
+
+// GET /api/client/support/admin/all?status=all&limit=50
+exports.adminGetAllTickets = async (req, res) => {
+    try {
+        const statusFilter = req.query.status || 'all';
+        const limit        = parseInt(req.query.limit) || 50;
+        const query        = {};
+        if (statusFilter !== 'all') query.status = statusFilter;
+
+        const tickets = await ClientTicket.find(query)
+            .sort('-createdAt')
+            .limit(limit)
+            .lean();
+
+        res.json({ success: true, tickets, total: tickets.length });
+    } catch(err) {
+        console.error('adminGetAllTickets error:', err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// GET /api/client/support/admin/unread-count
+exports.adminUnreadCount = async (req, res) => {
+    try {
+        const count = await ClientTicket.countDocuments({ adminRead: false });
+        res.json({ success: true, count });
+    } catch(err) {
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// GET /api/client/support/admin/:id
+exports.adminGetTicket = async (req, res) => {
+    try {
+        const ticket = await ClientTicket.findById(req.params.id);
+        if (!ticket) return res.status(404).json({ success: false, message: 'Ticket not found' });
+        ticket.adminRead = true;
+        await ticket.save();
+        res.json({ success: true, ticket });
+    } catch(err) {
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// POST /api/client/support/admin/:id/reply
+exports.adminReplyTicket = async (req, res) => {
+    try {
+        const { message } = req.body;
+        if (!message || !message.trim()) return res.status(400).json({ success: false, message: 'Message required' });
+
+        const ticket = await ClientTicket.findById(req.params.id);
+        if (!ticket) return res.status(404).json({ success: false, message: 'Ticket not found' });
+
+        const adminName = (req.admin && req.admin.name) || 'Admin';
+        ticket.replies.push({ sender: 'admin', senderName: adminName, message: message.trim() });
+        ticket.status    = 'replied';
+        ticket.adminRead = true;
+        ticket.userRead  = false;
+        await ticket.save();
+
+        res.json({ success: true, ticket });
+    } catch(err) {
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// PATCH /api/client/support/admin/:id/status
+exports.adminUpdateStatus = async (req, res) => {
+    try {
+        const { status } = req.body;
+        const allowed = ['open','replied','closed'];
+        if (!allowed.includes(status)) return res.status(400).json({ success: false, message: 'Invalid status' });
+
+        const ticket = await ClientTicket.findByIdAndUpdate(req.params.id, { status }, { new: true });
+        if (!ticket) return res.status(404).json({ success: false, message: 'Ticket not found' });
+        res.json({ success: true, ticket });
+    } catch(err) {
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};

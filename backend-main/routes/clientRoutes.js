@@ -71,3 +71,18 @@ router.post('/support/:id/reply',  protect, authorize('client'), replyToTicket);
 router.delete('/account', protect, authorize('client'), deleteAccount);
 
 module.exports = router;
+// ── Admin routes for Client Support ──────────────────────────────────────────
+const { adminProtect } = require('../middleware/adminAuth');
+const {
+    adminGetAllTickets,
+    adminUnreadCount,
+    adminGetTicket,
+    adminReplyTicket,
+    adminUpdateStatus
+} = require('../controllers/clientSupportController');
+
+router.get('/support/admin/all',           adminProtect, adminGetAllTickets);
+router.get('/support/admin/unread-count',  adminProtect, adminUnreadCount);
+router.get('/support/admin/:id',           adminProtect, adminGetTicket);
+router.post('/support/admin/:id/reply',    adminProtect, adminReplyTicket);
+router.patch('/support/admin/:id/status',  adminProtect, adminUpdateStatus);
