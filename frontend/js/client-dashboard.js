@@ -2142,12 +2142,12 @@ function _render() {
         return;
     }
 
-    var iconMap = { accepted: 'fa-user-check', message: 'fa-comment-alt', rejected: 'fa-times-circle', pending: 'fa-clock' };
+    var iconMap = { accepted: 'fa-user-check', message: 'fa-comment-alt', rejected: 'fa-times-circle', pending: 'fa-clock', support: 'fa-headset', shared: 'fa-share-alt' };
 
     list.innerHTML = _notifications.map(function(n) {
         var iconCls = iconMap[n.type] || 'fa-bell';
         var timeStr = _relTime(n.time);
-        return '<div class="notif-item' + (n.read ? '' : ' unread') + '" data-id="' + n.id + '" onclick="notifItemClick()" style="cursor:pointer">' +
+        return '<div class="notif-item' + (n.read ? '' : ' unread') + '" data-id="' + n.id + '" onclick="notifItemClick(\'' + n.id.replace(/'/g, '') + '\')" style="cursor:pointer">' +
             '<div class="notif-icon ' + (n.type || 'message') + '"><i class="fas ' + iconCls + '"></i></div>' +
             '<div class="notif-text">' +
                 '<div class="notif-text-main">' + _esc(n.text) + '</div>' +
@@ -2204,11 +2204,23 @@ window.clearAllNotifications = function() {
     _render();
 };
 
-/* ── Navigate to connections on item click ───────────── */
-window.notifItemClick = function() {
+/* ── Navigate to the right view based on notification type ── */
+window.notifItemClick = function(id) {
     document.getElementById('notifDropdown').style.display = 'none';
     _dropdownOpen = false;
-    if (typeof showView === 'function') showView('connections');
+    if (typeof showView !== 'function') return;
+
+    /* Find the notification to determine its type */
+    var notif = id ? _notifications.find(function(n) { return n.id === id; }) : null;
+    var type  = notif ? notif.type : null;
+
+    if (type === 'support') {
+        showView('support');
+    } else if (type === 'shared') {
+        showView('shared');
+    } else {
+        showView('connections');
+    }
 };
 
 /* ── Outside-click to close ──────────────────────────── */
@@ -2291,6 +2303,103 @@ function _processConnections(conns) {
     if (changed) _render();
 }
 
+/* ════════════════════════════════════════════════════
+   POLL SUPPORT TICKET REPLIES → BELL NOTIFICATIONS
+   ════════════════════════════════════════════════════ */
+
+async function _pollSupportReplies() {
+    var token = localStorage.getItem('client_token');
+    if (!token) return;
+    try {
+        var r = await fetch((window.CLIENT_API || 'http://localhost:5000/api') + '/client/support', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (!r.ok) return;
+        var d = await r.json();
+        if (!d.success) return;
+
+        var tickets = d.tickets || [];
+
+        /* Fire a bell notification for every ticket where the admin has replied
+           and the client hasn't read it yet (userRead === false).
+           _add() deduplicates by id and respects _dismissed, so:
+           - Tickets already notified and not dismissed are skipped (no duplicate bell).
+           - Tickets the user "Clear All"-ed are in _dismissed and won't reappear.
+           - New admin replies that arrive between polls ring the bell immediately. */
+        var changed = false;
+        tickets.forEach(function(t) {
+            if (t.userRead !== false) return;   // admin hasn't replied, or client already read it
+            var notifId = 'support-reply-' + t._id;
+            var subject = t.subject || 'your support ticket';
+            if (_add(notifId, 'support',
+                'Support replied to: ' + subject,
+                t.updatedAt || new Date().toISOString())) {
+                changed = true;
+            }
+        });
+
+        if (changed) _render();
+    } catch(e) {}
+}
+
+/* ════════════════════════════════════════════════════
+   POLL SHARED PROJECTS → BELL NOTIFICATIONS
+   ════════════════════════════════════════════════════ */
+
+/* Track share ids we have already notified about */
+var _lastKnownShareIds = null;  // Set<shareId> or null
+
+async function _pollSharedProjects() {
+    var token = localStorage.getItem('client_token');
+    if (!token) return;
+    try {
+        var r = await fetch((window.CLIENT_API || 'http://localhost:5000/api') + '/shares/my', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (!r.ok) return;
+        var d = await r.json();
+        if (!d.success) return;
+
+        var shares = d.data || [];
+        var currentIds = new Set(shares.map(function(s) { return s._id; }));
+
+        if (_lastKnownShareIds === null) {
+            /* First poll: baseline snapshot. Only treat shares that have
+               never been viewed as new (viewedAt === null). */
+            _lastKnownShareIds = currentIds;
+
+            /* Still surface unseen shares that existed before this session */
+            var changed = false;
+            shares.forEach(function(s) {
+                if (s.viewedAt) return;   // already viewed in a past session
+                var arch = (s.sharedBy && s.sharedBy.name) ? s.sharedBy.name : 'An architect';
+                var proj = (s.project && s.project.name) ? s.project.name : 'a project';
+                var notifId = 'shared-proj-' + s._id;
+                if (_add(notifId, 'shared',
+                    arch + ' shared "' + proj + '" with you!',
+                    s.createdAt || new Date().toISOString())) changed = true;
+            });
+            if (changed) _render();
+            return;
+        }
+
+        /* Subsequent polls: fire bell for brand-new shares */
+        var changed = false;
+        shares.forEach(function(s) {
+            if (_lastKnownShareIds.has(s._id)) return;
+            var arch = (s.sharedBy && s.sharedBy.name) ? s.sharedBy.name : 'An architect';
+            var proj = (s.project && s.project.name) ? s.project.name : 'a project';
+            var notifId = 'shared-proj-' + s._id;
+            if (_add(notifId, 'shared',
+                arch + ' shared "' + proj + '" with you!',
+                s.createdAt || new Date().toISOString())) changed = true;
+        });
+
+        _lastKnownShareIds = currentIds;
+        if (changed) _render();
+    } catch(e) {}
+}
+
 /* ── Boot ──────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', function() {
     _load();
@@ -2300,6 +2409,14 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(function() {
         _pollConnections();
         setInterval(_pollConnections, 20000);   // every 20 s
+
+        /* Support-reply notifications — poll every 30 s */
+        _pollSupportReplies();
+        setInterval(_pollSupportReplies, 30000);
+
+        /* Shared-project notifications — poll every 30 s */
+        _pollSharedProjects();
+        setInterval(_pollSharedProjects, 30000);
     }, 2000);
 });
 

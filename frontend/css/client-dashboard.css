@@ -1710,7 +1710,7 @@ text-overflow: ellipsis;
 .profile-overview-meta { padding: 0 1.5rem 0.75rem; }
 .meta-row { display: flex; align-items: center; gap: 0.6rem; }
 .meta-icon { color: var(--cyan); font-size: 0.8rem; width: 16px; text-align: center; flex-shrink: 0; }
-.profile-email { font-size: 0.875rem; color: var(--slate); }
+.profile-email { font-size: 0.875rem; color: var(--slate); text-align: center;}
 .profile-overview-grid {
     display: grid; grid-template-columns: 1fr 1fr;
     gap: 1px; background: var(--border);
@@ -1939,6 +1939,8 @@ text-overflow: ellipsis;
 .notif-icon.message   { background: rgba(139,92,246,0.12); color: #8b5cf6; border: 1px solid rgba(139,92,246,0.2); }
 .notif-icon.rejected  { background: rgba(239,68,68,0.10);  color: #ef4444; border: 1px solid rgba(239,68,68,0.2); }
 .notif-icon.pending   { background: rgba(245,158,11,0.10); color: #f59e0b; border: 1px solid rgba(245,158,11,0.2); }
+.notif-icon.support   { background: rgba(0,212,200,0.12);  color: #00d4c8; border: 1px solid rgba(0,212,200,0.2); }
+.notif-icon.shared    { background: rgba(56,189,248,0.12); color: #38bdf8; border: 1px solid rgba(56,189,248,0.2); }
 
 .notif-text { flex: 1; min-width: 0; }
 .notif-text-main {
