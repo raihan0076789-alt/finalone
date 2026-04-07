@@ -143,49 +143,233 @@
 
 <!-- VIEW: DASHBOARD -->
 <main class="main" id="view-dashboard">
-    <div class="dashboard-blank">
-        <div class="blank-icon-ring">
-            <i class="fas fa-compass"></i>
-        </div>
-        <h1 class="blank-title">Your Dashboard is Ready</h1>
-        <p class="blank-sub">
-            Welcome to your SmartArch client portal. Features like architect discovery,
-            project tracking, and messaging are on their way. Stay tuned!
-        </p>
-        <div class="blank-actions">
-            <button class="btn-primary" onclick="showView('architects')">
-                <i class="fas fa-search"></i> Find Architects
-            </button>
-            <a href="client-index.html" class="btn-outline">
-                <i class="fas fa-arrow-left"></i> Back to Home
-            </a>
-        </div>
-        <div class="coming-soon-grid">
-            <div class="cs-card">
-                <div class="cs-icon"><i class="fas fa-search"></i></div>
-                <div class="cs-title">Architect Search</div>
-                <div class="cs-desc">Browse and filter verified architects by specialization and location</div>
-                <div class="cs-badge">Coming Soon</div>
+    <div class="db-home">
+
+        <!-- ── WELCOME HERO BANNER ─────────────────────────────────────────── -->
+        <div class="db-hero">
+            <div class="db-hero-text">
+                <div class="db-greeting" id="dbGreeting">Good morning</div>
+                <h1 class="db-hero-title">Welcome back, <span id="dbFirstName">there</span> 👋</h1>
+                <p class="db-hero-sub">Your SmartArch portal is ready. Discover architects, manage projects, and track your builds all in one place.</p>
+                <div class="db-hero-actions">
+                    <button class="btn-primary" onclick="showView('architects')">
+                        <i class="fas fa-search"></i> Find Architects
+                    </button>
+                    <button class="btn-outline" onclick="showView('projects')">
+                        <i class="fas fa-folder-open"></i> My Projects
+                    </button>
+                </div>
             </div>
-            <div class="cs-card">
-                <div class="cs-icon"><i class="fas fa-folder-open"></i></div>
-                <div class="cs-title">Project Tracking</div>
-                <div class="cs-desc">Monitor your project milestones and progress in real-time</div>
-                <div class="cs-badge">Coming Soon</div>
+            <div class="db-hero-visual">
+                <div class="db-hero-ring">
+                    <div class="db-hero-ring-inner">
+                        <i class="fas fa-drafting-compass"></i>
+                    </div>
+                    <div class="db-hero-orbit db-orbit-1"><span></span></div>
+                    <div class="db-hero-orbit db-orbit-2"><span></span></div>
+                    <div class="db-hero-orbit db-orbit-3"><span></span></div>
+                </div>
             </div>
-            <div class="cs-card">
-                <div class="cs-icon"><i class="fas fa-comments"></i></div>
+        </div>
+
+        <!-- ── STAT CARDS ─────────────────────────────────────────────────── -->
+        <div class="db-stats-row">
+            <div class="db-stat-card" onclick="showView('architects')">
+                <div class="db-stat-icon db-stat-violet"><i class="fas fa-users"></i></div>
+                <div class="db-stat-body">
+                    <div class="db-stat-value" id="dbStatArchitects">—</div>
+                    <div class="db-stat-label">Architects Available</div>
+                </div>
+                <div class="db-stat-arrow"><i class="fas fa-chevron-right"></i></div>
+            </div>
+            <div class="db-stat-card" onclick="showView('connections')">
+                <div class="db-stat-icon db-stat-cyan"><i class="fas fa-handshake"></i></div>
+                <div class="db-stat-body">
+                    <div class="db-stat-value" id="dbStatConnections">—</div>
+                    <div class="db-stat-label">My Connections</div>
+                </div>
+                <div class="db-stat-arrow"><i class="fas fa-chevron-right"></i></div>
+            </div>
+            <div class="db-stat-card" onclick="showView('projects')">
+                <div class="db-stat-icon db-stat-emerald"><i class="fas fa-folder-open"></i></div>
+                <div class="db-stat-body">
+                    <div class="db-stat-value" id="dbStatProjects">—</div>
+                    <div class="db-stat-label">Active Projects</div>
+                </div>
+                <div class="db-stat-arrow"><i class="fas fa-chevron-right"></i></div>
+            </div>
+            <div class="db-stat-card" onclick="showView('shared')">
+                <div class="db-stat-icon db-stat-amber"><i class="fas fa-check-circle"></i></div>
+                <div class="db-stat-body">
+                    <div class="db-stat-value" id="dbStatDelivered">—</div>
+                    <div class="db-stat-label">Delivered Projects</div>
+                </div>
+                <div class="db-stat-arrow"><i class="fas fa-chevron-right"></i></div>
+            </div>
+        </div>
+
+        <!-- ── MAIN GRID: Quick Actions + Features ────────────────────────── -->
+        <div class="db-mid-grid">
+
+            <!-- Quick Actions -->
+            <div class="db-panel">
+                <div class="db-panel-header">
+                    <span class="db-panel-title"><i class="fas fa-bolt"></i> Quick Actions</span>
+                </div>
+                <div class="db-quick-actions">
+                    <button class="db-qa-btn" onclick="showView('architects')">
+                        <div class="db-qa-icon" style="background:rgba(139,92,246,0.12);color:var(--violet)"><i class="fas fa-search"></i></div>
+                        <div>
+                            <div class="db-qa-title">Find Architects</div>
+                            <div class="db-qa-sub">Browse verified professionals</div>
+                        </div>
+                        <i class="fas fa-arrow-right db-qa-arrow"></i>
+                    </button>
+                    <button class="db-qa-btn" onclick="showView('connections')">
+                        <div class="db-qa-icon" style="background:rgba(0,212,200,0.1);color:var(--cyan)"><i class="fas fa-user-check"></i></div>
+                        <div>
+                            <div class="db-qa-title">My Architects</div>
+                            <div class="db-qa-sub">View your connections</div>
+                        </div>
+                        <i class="fas fa-arrow-right db-qa-arrow"></i>
+                    </button>
+                    <button class="db-qa-btn" onclick="showView('projects')">
+                        <div class="db-qa-icon" style="background:rgba(16,185,129,0.1);color:var(--emerald)"><i class="fas fa-plus-circle"></i></div>
+                        <div>
+                            <div class="db-qa-title">Create Project</div>
+                            <div class="db-qa-sub">Post a new project brief</div>
+                        </div>
+                        <i class="fas fa-arrow-right db-qa-arrow"></i>
+                    </button>
+                    <button class="db-qa-btn" onclick="showView('shared')">
+                        <div class="db-qa-icon" style="background:rgba(245,158,11,0.1);color:var(--amber)"><i class="fas fa-drafting-compass"></i></div>
+                        <div>
+                            <div class="db-qa-title">Delivered Projects</div>
+                            <div class="db-qa-sub">Review completed work</div>
+                        </div>
+                        <i class="fas fa-arrow-right db-qa-arrow"></i>
+                    </button>
+                    <button class="db-qa-btn" onclick="showView('settings')">
+                        <div class="db-qa-icon" style="background:rgba(139,92,246,0.08);color:var(--slate)"><i class="fas fa-cog"></i></div>
+                        <div>
+                            <div class="db-qa-title">Account Settings</div>
+                            <div class="db-qa-sub">Update profile & preferences</div>
+                        </div>
+                        <i class="fas fa-arrow-right db-qa-arrow"></i>
+                    </button>
+                    <button class="db-qa-btn" onclick="showView('support')">
+                        <div class="db-qa-icon" style="background:rgba(244,63,94,0.1);color:var(--rose)"><i class="fas fa-headset"></i></div>
+                        <div>
+                            <div class="db-qa-title">Support Center</div>
+                            <div class="db-qa-sub">Get help, raise a ticket</div>
+                        </div>
+                        <i class="fas fa-arrow-right db-qa-arrow"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- How It Works -->
+            <div class="db-panel">
+                <div class="db-panel-header">
+                    <span class="db-panel-title"><i class="fas fa-map-signs"></i> How SmartArch Works</span>
+                </div>
+                <div class="db-steps">
+                    <div class="db-step">
+                        <div class="db-step-num">01</div>
+                        <div class="db-step-body">
+                            <div class="db-step-title">Discover Architects</div>
+                            <div class="db-step-desc">Browse our curated pool of verified, rated architects filtered by specialization and location.</div>
+                        </div>
+                    </div>
+                    <div class="db-step-divider"></div>
+                    <div class="db-step">
+                        <div class="db-step-num">02</div>
+                        <div class="db-step-body">
+                            <div class="db-step-title">Connect & Discuss</div>
+                            <div class="db-step-desc">Send a connection request and chat directly with your chosen architect to discuss your vision.</div>
+                        </div>
+                    </div>
+                    <div class="db-step-divider"></div>
+                    <div class="db-step">
+                        <div class="db-step-num">03</div>
+                        <div class="db-step-body">
+                            <div class="db-step-title">Post Your Project</div>
+                            <div class="db-step-desc">Create a project brief with your requirements — budget, timeline, style, and site details.</div>
+                        </div>
+                    </div>
+                    <div class="db-step-divider"></div>
+                    <div class="db-step">
+                        <div class="db-step-num">04</div>
+                        <div class="db-step-body">
+                            <div class="db-step-title">Track & Receive</div>
+                            <div class="db-step-desc">Monitor milestones and receive final deliverables securely through your portal.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── COMING SOON FEATURES ────────────────────────────────────────── -->
+        <div class="db-section-label">
+            <i class="fas fa-rocket"></i> Coming Soon — Features in the Pipeline
+        </div>
+        <div class="coming-soon-grid db-cs-grid">
+            <div class="cs-card db-cs-card-new">
+                <div class="cs-icon db-cs-icon-new"><i class="fas fa-comments"></i></div>
                 <div class="cs-title">Direct Messaging</div>
-                <div class="cs-desc">Chat directly with your architect and share files securely</div>
+                <div class="cs-desc">Real-time chat with your architect — share files, images, and feedback securely.</div>
                 <div class="cs-badge">Coming Soon</div>
             </div>
-            <div class="cs-card">
-                <div class="cs-icon"><i class="fas fa-rupee-sign"></i></div>
+            <div class="cs-card db-cs-card-new">
+                <div class="cs-icon db-cs-icon-new" style="background:rgba(0,212,200,0.08);color:var(--cyan)"><i class="fas fa-chart-line"></i></div>
+                <div class="cs-title">Project Tracking</div>
+                <div class="cs-desc">Live milestone boards to monitor project progress from concept to completion.</div>
+                <div class="cs-badge">Coming Soon</div>
+            </div>
+            <div class="cs-card db-cs-card-new">
+                <div class="cs-icon db-cs-icon-new" style="background:rgba(245,158,11,0.08);color:var(--amber)"><i class="fas fa-rupee-sign"></i></div>
                 <div class="cs-title">Budget Tracker</div>
-                <div class="cs-desc">Transparent cost estimates and real-time budget monitoring</div>
+                <div class="cs-desc">Transparent cost breakdowns and real-time spend monitoring for every project.</div>
+                <div class="cs-badge">Coming Soon</div>
+            </div>
+            <div class="cs-card db-cs-card-new">
+                <div class="cs-icon db-cs-icon-new" style="background:rgba(16,185,129,0.08);color:var(--emerald)"><i class="fas fa-heart"></i></div>
+                <div class="cs-title">Favourites</div>
+                <div class="cs-desc">Save and compare architects you love so you never lose track of a great find.</div>
+                <div class="cs-badge">Coming Soon</div>
+            </div>
+            <div class="cs-card db-cs-card-new">
+                <div class="cs-icon db-cs-icon-new" style="background:rgba(244,63,94,0.08);color:var(--rose)"><i class="fas fa-file-alt"></i></div>
+                <div class="cs-title">Document Vault</div>
+                <div class="cs-desc">Secure cloud storage for contracts, permits, blueprints and all project documents.</div>
+                <div class="cs-badge">Coming Soon</div>
+            </div>
+            <div class="cs-card db-cs-card-new">
+                <div class="cs-icon db-cs-icon-new" style="background:rgba(139,92,246,0.08);color:var(--violet)"><i class="fas fa-star"></i></div>
+                <div class="cs-title">Ratings & Reviews</div>
+                <div class="cs-desc">Rate your experience and read verified reviews from other clients.</div>
                 <div class="cs-badge">Coming Soon</div>
             </div>
         </div>
+
+        <!-- ── TIPS STRIP ──────────────────────────────────────────────────── -->
+        <div class="db-tips-strip">
+            <div class="db-tip">
+                <i class="fas fa-lightbulb"></i>
+                <span><strong>Pro Tip:</strong> Use the specialization filter in Find Architects to narrow down the perfect match for your project type.</span>
+            </div>
+            <div class="db-tip-divider"></div>
+            <div class="db-tip">
+                <i class="fas fa-shield-alt"></i>
+                <span><strong>Verified Profiles:</strong> Every architect on SmartArch goes through a verification process before being listed.</span>
+            </div>
+            <div class="db-tip-divider"></div>
+            <div class="db-tip">
+                <i class="fas fa-headset"></i>
+                <span><strong>Need Help?</strong> Our support team typically responds within 1–2 business days via the Support Center.</span>
+            </div>
+        </div>
+
     </div>
 </main>
 
@@ -341,11 +525,11 @@
                 <div class="wizard-row-2">
                     <div class="wizard-field">
                         <label class="wizard-label">Min Budget (₹)</label>
-                        <input class="wizard-input" id="wf-budgetMin" type="number" min="0" placeholder="e.g. 2500000">
+                        <input class="wizard-input" id="wf-budgetMin" type="number" min="0" placeholder="e.g. 2500000" required>
                     </div>
                     <div class="wizard-field">
                         <label class="wizard-label">Max Budget (₹)</label>
-                        <input class="wizard-input" id="wf-budgetMax" type="number" min="0" placeholder="e.g. 5000000">
+                        <input class="wizard-input" id="wf-budgetMax" type="number" min="0" placeholder="e.g. 5000000" required>
                     </div>
                 </div>
                 <div class="wizard-row-2">
