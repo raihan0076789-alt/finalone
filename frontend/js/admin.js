@@ -1503,6 +1503,113 @@ async function appRatingsRequest(endpoint, options = {}) {
     return data;
 }
 
+// Stores full recent list for client-side filtering
+let _arAllRecent = [];
+let _arActiveFilter = 'all';
+
+function _buildMiniChart(canvasId, dist, color) {
+    const ctx = document.getElementById(canvasId);
+    if (!ctx) return;
+    if (ctx._miniChart) ctx._miniChart.destroy();
+    ctx._miniChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['1','2','3','4','5'],
+            datasets: [{ data: dist,
+                backgroundColor: color + '99',
+                borderColor: color,
+                borderWidth: 1,
+                borderRadius: 3,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false }, tooltip: { enabled: false } },
+            scales: {
+                x: { display: false },
+                y: { display: false, beginAtZero: true }
+            }
+        }
+    });
+}
+
+function _renderArFeed(list) {
+    const feedEl = document.getElementById('arRecentFeed');
+    if (!feedEl) return;
+    if (!list || !list.length) {
+        feedEl.innerHTML = '<p style="color:var(--gray);font-size:.85rem">No ratings for this filter.</p>';
+        return;
+    }
+
+    const roleBadge = (r) => {
+        if (r.userRole === 'client')    return '<span style="background:rgba(6,182,212,.15);color:#06b6d4;border-radius:4px;padding:1px 7px;font-size:.68rem;font-weight:600">Client</span>';
+        if (r.userRole === 'architect') return '<span style="background:rgba(124,58,237,.15);color:#7c3aed;border-radius:4px;padding:1px 7px;font-size:.68rem;font-weight:600">Architect</span>';
+        return '<span style="background:rgba(148,163,184,.1);color:#94a3b8;border-radius:4px;padding:1px 7px;font-size:.68rem">Guest</span>';
+    };
+
+    feedEl.innerHTML =
+        '<table style="width:100%;border-collapse:collapse;font-size:.83rem">' +
+            '<thead><tr style="color:var(--gray);text-align:left;border-bottom:1px solid rgba(255,255,255,.08)">' +
+                '<th style="padding:6px 10px">User</th>' +
+                '<th style="padding:6px 10px">Role</th>' +
+                '<th style="padding:6px 10px;text-align:center">Rating</th>' +
+                '<th style="padding:6px 10px">Comment</th>' +
+                '<th style="padding:6px 10px">Page</th>' +
+                '<th style="padding:6px 10px">Date</th>' +
+                '<th style="padding:6px 10px;text-align:center">Action</th>' +
+            '</tr></thead>' +
+            '<tbody>' +
+            list.map(r =>
+                '<tr style="border-bottom:1px solid rgba(255,255,255,.04)" ' +
+                    'onmouseover="this.style.background=\'rgba(255,255,255,.03)\'" ' +
+                    'onmouseout="this.style.background=\'\'">' +
+                    '<td style="padding:8px 10px">' +
+                        (r.user
+                            ? '<div style="font-weight:600;color:var(--text)">' + escAdm(r.user.name) + '</div>' +
+                              '<div style="font-size:.73rem;color:var(--gray)">' + escAdm(r.user.email) + '</div>'
+                            : '<div style="color:var(--gray);font-style:italic">Guest</div>') +
+                    '</td>' +
+                    '<td style="padding:8px 10px">' + roleBadge(r) + '</td>' +
+                    '<td style="padding:8px 10px;text-align:center"><span style="color:#f59e0b;font-weight:700">' + r.rating + ' ★</span></td>' +
+                    '<td style="padding:8px 10px;color:var(--gray);max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' +
+                        (r.comment ? escAdm(r.comment) : '<em style="color:#475569">—</em>') +
+                    '</td>' +
+                    '<td style="padding:8px 10px;color:var(--gray);font-size:.75rem">' + escAdm(r.page || '—') + '</td>' +
+                    '<td style="padding:8px 10px;color:var(--gray);white-space:nowrap">' +
+                        new Date(r.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) +
+                    '</td>' +
+                    '<td style="padding:8px 10px;text-align:center">' +
+                        '<button onclick="adminDeleteAppRating(\'' + r._id + '\')" ' +
+                            'style="background:rgba(239,68,68,.15);border:none;color:#f87171;padding:3px 10px;border-radius:5px;cursor:pointer;font-size:.75rem">' +
+                            '<i class="fas fa-trash-alt"></i>' +
+                        '</button>' +
+                    '</td>' +
+                '</tr>'
+            ).join('') +
+            '</tbody></table>';
+}
+
+function filterArFeed(role) {
+    _arActiveFilter = role;
+    // Update button styles
+    ['all','architect','client'].forEach(function(r) {
+        const btn = document.getElementById('ar-filter-' + r);
+        if (!btn) return;
+        if (r === role) {
+            btn.style.background = 'linear-gradient(135deg,rgba(102,126,234,.25),rgba(118,75,162,.25))';
+            btn.style.color      = '#f1f5f9';
+            btn.style.fontWeight = '600';
+        } else {
+            btn.style.background = 'none';
+            btn.style.color      = '#94a3b8';
+            btn.style.fontWeight = 'normal';
+        }
+    });
+    const filtered = role === 'all' ? _arAllRecent : _arAllRecent.filter(r => r.userRole === role);
+    _renderArFeed(filtered);
+}
+
 async function loadAppRatingStats() {
     try {
         const res  = await appRatingsRequest('/admin/stats');
@@ -1517,7 +1624,19 @@ async function loadAppRatingStats() {
         const topIdx = dist.indexOf(Math.max(...dist));
         setEl('ar-stat-common', topIdx >= 0 ? `${topIdx + 1} ★` : '—');
 
-        // Distribution bar chart
+        // Role breakdown cards
+        const arch   = (data.byRole && data.byRole.architect) || null;
+        const client = (data.byRole && data.byRole.client)    || null;
+        setEl('ar-arch-count',   arch   ? arch.count       : '0');
+        setEl('ar-arch-avg',     arch   ? arch.avg + ' ★'  : '—');
+        setEl('ar-client-count', client ? client.count      : '0');
+        setEl('ar-client-avg',   client ? client.avg + ' ★' : '—');
+
+        // Mini bar charts for role cards
+        _buildMiniChart('arArchMiniChart',   arch   ? arch.distribution   : [0,0,0,0,0], '#7c3aed');
+        _buildMiniChart('arClientMiniChart', client ? client.distribution : [0,0,0,0,0], '#06b6d4');
+
+        // Main distribution bar chart
         const ctx = document.getElementById('arDistChart');
         if (ctx) {
             if (ctx._arChart) ctx._arChart.destroy();
@@ -1550,54 +1669,10 @@ async function loadAppRatingStats() {
             });
         }
 
-        // Recent feed
-        const feedEl = document.getElementById('arRecentFeed');
-        if (feedEl) {
-            if (!data.recent || !data.recent.length) {
-                feedEl.innerHTML = '<p style="color:var(--gray);font-size:.85rem">No app ratings yet.</p>';
-            } else {
-                feedEl.innerHTML = `
-                    <table style="width:100%;border-collapse:collapse;font-size:.83rem">
-                        <thead>
-                            <tr style="color:var(--gray);text-align:left;border-bottom:1px solid rgba(255,255,255,.08)">
-                                <th style="padding:6px 10px">User</th>
-                                <th style="padding:6px 10px;text-align:center">Rating</th>
-                                <th style="padding:6px 10px">Comment</th>
-                                <th style="padding:6px 10px">Page</th>
-                                <th style="padding:6px 10px">Date</th>
-                                <th style="padding:6px 10px;text-align:center">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${data.recent.map(r => `
-                            <tr style="border-bottom:1px solid rgba(255,255,255,.04)" onmouseover="this.style.background='rgba(255,255,255,.03)'" onmouseout="this.style.background=''">
-                                <td style="padding:8px 10px">
-                                    ${r.user
-                                        ? `<div style="font-weight:600;color:var(--text)">${escAdm(r.user.name)}</div>
-                                           <div style="font-size:.73rem;color:var(--gray)">${escAdm(r.user.email)}</div>`
-                                        : `<div style="color:var(--gray);font-style:italic">Guest</div>`}
-                                </td>
-                                <td style="padding:8px 10px;text-align:center">
-                                    <span style="color:#f59e0b;font-weight:700">${r.rating} ★</span>
-                                </td>
-                                <td style="padding:8px 10px;color:var(--gray);max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-                                    ${r.comment ? escAdm(r.comment) : '<em style="color:#475569">—</em>'}
-                                </td>
-                                <td style="padding:8px 10px;color:var(--gray);font-size:.75rem">${escAdm(r.page || '—')}</td>
-                                <td style="padding:8px 10px;color:var(--gray);white-space:nowrap">
-                                    ${new Date(r.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}
-                                </td>
-                                <td style="padding:8px 10px;text-align:center">
-                                    <button onclick="adminDeleteAppRating('${r._id}')"
-                                        style="background:rgba(239,68,68,.15);border:none;color:#f87171;padding:3px 10px;border-radius:5px;cursor:pointer;font-size:.75rem">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </td>
-                            </tr>`).join('')}
-                        </tbody>
-                    </table>`;
-            }
-        }
+        // Recent feed — store and render with current filter
+        _arAllRecent = data.recent || [];
+        filterArFeed(_arActiveFilter);
+
     } catch (err) {
         console.error('loadAppRatingStats error:', err);
     }
@@ -1615,3 +1690,4 @@ async function adminDeleteAppRating(id) {
 
 window.loadAppRatingStats     = loadAppRatingStats;
 window.adminDeleteAppRating   = adminDeleteAppRating;
+window.filterArFeed           = filterArFeed;

@@ -104,11 +104,203 @@ function getToken()    { return localStorage.getItem('client_token'); }
 function authHeaders() {
     return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() };
 }
+// ── Client App Rating Modal (shown on logout) ────────────────────────────────
+(function() {
+    var CLIENT_RATING_SESSION_KEY = 'smartarch_client_app_rated_session';
+
+    function injectClientRatingStyles() {
+        if (document.getElementById('clientArModalStyles')) return;
+        var s = document.createElement('style');
+        s.id = 'clientArModalStyles';
+        s.textContent = [
+            '#clientArModal{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);',
+            '  display:flex;align-items:center;justify-content:center;z-index:99999;',
+            '  opacity:0;transition:opacity .25s;pointer-events:none;}',
+            '#clientArModal.ar-visible{opacity:1;pointer-events:all;}',
+            '#clientArBox{position:relative;background:#0d1424;border:1px solid rgba(255,255,255,.1);border-radius:16px;',
+            '  padding:2rem;width:100%;max-width:380px;box-shadow:0 24px 60px rgba(0,0,0,.6);',
+            '  transform:translateY(18px);transition:transform .28s cubic-bezier(.34,1.56,.64,1);}',
+            '#clientArModal.ar-visible #clientArBox{transform:translateY(0);}',
+            '.client-ar-top-bar{height:4px;background:linear-gradient(90deg,#8b5cf6,#06b6d4);',
+            '  border-radius:14px 14px 0 0;margin:-2rem -2rem 1.4rem;}',
+            '.client-ar-stars{display:flex;gap:10px;justify-content:center;margin-bottom:1.2rem;}',
+            '.client-ar-star{font-size:2rem;color:#2d3748;cursor:pointer;transition:color .15s,transform .12s;}',
+            '.client-ar-star:hover,.client-ar-star.ar-on{color:#f59e0b;}',
+            '.client-ar-star:hover{transform:scale(1.15);}',
+            '.client-ar-comment{width:100%;background:rgba(255,255,255,.06);border:1px solid #2d3651;',
+            '  color:#e2e8f0;padding:.6rem .8rem;border-radius:8px;font-size:.82rem;',
+            '  resize:none;min-height:70px;font-family:inherit;box-sizing:border-box;}',
+            '.client-ar-comment:focus{outline:none;border-color:#8b5cf6;}',
+            '.client-ar-comment::placeholder{color:#475569;}',
+            '.client-ar-actions{display:flex;gap:.75rem;margin-top:1rem;}',
+            '.client-ar-btn-skip{flex:1;padding:.6rem;border-radius:8px;border:1px solid #2d3651;',
+            '  background:transparent;color:#fff;cursor:pointer;font-size:.82rem;}',
+            '.client-ar-btn-submit{flex:2;padding:.6rem;border-radius:8px;border:none;',
+            '  background:linear-gradient(135deg,#8b5cf6,#06b6d4);color:#fff;',
+            '  cursor:pointer;font-size:.82rem;font-weight:600;transition:opacity .15s;}',
+            '.client-ar-btn-submit:hover{opacity:.88;}',
+            '.client-ar-btn-submit:disabled{opacity:.45;cursor:not-allowed;}',
+            '.client-ar-close{position:absolute;top:12px;right:14px;background:none;border:none;',
+            '  color:#64748b;font-size:1.1rem;cursor:pointer;line-height:1;padding:4px 6px;border-radius:6px;}',
+            '.client-ar-close:hover{color:#e2e8f0;background:rgba(255,255,255,.08);}',
+            '.client-ar-sent{text-align:center;padding:1rem 0;}',
+            '.client-ar-sent-icon{font-size:2.5rem;margin-bottom:.5rem;}',
+            '.client-ar-sent-title{font-size:1rem;font-weight:700;color:#f1f5f9;margin-bottom:.3rem;}',
+            '.client-ar-sent-sub{font-size:.8rem;color:#64748b;}'
+        ].join('');
+        document.head.appendChild(s);
+    }
+
+    function injectClientRatingModal() {
+        var el = document.createElement('div');
+        el.id = 'clientArModal';
+        el.innerHTML =
+            '<div id="clientArBox">' +
+                '<div class="client-ar-top-bar"></div>' +
+                '<button class="client-ar-close" id="clientArCloseBtn" title="Close">&#x2715;</button>' +
+                '<div style="font-size:1.1rem;font-weight:700;color:#f1f5f9;margin-bottom:.3rem;">&#11088; How was your experience?</div>' +
+                '<div style="font-size:.82rem;color:#64748b;margin-bottom:1.4rem;line-height:1.5;">Rate SmartArch before you go — helps us improve for clients like you.</div>' +
+                '<div class="client-ar-stars" id="clientArStars">' +
+                    '<i class="client-ar-star fas fa-star" data-v="1"></i>' +
+                    '<i class="client-ar-star fas fa-star" data-v="2"></i>' +
+                    '<i class="client-ar-star fas fa-star" data-v="3"></i>' +
+                    '<i class="client-ar-star fas fa-star" data-v="4"></i>' +
+                    '<i class="client-ar-star fas fa-star" data-v="5"></i>' +
+                '</div>' +
+                '<textarea id="clientArComment" class="client-ar-comment" maxlength="500"' +
+                    ' placeholder="Any thoughts? (optional)"></textarea>' +
+                '<div class="client-ar-actions">' +
+                    '<button class="client-ar-btn-skip" id="clientArSkip">Skip</button>' +
+                    '<button class="client-ar-btn-submit" id="clientArSubmit" disabled>Submit &amp; Logout</button>' +
+                '</div>' +
+            '</div>';
+        document.body.appendChild(el);
+        wireClientRatingModal();
+    }
+
+    var _clientSelectedRating = 0;
+    var _clientLogoutCb = null;
+
+    function wireClientRatingModal() {
+        var stars  = document.querySelectorAll('.client-ar-star');
+        var submit = document.getElementById('clientArSubmit');
+        var skip   = document.getElementById('clientArSkip');
+        var close  = document.getElementById('clientArCloseBtn');
+
+        stars.forEach(function(s) {
+            s.addEventListener('mouseenter', function() { highlightClientStars(parseInt(s.dataset.v)); });
+            s.addEventListener('mouseleave', function() { highlightClientStars(_clientSelectedRating); });
+            s.addEventListener('click', function() {
+                _clientSelectedRating = parseInt(s.dataset.v);
+                highlightClientStars(_clientSelectedRating);
+                if (submit) submit.disabled = false;
+            });
+        });
+        if (submit) submit.addEventListener('click', submitClientRating);
+        if (skip)   skip.addEventListener('click',   doClientLogout);
+        if (close)  close.addEventListener('click',  hideClientRatingModal);
+    }
+
+    function highlightClientStars(val) {
+        document.querySelectorAll('.client-ar-star').forEach(function(s) {
+            s.classList.toggle('ar-on', parseInt(s.dataset.v) <= val);
+        });
+    }
+
+    async function submitClientRating() {
+        if (!_clientSelectedRating) return;
+        var submit  = document.getElementById('clientArSubmit');
+        var comment = (document.getElementById('clientArComment') ? document.getElementById('clientArComment').value : '').trim();
+        if (submit) { submit.disabled = true; submit.textContent = 'Saving...'; }
+
+        try {
+            var token = localStorage.getItem('client_token');
+            await fetch('http://localhost:5000/api/app-ratings', {
+                method:  'POST',
+                headers: Object.assign(
+                    { 'Content-Type': 'application/json' },
+                    token ? { 'Authorization': 'Bearer ' + token } : {}
+                ),
+                body: JSON.stringify({
+                    rating:   _clientSelectedRating,
+                    comment:  comment,
+                    userRole: 'client',
+                    page:     window.location.pathname.split('/').pop() || 'client-dashboard.html'
+                })
+            });
+        } catch(e) { /* non-fatal — still log out */ }
+
+        localStorage.setItem(CLIENT_RATING_SESSION_KEY, '1');
+        showClientRatingThanks();
+    }
+
+    function showClientRatingThanks() {
+        var box = document.getElementById('clientArBox');
+        if (box) {
+            box.innerHTML =
+                '<div class="client-ar-sent">' +
+                    '<div class="client-ar-sent-icon">&#x2728;</div>' +
+                    '<div class="client-ar-sent-title">Thanks for your feedback!</div>' +
+                    '<div class="client-ar-sent-sub">Logging you out...</div>' +
+                '</div>';
+        }
+        setTimeout(doClientLogout, 1200);
+    }
+
+    function doClientLogout() {
+        hideClientRatingModal();
+        if (typeof _clientLogoutCb === 'function') _clientLogoutCb();
+    }
+
+    function hideClientRatingModal() {
+        var el = document.getElementById('clientArModal');
+        if (el) {
+            el.classList.remove('ar-visible');
+            setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, 300);
+        }
+    }
+
+    window._showClientAppRatingModal = function(cb) {
+        injectClientRatingStyles();
+        var old = document.getElementById('clientArModal');
+        if (old && old.parentNode) old.parentNode.removeChild(old);
+        injectClientRatingModal();
+        _clientLogoutCb = cb;
+        _clientSelectedRating = 0;
+        highlightClientStars(0);
+        requestAnimationFrame(function() {
+            var modal = document.getElementById('clientArModal');
+            if (modal) modal.classList.add('ar-visible');
+        });
+    };
+})();
+
 function logout() {
-    localStorage.removeItem('client_token');
-    localStorage.removeItem('client_user');
-    showToast('Logged out successfully', 'info');
-    setTimeout(function() { window.location.href = 'client-index.html'; }, 800);
+    // If already rated this session, skip modal
+    if (localStorage.getItem('smartarch_client_app_rated_session')) {
+        localStorage.removeItem('smartarch_client_app_rated_session');
+        localStorage.removeItem('client_token');
+        localStorage.removeItem('client_user');
+        showToast('Logged out successfully', 'info');
+        setTimeout(function() { window.location.href = 'client-index.html'; }, 800);
+        return;
+    }
+
+    // Show rating modal — actual logout fires inside modal callbacks
+    if (typeof window._showClientAppRatingModal === 'function') {
+        window._showClientAppRatingModal(function() {
+            localStorage.removeItem('smartarch_client_app_rated_session');
+            localStorage.removeItem('client_token');
+            localStorage.removeItem('client_user');
+            showToast('Logged out successfully', 'info');
+            setTimeout(function() { window.location.href = 'client-index.html'; }, 800);
+        });
+    } else {
+        localStorage.removeItem('client_token');
+        localStorage.removeItem('client_user');
+        showToast('Logged out successfully', 'info');
+        setTimeout(function() { window.location.href = 'client-index.html'; }, 800);
+    }
 }
 
 /* ============================================================
@@ -2187,6 +2379,12 @@ function renderSharedProjects(shares) {
 
         var newBadge = isNew ? '<span class="shared-new-badge">New</span>' : '';
 
+        // Rating pill — shows architect's current average rating
+        var archRating = arch.rating ? parseFloat(arch.rating).toFixed(1) : null;
+        var ratingPill = archRating && parseFloat(archRating) > 0
+            ? '<span style="display:inline-flex;align-items:center;gap:0.3rem;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.3);border-radius:20px;padding:2px 8px;font-size:0.7rem;color:#f59e0b;font-weight:600;"><i class="fas fa-star" style="font-size:0.6rem"></i>' + archRating + '</span>'
+            : '';
+
         var sharedDate = share.createdAt
             ? new Date(share.createdAt).toLocaleDateString(undefined, { day:'numeric', month:'short', year:'numeric' })
             : '';
@@ -2202,6 +2400,7 @@ function renderSharedProjects(shares) {
                     '<img src="' + archAvatar + '" alt="' + esc(arch.name || '') + '" style="width:20px;height:20px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.src=\'https://ui-avatars.com/api/?name=A&background=7c3aed&color=fff&bold=true\'">' +
                     esc(arch.name || 'Architect') +
                     (arch.specialization ? ' · ' + esc(arch.specialization) : '') +
+                    ratingPill +
                     (sharedDate ? '<span style="margin-left:auto;color:#475569;font-size:0.7rem;">' + sharedDate + '</span>' : '') +
                 '</div>' +
                 '<div class="shared-card-meta">' + metaHtml + '</div>' +

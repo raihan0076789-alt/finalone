@@ -455,14 +455,67 @@
 
       <!-- ══ APP RATINGS ══ -->
       <div class="page" id="page-app-ratings">
+
+        <!-- Overall stats row -->
         <div class="stats-grid" style="margin-bottom:1.5rem">
           <div class="stat-card blue"><div class="stat-icon"><i class="fas fa-star"></i></div><div class="stat-info"><div class="stat-value" id="ar-stat-total">—</div><div class="stat-label">Total Ratings</div></div></div>
           <div class="stat-card green"><div class="stat-icon"><i class="fas fa-chart-line"></i></div><div class="stat-info"><div class="stat-value" id="ar-stat-avg">—</div><div class="stat-label">Overall Average</div></div></div>
           <div class="stat-card orange"><div class="stat-icon"><i class="fas fa-fire"></i></div><div class="stat-info"><div class="stat-value" id="ar-stat-five">—</div><div class="stat-label">5-Star Ratings</div></div></div>
           <div class="stat-card purple"><div class="stat-icon"><i class="fas fa-medal"></i></div><div class="stat-info"><div class="stat-value" id="ar-stat-common">—</div><div class="stat-label">Most Common</div></div></div>
         </div>
+
+        <!-- Role breakdown cards -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;">
+          <div class="card" style="border-left:3px solid #7c3aed;">
+            <div class="card-header" style="padding-bottom:.5rem">
+              <div class="card-title"><i class="fas fa-hard-hat" style="color:#7c3aed;margin-right:.4rem"></i>Architect Ratings</div>
+            </div>
+            <div class="card-body" style="display:flex;gap:2rem;align-items:center;padding-top:.25rem">
+              <div style="text-align:center">
+                <div id="ar-arch-count" style="font-size:1.6rem;font-weight:800;color:#f1f5f9">—</div>
+                <div style="font-size:.72rem;color:var(--gray)">Total</div>
+              </div>
+              <div style="text-align:center">
+                <div id="ar-arch-avg" style="font-size:1.6rem;font-weight:800;color:#f59e0b">—</div>
+                <div style="font-size:.72rem;color:var(--gray)">Avg Rating</div>
+              </div>
+              <div style="flex:1"><canvas id="arArchMiniChart" height="50"></canvas></div>
+            </div>
+          </div>
+          <div class="card" style="border-left:3px solid #06b6d4;">
+            <div class="card-header" style="padding-bottom:.5rem">
+              <div class="card-title"><i class="fas fa-user-tie" style="color:#06b6d4;margin-right:.4rem"></i>Client Ratings</div>
+            </div>
+            <div class="card-body" style="display:flex;gap:2rem;align-items:center;padding-top:.25rem">
+              <div style="text-align:center">
+                <div id="ar-client-count" style="font-size:1.6rem;font-weight:800;color:#f1f5f9">—</div>
+                <div style="font-size:.72rem;color:var(--gray)">Total</div>
+              </div>
+              <div style="text-align:center">
+                <div id="ar-client-avg" style="font-size:1.6rem;font-weight:800;color:#f59e0b">—</div>
+                <div style="font-size:.72rem;color:var(--gray)">Avg Rating</div>
+              </div>
+              <div style="flex:1"><canvas id="arClientMiniChart" height="50"></canvas></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Distribution chart -->
         <div style="margin-bottom:1.5rem"><div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-chart-bar"></i> Rating Distribution</div></div><div class="card-body"><div class="chart-container"><canvas id="arDistChart"></canvas></div></div></div></div>
-        <div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-comments"></i> Recent App Ratings</div></div><div class="card-body" style="padding-top:.5rem"><div id="arRecentFeed"><p style="color:var(--gray);font-size:.85rem">Loading…</p></div></div></div>
+
+        <!-- Recent feed with role filter tabs -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-comments"></i> Recent App Ratings</div>
+            <div style="display:flex;gap:.5rem;margin-left:auto">
+              <button id="ar-filter-all"       onclick="filterArFeed('all')"       style="padding:4px 12px;border-radius:6px;border:1px solid #334155;background:linear-gradient(135deg,rgba(102,126,234,.25),rgba(118,75,162,.25));color:#f1f5f9;cursor:pointer;font-size:.75rem;font-weight:600">All</button>
+              <button id="ar-filter-architect"  onclick="filterArFeed('architect')" style="padding:4px 12px;border-radius:6px;border:1px solid #334155;background:none;color:#94a3b8;cursor:pointer;font-size:.75rem">Architects</button>
+              <button id="ar-filter-client"     onclick="filterArFeed('client')"    style="padding:4px 12px;border-radius:6px;border:1px solid #334155;background:none;color:#94a3b8;cursor:pointer;font-size:.75rem">Clients</button>
+            </div>
+          </div>
+          <div class="card-body" style="padding-top:.5rem"><div id="arRecentFeed"><p style="color:var(--gray);font-size:.85rem">Loading...</p></div></div>
+        </div>
+
       </div>
 
     </div>

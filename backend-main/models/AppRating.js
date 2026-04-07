@@ -23,6 +23,12 @@ const appRatingSchema = new mongoose.Schema({
     page: {
         type: String,
         default: ''
+    },
+    // Role of the user who submitted — 'architect', 'client', or 'guest'
+    userRole: {
+        type: String,
+        enum: ['architect', 'client', 'guest'],
+        default: 'guest'
     }
 }, { timestamps: true });
 

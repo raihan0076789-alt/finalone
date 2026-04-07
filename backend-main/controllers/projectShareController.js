@@ -147,7 +147,7 @@ exports.getMySharedProjects = async (req, res) => {
             $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }]
         })
         .populate('project',  'name type status metadata floors totalWidth totalDepth materials specifications thumbnail description tags')
-        .populate('sharedBy', 'name email avatar specialization')
+        .populate('sharedBy', 'name email avatar specialization rating')
         .sort('-createdAt');
 
         res.json({ success: true, data: shares });
@@ -167,7 +167,7 @@ exports.getShareByToken = async (req, res) => {
             $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }]
         })
         .populate('project',  'name type status metadata floors totalWidth totalDepth materials specifications thumbnail description tags')
-        .populate('sharedBy', 'name email avatar specialization company');
+        .populate('sharedBy', 'name email avatar specialization company rating');
 
         if (!share) {
             return res.status(404).json({

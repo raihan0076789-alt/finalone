@@ -10,6 +10,10 @@ const {
     getShareByToken,
     getConnectedClients
 } = require('../controllers/projectShareController');
+const {
+    submitRating,
+    getMyRating
+} = require('../controllers/architectRatingController');
 
 // ── Architect routes ──────────────────────────────────────────────────────────
 // Share a project (connection or link mode)
@@ -28,5 +32,11 @@ router.get('/shares/my',                    protect, authorize('client'), getMyS
 // ── Public route (token access) ───────────────────────────────────────────────
 // No auth middleware here — controller handles auth conditionally per mode
 router.get('/shares/token/:token',          getShareByToken);
+
+// ── Rating routes (client only) ───────────────────────────────────────────────
+// Submit or update a rating for the architect of a specific shared project
+router.post('/shares/:shareId/rate',        protect, authorize('client'), submitRating);
+// Check if current client has already rated for this share
+router.get('/shares/:shareId/rating',       protect, authorize('client'), getMyRating);
 
 module.exports = router;
