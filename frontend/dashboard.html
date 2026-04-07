@@ -163,6 +163,7 @@
 .arch-notif-icon.request  { background: rgba(245,158,11,0.12); color: #f59e0b; border: 1px solid rgba(245,158,11,0.25); }
 .arch-notif-icon.message  { background: rgba(0,212,200,0.12);  color: #00d4c8; border: 1px solid rgba(0,212,200,0.25); }
 .arch-notif-icon.accepted { background: rgba(16,185,129,0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.2); }
+.arch-notif-icon.support  { background: rgba(139,92,246,0.12); color: #8b5cf6; border: 1px solid rgba(139,92,246,0.25); }
 .arch-notif-text { flex: 1; min-width: 0; }
 .arch-notif-text-main { font-size: 0.8rem; color: #f1f5f9; font-weight: 500; line-height: 1.4; word-break: break-word; }
 .arch-notif-text-time { font-size: 0.68rem; color: #475569; margin-top: 2px; }
@@ -2191,9 +2192,10 @@ function _render() {
         list.innerHTML = '<div class="arch-notif-empty"><i class="fas fa-check-circle" style="color:#00d4c8;font-size:1.3rem;margin-bottom:0.5rem;display:block"></i>You\'re all caught up!</div>';
         return;
     }
-    var iconMap = { request:'fa-user-plus', message:'fa-comment-alt', accepted:'fa-user-check' };
+    var iconMap = { request:'fa-user-plus', message:'fa-comment-alt', accepted:'fa-user-check', support:'fa-headset' };
     list.innerHTML = _notifs.map(function(n){
-        return '<div class="arch-notif-item'+(n.read?'':' unread')+'" onclick="archNotifClick()" style="cursor:pointer">'+
+        var clickFn = (n.type==='support') ? 'archSupportNotifClick()' : 'archNotifClick()';
+        return '<div class="arch-notif-item'+(n.read?'':' unread')+'" onclick="'+clickFn+'" style="cursor:pointer">'+
             '<div class="arch-notif-icon '+(n.type||'message')+'"><i class="fas '+(iconMap[n.type]||'fa-bell')+'"></i></div>'+
             '<div class="arch-notif-text">'+
                 '<div class="arch-notif-text-main">'+_esc(n.text)+'</div>'+
@@ -2227,6 +2229,23 @@ window.archNotifClick = function() {
     if (typeof switchSection==='function') switchSection('connections');
 };
 
+window.archSupportNotifClick = function() {
+    var p = document.getElementById('archNotifDropdown');
+    if (p) p.style.display='none';
+    _open = false;
+    document.querySelectorAll('.sidebar-nav .nav-item').forEach(function(nav){ nav.classList.remove('active'); });
+    document.querySelectorAll('.content-section').forEach(function(sec){ sec.classList.remove('active'); });
+    var secEl = document.getElementById('messagesSection');
+    if (secEl) secEl.classList.add('active');
+    var navBtn = document.querySelector('[data-section="messages"]');
+    if (navBtn) navBtn.classList.add('active');
+    var headerEl = document.getElementById('headerTitle');
+    if (headerEl) headerEl.textContent = 'My Messages';
+    var actionBtn = document.getElementById('headerActionBtn');
+    if (actionBtn) actionBtn.style.display = 'none';
+    if (typeof loadUserTickets === 'function') loadUserTickets();
+};
+
 document.addEventListener('click', function(e) {
     if (!_open) return;
     var wrap = document.getElementById('archNotifWrap');
@@ -2242,8 +2261,9 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-/* ── Poll connections ────────────────────────────── */
+/* ── Poll connections + ticket replies ───────────── */
 var _snap = null;
+var _ticketUnreadSnap = null; // tracks last known ticket unread count
 
 async function _poll() {
     var token = localStorage.getItem('token');
@@ -2256,6 +2276,32 @@ async function _poll() {
         var d = await r.json();
         if (!d.success) return;
         _process(d.data||[]);
+    } catch(e){}
+    /* ── Poll support ticket replies ── */
+    try {
+        var tr = await fetch('http://localhost:5000/api/tickets/my/unread', {
+            headers: { 'Authorization': 'Bearer '+token }
+        });
+        if (tr.ok) {
+            var td = await tr.json();
+            if (td.success) {
+                var newCount = td.count || 0;
+                if (_ticketUnreadSnap === null) {
+                    /* First load — just store, don't notify (avoid noise on page load) */
+                    _ticketUnreadSnap = newCount;
+                } else if (newCount > _ticketUnreadSnap) {
+                    var added = newCount - _ticketUnreadSnap;
+                    var txt = added === 1
+                        ? 'Support team replied to your ticket.'
+                        : 'Support team replied to ' + added + ' of your tickets.';
+                    var notifId = 'ticket-reply-' + Date.now();
+                    if (_add(notifId, 'support', txt, new Date().toISOString())) _render();
+                    _ticketUnreadSnap = newCount;
+                } else {
+                    _ticketUnreadSnap = newCount;
+                }
+            }
+        }
     } catch(e){}
 }
 
