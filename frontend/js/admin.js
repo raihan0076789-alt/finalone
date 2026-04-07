@@ -946,14 +946,14 @@ async function loadAdminTickets() {
 
         listEl.innerHTML = data.tickets.map(t => {
             const isNew = t.status === 'new';
-            const statusColors = { new: '#dc3545', seen: '#ffc107', replied: '#11998e', closed: '#6c757d' };
-            const statusBg    = { new: '#fff5f5',  seen: '#fffbea',  replied: '#f0fdf4', closed: '#f8f9fa' };
+            const statusColors = { new: '#ef4444', seen: '#f59e0b', replied: '#10b981', closed: '#64748b' };
+            const statusBg    = { new: 'rgba(239,68,68,0.15)', seen: 'rgba(245,158,11,0.15)', replied: 'rgba(16,185,129,0.15)', closed: 'rgba(100,116,139,0.15)' };
             const color = statusColors[t.status] || '#6c757d';
-            const bg    = statusBg[t.status]    || '#f8f9fa';
+            const bg    = statusBg[t.status]    || 'rgba(100,116,139,0.15)';
             const time = new Date(t.createdAt).toLocaleDateString('en-US', { month:'short', day:'numeric' });
             return `<div class="ticket-item" onclick="openAdminTicket('${t._id}')" data-id="${t._id}"
                 style="padding:0.875rem 1.125rem;border-bottom:1px solid #dee2e6;cursor:pointer;transition:background 0.15s;border-left:3px solid ${isNew ? '#dc3545' : 'transparent'};"
-                onmouseover="this.style.background='#f0f2f5'" onmouseout="if(!this.classList.contains('selected'))this.style.background='transparent'">
+                onmouseover="this.style.background='rgba(255,255,255,0.04)'" onmouseout="if(!this.classList.contains('selected'))this.style.background='transparent'">
                 <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.5rem;margin-bottom:3px;">
                     <span style="font-weight:${isNew ? '700' : '500'};color:${isNew ? '#1a1a2e' : '#495057'};font-size:0.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px;">${t.subject}</span>
                     <span style="color:#6c757d;font-size:0.7rem;flex-shrink:0;">${time}</span>
@@ -996,8 +996,8 @@ function renderAdminTicketDetail(ticket) {
     document.getElementById('tdSubject').textContent = ticket.subject;
     document.getElementById('tdMeta').textContent = `${ticket.name} <${ticket.email}>${ticket.company ? ' · ' + ticket.company : ''} · ${new Date(ticket.createdAt).toLocaleString()}`;
 
-    const statusColors = { new: '#dc3545', seen: '#ffc107', replied: '#11998e', closed: '#6c757d' };
-    const statusBgs   = { new: '#fff5f5',  seen: '#fffbea',  replied: '#f0fdf4', closed: '#f8f9fa' };
+    const statusColors = { new: '#ef4444', seen: '#f59e0b', replied: '#10b981', closed: '#64748b' };
+    const statusBgs   = { new: 'rgba(239,68,68,0.15)', seen: 'rgba(245,158,11,0.15)', replied: 'rgba(16,185,129,0.15)', closed: 'rgba(100,116,139,0.15)' };
     const badge = document.getElementById('tdStatusBadge');
     badge.textContent = ticket.status.toUpperCase();
     badge.style.cssText = `padding:3px 12px;border-radius:20px;font-size:0.7rem;font-weight:700;border:1px solid ${statusColors[ticket.status]}55;background:${statusBgs[ticket.status]};color:${statusColors[ticket.status]};`;

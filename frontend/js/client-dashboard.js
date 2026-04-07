@@ -2240,7 +2240,7 @@ var clientSupportState = {
 
 // ── Auth header helper ────────────────────────────────────────────────────────
 function clientSupportHeaders() {
-    var token = localStorage.getItem('clientToken') || localStorage.getItem('token');
+    var token = localStorage.getItem('client_token');
     return {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + token

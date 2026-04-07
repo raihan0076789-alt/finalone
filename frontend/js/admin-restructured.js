@@ -697,13 +697,13 @@ window.loadClientSupportTickets = async function() {
             return;
         }
 
-        const statusColor = { open:'#dc3545', replied:'#11998e', closed:'#6c757d' };
-        const statusBg    = { open:'#fff5f5', replied:'#f0fdf4', closed:'#f8f9fa' };
+        const statusColor = { open:'#ef4444', replied:'#10b981', closed:'#64748b' };
+        const statusBg    = { open:'rgba(239,68,68,0.15)', replied:'rgba(16,185,129,0.15)', closed:'rgba(100,116,139,0.15)' };
 
         listEl.innerHTML = data.tickets.map(t => {
             const isNew  = t.status === 'open' && !t.adminRead;
             const color  = statusColor[t.status] || '#6c757d';
-            const bg     = statusBg[t.status]    || '#f8f9fa';
+            const bg     = statusBg[t.status]    || 'rgba(100,116,139,0.15)';
             const time   = new Date(t.createdAt).toLocaleDateString('en-US', { month:'short', day:'numeric' });
             return `<div class="ticket-item" onclick="openClientSupportTicket('${t._id}')" data-id="${t._id}"
                 style="padding:0.875rem 1.125rem;border-bottom:1px solid #dee2e6;cursor:pointer;transition:background 0.15s;border-left:3px solid ${isNew ? '#0891b2' : 'transparent'};"
@@ -728,7 +728,7 @@ window.openClientSupportTicket = async function(id) {
     RS.currentClientTicketId = id;
     document.querySelectorAll('#clientTicketList .ticket-item').forEach(el => { el.style.background = 'transparent'; el.classList.remove('selected'); });
     const sel = document.querySelector(`#clientTicketList .ticket-item[data-id="${id}"]`);
-    if (sel) { sel.style.background = '#eef0fb'; sel.classList.add('selected'); }
+    if (sel) { sel.style.background = 'rgba(0,212,200,0.06)'; sel.classList.add('selected'); }
 
     try {
         const res  = await fetch(`${CLIENT_TICKET_API}/admin/${id}`, { headers: clientTicketAuthHeaders() });
@@ -747,8 +747,8 @@ function renderClientTicketDetail(ticket) {
     document.getElementById('clientTdSubject').textContent = ticket.subject;
     document.getElementById('clientTdMeta').textContent    = `${ticket.clientName} <${ticket.clientEmail}> · ${new Date(ticket.createdAt).toLocaleString()}`;
 
-    const statusColor = { open:'#dc3545', replied:'#11998e', closed:'#6c757d' };
-    const statusBg    = { open:'#fff5f5', replied:'#f0fdf4', closed:'#f8f9fa' };
+    const statusColor = { open:'#ef4444', replied:'#10b981', closed:'#64748b' };
+    const statusBg    = { open:'rgba(239,68,68,0.15)', replied:'rgba(16,185,129,0.15)', closed:'rgba(100,116,139,0.15)' };
     const badge = document.getElementById('clientTdStatusBadge');
     badge.textContent = ticket.status.toUpperCase();
     badge.style.cssText = `padding:3px 12px;border-radius:20px;font-size:0.7rem;font-weight:700;border:1px solid ${statusColor[ticket.status]}55;background:${statusBg[ticket.status]};color:${statusColor[ticket.status]};`;

@@ -70,8 +70,9 @@ router.post('/support/:id/reply',  protect, authorize('client'), replyToTicket);
 // ── Delete account ────────────────────────────────────────────────────────────
 router.delete('/account', protect, authorize('client'), deleteAccount);
 
-module.exports = router;
 // ── Admin routes for Client Support ──────────────────────────────────────────
+// IMPORTANT: These must be BEFORE module.exports and BEFORE the :id wildcard
+// routes to be registered correctly.
 const { adminProtect } = require('../middleware/adminAuth');
 const {
     adminGetAllTickets,
@@ -86,3 +87,5 @@ router.get('/support/admin/unread-count',  adminProtect, adminUnreadCount);
 router.get('/support/admin/:id',           adminProtect, adminGetTicket);
 router.post('/support/admin/:id/reply',    adminProtect, adminReplyTicket);
 router.patch('/support/admin/:id/status',  adminProtect, adminUpdateStatus);
+
+module.exports = router;
