@@ -81,10 +81,9 @@
             Budget Tracker
             <span class="nav-badge soon">Soon</span>
         </a>
-        <a href="#" class="nav-item" onclick="comingSoon(event,'Documents')">
+        <a href="#" class="nav-item" id="nav-documents" onclick="showView('documents', event)">
             <span class="nav-icon"><i class="fas fa-file-alt"></i></span>
             Documents
-            <span class="nav-badge soon">Soon</span>
         </a>
 
         <div class="nav-section-label">Account</div>
@@ -1212,6 +1211,120 @@
         </div><!-- /client-chat-main -->
     </div><!-- /client-chat-shell -->
 </div><!-- /view-support -->
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     VIEW: DOCUMENTS
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="docs-main" id="view-documents" style="display:none">
+
+    <!-- Hero Strip -->
+    <div class="docs-hero">
+        <div class="docs-hero-left">
+            <div class="docs-hero-title"><i class="fas fa-file-alt" style="color:var(--violet)"></i> Documents</div>
+            <div class="docs-hero-sub">All your project files and downloaded designs in one place</div>
+        </div>
+        <button class="docs-upload-btn" onclick="docsOpenUpload()">
+            <i class="fas fa-cloud-upload-alt"></i> Upload File
+        </button>
+    </div>
+
+    <!-- Toolbar: Type Tabs + Project Filter + Search -->
+    <div class="docs-toolbar">
+        <div class="docs-type-tabs" id="docsTypeTabs">
+            <button class="docs-tab active" data-type="all"    onclick="docsSetTab(this,'all')">All</button>
+            <button class="docs-tab"        data-type="image"  onclick="docsSetTab(this,'image')"><i class="fas fa-image"></i> Images</button>
+            <button class="docs-tab"        data-type="pdf"    onclick="docsSetTab(this,'pdf')"><i class="fas fa-file-pdf"></i> PDFs</button>
+            <button class="docs-tab"        data-type="cad"    onclick="docsSetTab(this,'cad')"><i class="fas fa-drafting-compass"></i> CAD / 3D</button>
+            <button class="docs-tab"        data-type="other"  onclick="docsSetTab(this,'other')"><i class="fas fa-file"></i> Other</button>
+            <button class="docs-tab"        data-type="downloaded" onclick="docsSetTab(this,'downloaded')"><i class="fas fa-download"></i> Downloads</button>
+        </div>
+        <div class="docs-toolbar-right">
+            <div class="docs-search-wrap">
+                <i class="fas fa-search docs-search-icon"></i>
+                <input type="text" id="docsSearchInput" class="docs-search" placeholder="Search files…" oninput="docsApplyFilters()">
+            </div>
+            <select class="docs-project-filter" id="docsProjectFilter" onchange="docsApplyFilters()">
+                <option value="all">All Projects</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Stats bar -->
+    <div class="docs-stats" id="docsStats">
+        <div class="docs-stat"><span id="docsTotalCount">0</span> files</div>
+        <div class="docs-stat-sep"></div>
+        <div class="docs-stat"><span id="docsTotalSize">0 KB</span> total</div>
+        <div class="docs-stat-sep"></div>
+        <div class="docs-stat docs-stat-source"><i class="fas fa-paperclip" style="color:var(--cyan);font-size:0.7rem"></i> <span id="docsProjectCount">0</span> project attachments</div>
+        <div class="docs-stat-sep"></div>
+        <div class="docs-stat docs-stat-source"><i class="fas fa-download" style="color:var(--violet);font-size:0.7rem"></i> <span id="docsDownloadCount">0</span> downloads</div>
+    </div>
+
+    <!-- File Grid -->
+    <div class="docs-body">
+        <div class="docs-file-grid" id="docsFileGrid">
+            <div class="docs-loading"><i class="fas fa-spinner fa-spin"></i><span>Loading documents…</span></div>
+        </div>
+    </div>
+
+</div><!-- /view-documents -->
+
+<!-- ── Documents: Upload Modal ─────────────────────────────────────────────── -->
+<div class="docs-modal-overlay" id="docsUploadOverlay" style="display:none" onclick="docsCloseUpload(event)">
+    <div class="docs-modal docs-upload-modal">
+        <div class="docs-modal-header">
+            <div class="docs-modal-title"><i class="fas fa-cloud-upload-alt" style="color:var(--cyan)"></i> Upload File to Project</div>
+            <button class="docs-modal-close" onclick="docsCloseUpload()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="docs-modal-body">
+            <label class="docs-field-label">Select Project <span style="color:var(--rose)">*</span></label>
+            <select class="docs-modal-select" id="docsUploadProject">
+                <option value="">— choose a project —</option>
+            </select>
+
+            <label class="docs-field-label" style="margin-top:1.1rem">Files</label>
+            <div class="docs-drop-zone" id="docsDropZone"
+                 ondragover="event.preventDefault();this.classList.add('dragover')"
+                 ondragleave="this.classList.remove('dragover')"
+                 ondrop="docsHandleDrop(event)">
+                <i class="fas fa-cloud-upload-alt docs-drop-icon"></i>
+                <div class="docs-drop-text">Drag & drop files here</div>
+                <div class="docs-drop-sub">or</div>
+                <label class="docs-browse-btn">
+                    Browse Files
+                    <input type="file" id="docsFileInput" multiple style="display:none" onchange="docsHandleFileSelect(event)">
+                </label>
+                <div class="docs-drop-hint">Max 10 files · 20 MB each</div>
+            </div>
+
+            <div class="docs-upload-preview" id="docsUploadPreview"></div>
+        </div>
+        <div class="docs-modal-footer">
+            <button class="docs-btn-cancel" onclick="docsCloseUpload()">Cancel</button>
+            <button class="docs-btn-upload" id="docsUploadSubmitBtn" onclick="docsSubmitUpload()">
+                <i class="fas fa-upload"></i> Upload
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ── Documents: Preview Modal ───────────────────────────────────────────── -->
+<div class="docs-modal-overlay" id="docsPreviewOverlay" style="display:none" onclick="docsClosePreview(event)">
+    <div class="docs-modal docs-preview-modal">
+        <div class="docs-modal-header">
+            <div class="docs-modal-title docs-preview-title" id="docsPreviewTitle">Preview</div>
+            <div style="display:flex;align-items:center;gap:0.5rem">
+                <a class="docs-preview-download-btn" id="docsPreviewDownloadBtn" href="#" download target="_blank">
+                    <i class="fas fa-download"></i> Download
+                </a>
+                <button class="docs-modal-close" onclick="docsClosePreview()"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        <div class="docs-preview-body" id="docsPreviewBody">
+        </div>
+        <div class="docs-preview-meta" id="docsPreviewMeta"></div>
+    </div>
+</div>
 
 <!-- Scripts -->
 <script src="js/presence.js"></script>

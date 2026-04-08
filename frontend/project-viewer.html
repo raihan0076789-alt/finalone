@@ -1424,9 +1424,24 @@ async function doDownload(fmt){
   if(fmt==='png'){
     if(currentMode==='2d'){
       const canvas=document.getElementById('viewCanvas');
-      const a=document.createElement('a');a.href=canvas.toDataURL('image/png');
+      const dataUrl=canvas.toDataURL('image/png');
+      const a=document.createElement('a');a.href=dataUrl;
       a.download=`${safeName}_floorplan.png`;a.click();
-    } else {alert('Switch to 2D Plan view to download PNG.');}
+      // Mirror to Documents hub
+      try{
+        const DL_KEY='sa_downloaded_docs';
+        const projectName=(projectData&&projectData.name)||'Delivered Project';
+        const filename=`${safeName}_floorplan.png`;
+        let arr=[];try{arr=JSON.parse(localStorage.getItem(DL_KEY)||'[]');}catch(e){}
+        const exists=arr.some(function(f){return f.name===filename&&f.projectName===projectName;});
+        if(!exists){
+          arr.unshift({id:'dl_'+Date.now(),name:filename,url:dataUrl,mime:'image/png',projectName:projectName,size:0,source:'downloaded',downloadedAt:new Date().toISOString()});
+          if(arr.length>200)arr=arr.slice(0,200);
+          localStorage.setItem(DL_KEY,JSON.stringify(arr));
+        }
+        if(window.opener&&window.opener.docsAddDownloaded)window.opener.docsAddDownloaded(filename,dataUrl,'image/png',projectName,0);
+      }catch(e){}
+    } else {alert('Switch to 2D Plan view to download PNG.')}
     return;
   }
   if(fmt==='svg'){
@@ -1458,6 +1473,40 @@ function saveBlob(blob,filename){
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();
   setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1000);
+
+  // ── Mirror download to Documents hub ──────────────────────────────────────
+  // Convert blob to a persistent data URL so the Documents section can preview/download it
+  const reader=new FileReader();
+  reader.onload=function(){
+    const dataUrl=reader.result;
+    const projectName=(projectData&&projectData.name)||'Delivered Project';
+    const entry={
+      id:'dl_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),
+      name:filename,
+      url:dataUrl,
+      mime:blob.type||'',
+      projectName:projectName,
+      size:blob.size||0,
+      source:'downloaded',
+      downloadedAt:new Date().toISOString()
+    };
+    try{
+      const DL_KEY='sa_downloaded_docs';
+      let arr=[];
+      try{arr=JSON.parse(localStorage.getItem(DL_KEY)||'[]');}catch(e){}
+      const exists=arr.some(function(f){return f.name===entry.name&&f.projectName===entry.projectName;});
+      if(!exists){
+        arr.unshift(entry);
+        if(arr.length>200)arr=arr.slice(0,200);
+        localStorage.setItem(DL_KEY,JSON.stringify(arr));
+      }
+      // If dashboard is open in the opener window, notify it
+      if(window.opener&&window.opener.docsAddDownloaded){
+        window.opener.docsAddDownloaded(filename,dataUrl,blob.type||'',projectName,blob.size||0);
+      }
+    }catch(e){console.warn('Could not save to Documents hub:',e);}
+  };
+  reader.readAsDataURL(blob);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

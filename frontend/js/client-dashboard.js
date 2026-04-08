@@ -40,6 +40,11 @@ const VIEWS = {
         title: 'Support', sub: 'Get help from the SmartArch team',
         showDashBtns: false, showPlan: false,
         displayType: 'flex'
+    },
+    documents: {
+        el: 'view-documents', navId: 'nav-documents',
+        title: 'Documents', sub: 'All your project files and downloaded designs',
+        showDashBtns: false, showPlan: false
     }
 };
 
@@ -89,6 +94,9 @@ function showView(name, event) {
     }
     if (name === 'support') {
         clientSupportInit();
+    }
+    if (name === 'documents') {
+        loadDocuments();
     }
 }
 
@@ -3036,3 +3044,430 @@ window.clientSupportOpenThread    = clientSupportOpenThread;
 window.clientSupportSendReply     = clientSupportSendReply;
 window.clientSupportReplyKeydown  = clientSupportReplyKeydown;
 window.clientSupportShowList      = clientSupportShowList;
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   DOCUMENTS MODULE
+   Centralised file hub: project attachments + downloaded project-viewer files.
+   ─────────────────────────────────────────────────────────────────────────────
+   Storage keys:
+     'sa_downloaded_docs'  → JSON array of { name, url, type, projectName, size, downloadedAt }
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+var DOCS_STATE = {
+    allFiles:    [],   // merged array of { id, name, originalName, url, mime, size, projectId, projectName, source, createdAt }
+    filtered:    [],
+    activeTab:   'all',
+    uploadFiles: [],
+    projects:    []    // cache of client projects for filter dropdown
+};
+
+var DOCS_DL_KEY = 'sa_downloaded_docs';
+
+/* ── Helpers ─────────────────────────────────────────────────────────────── */
+function docsFormatSize(bytes) {
+    if (!bytes || bytes === 0) return '—';
+    if (bytes < 1024)       return bytes + ' B';
+    if (bytes < 1048576)    return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1048576).toFixed(1) + ' MB';
+}
+
+function docsGetTypeCategory(mime, name) {
+    if (!mime && name) {
+        var ext = (name.split('.').pop() || '').toLowerCase();
+        if (['png','jpg','jpeg','gif','webp','svg','bmp'].includes(ext)) return 'image';
+        if (ext === 'pdf') return 'pdf';
+        if (['obj','stl','glb','gltf','fbx','dxf','dwg','svg'].includes(ext)) return 'cad';
+        return 'other';
+    }
+    if (!mime) return 'other';
+    if (mime.startsWith('image/')) return 'image';
+    if (mime === 'application/pdf') return 'pdf';
+    if (['model/obj','model/stl','model/gltf-binary','model/gltf+json',
+         'application/octet-stream','text/plain'].includes(mime)) {
+        var n = (name || '').toLowerCase();
+        if (n.endsWith('.obj')||n.endsWith('.stl')||n.endsWith('.glb')||
+            n.endsWith('.gltf')||n.endsWith('.fbx')) return 'cad';
+    }
+    return 'other';
+}
+
+function docsTypeIcon(category, mime, name) {
+    var ext = (name || '').split('.').pop().toLowerCase();
+    if (category === 'image') return { icon: 'fa-file-image',    color: '#00d4c8' };
+    if (category === 'pdf')   return { icon: 'fa-file-pdf',      color: '#ef4444' };
+    if (category === 'cad') {
+        if (ext === 'svg') return { icon: 'fa-bezier-curve',     color: '#f59e0b' };
+        return                   { icon: 'fa-drafting-compass',   color: '#8b5cf6' };
+    }
+    if (ext === 'json')       return { icon: 'fa-file-code',     color: '#10b981' };
+    if (['zip','rar','7z'].includes(ext)) return { icon: 'fa-file-archive', color: '#f97316' };
+    return                             { icon: 'fa-file-alt',    color: '#94a3b8' };
+}
+
+function docsRelTime(iso) {
+    if (!iso) return '';
+    var d = new Date(iso), now = Date.now(), diff = now - d.getTime();
+    if (diff < 60000)   return 'just now';
+    if (diff < 3600000) return Math.floor(diff/60000) + 'm ago';
+    if (diff < 86400000)return Math.floor(diff/3600000) + 'h ago';
+    if (diff < 604800000)return Math.floor(diff/86400000) + 'd ago';
+    return d.toLocaleDateString(undefined, { day:'numeric', month:'short', year:'numeric' });
+}
+
+/* ── Downloaded docs localStorage store ─────────────────────────────────── */
+function docsGetDownloaded() {
+    try { return JSON.parse(localStorage.getItem(DOCS_DL_KEY) || '[]'); }
+    catch(e) { return []; }
+}
+
+function docsSaveDownloaded(arr) {
+    try { localStorage.setItem(DOCS_DL_KEY, JSON.stringify(arr)); } catch(e) {}
+}
+
+/* Public: called by project-viewer (via localStorage message) and internally */
+function docsAddDownloaded(name, url, mimeOrExt, projectName, sizeBytes) {
+    var arr = docsGetDownloaded();
+    // Avoid exact duplicates by name+url
+    var exists = arr.some(function(f){ return f.name === name && f.url === url; });
+    if (!exists) {
+        arr.unshift({
+            id:           'dl_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+            name:         name,
+            url:          url,
+            mime:         mimeOrExt || '',
+            projectName:  projectName || 'Delivered Project',
+            size:         sizeBytes || 0,
+            source:       'downloaded',
+            downloadedAt: new Date().toISOString()
+        });
+        // Keep max 200 entries
+        if (arr.length > 200) arr = arr.slice(0, 200);
+        docsSaveDownloaded(arr);
+    }
+    // If documents view is currently active, refresh
+    if (typeof currentView !== 'undefined' && currentView === 'documents') {
+        loadDocuments();
+    }
+}
+window.docsAddDownloaded = docsAddDownloaded;
+
+/* Listen for cross-tab messages from project-viewer */
+window.addEventListener('storage', function(e) {
+    if (e.key === DOCS_DL_KEY && currentView === 'documents') {
+        // Another tab (project-viewer) updated the key – refresh our view
+        _docsBuildAllFiles(DOCS_STATE.projects);
+        docsApplyFilters();
+    }
+});
+
+/* ── Load / Build ──────────────────────────────────────────────────────────── */
+async function loadDocuments() {
+    var grid = document.getElementById('docsFileGrid');
+    if (grid) grid.innerHTML = '<div class="docs-loading"><i class="fas fa-spinner fa-spin"></i><span>Loading documents…</span></div>';
+
+    try {
+        var r = await fetch(CLIENT_API + '/client/projects', { headers: authHeaders() });
+        var d = await r.json();
+        var projects = (d.success && d.data) ? d.data : [];
+        DOCS_STATE.projects = projects;
+
+        _docsPopulateProjectFilters(projects);
+        _docsBuildAllFiles(projects);
+        docsApplyFilters();
+    } catch(e) {
+        if (grid) grid.innerHTML = '<div class="docs-empty"><i class="fas fa-exclamation-circle" style="color:var(--rose);font-size:2rem;margin-bottom:0.75rem;display:block"></i><div>Could not load documents.</div></div>';
+    }
+}
+
+function _docsPopulateProjectFilters(projects) {
+    var sel1 = document.getElementById('docsProjectFilter');
+    var sel2 = document.getElementById('docsUploadProject');
+    if (sel1) {
+        sel1.innerHTML = '<option value="all">All Projects</option>' +
+            projects.map(function(p){ return '<option value="'+p._id+'">'+_docsEsc(p.title)+'</option>'; }).join('');
+    }
+    if (sel2) {
+        sel2.innerHTML = '<option value="">— choose a project —</option>' +
+            projects.map(function(p){ return '<option value="'+p._id+'">'+_docsEsc(p.title)+'</option>'; }).join('');
+    }
+}
+
+function _docsBuildAllFiles(projects) {
+    var all = [];
+
+    // 1. Project attachments
+    projects.forEach(function(proj) {
+        (proj.attachments || []).forEach(function(att) {
+            var cat = docsGetTypeCategory(att.mimetype, att.originalName);
+            all.push({
+                id:          proj._id + '_' + att.originalName,
+                name:        att.originalName,
+                url:         'http://localhost:5000' + att.url,
+                mime:        att.mimetype || '',
+                size:        att.size || 0,
+                projectId:   proj._id,
+                projectName: proj.title,
+                source:      'project',
+                category:    cat,
+                createdAt:   proj.updatedAt || proj.createdAt
+            });
+        });
+    });
+
+    // 2. Downloaded files from project-viewer (localStorage)
+    var downloads = docsGetDownloaded();
+    downloads.forEach(function(dl) {
+        var cat = docsGetTypeCategory(dl.mime, dl.name);
+        all.push({
+            id:          dl.id,
+            name:        dl.name,
+            url:         dl.url,
+            mime:        dl.mime || '',
+            size:        dl.size || 0,
+            projectId:   'downloaded',
+            projectName: dl.projectName || 'Delivered Project',
+            source:      'downloaded',
+            category:    cat,
+            createdAt:   dl.downloadedAt
+        });
+    });
+
+    DOCS_STATE.allFiles = all;
+
+    // Update stats
+    var dlCount  = downloads.length;
+    var projCount = all.length - dlCount;
+    var totalSize = all.reduce(function(s,f){ return s + (f.size||0); }, 0);
+    var el;
+    el = document.getElementById('docsTotalCount');   if(el) el.textContent = all.length;
+    el = document.getElementById('docsTotalSize');    if(el) el.textContent = docsFormatSize(totalSize);
+    el = document.getElementById('docsProjectCount'); if(el) el.textContent = projCount;
+    el = document.getElementById('docsDownloadCount');if(el) el.textContent = dlCount;
+}
+
+/* ── Filter / Render ─────────────────────────────────────────────────────── */
+function docsSetTab(btn, type) {
+    document.querySelectorAll('.docs-tab').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    DOCS_STATE.activeTab = type;
+    docsApplyFilters();
+}
+
+function docsApplyFilters() {
+    var tab     = DOCS_STATE.activeTab;
+    var project = (document.getElementById('docsProjectFilter') || {}).value || 'all';
+    var query   = ((document.getElementById('docsSearchInput') || {}).value || '').toLowerCase().trim();
+
+    var filtered = DOCS_STATE.allFiles.filter(function(f) {
+        // Tab filter
+        if (tab === 'downloaded' && f.source !== 'downloaded') return false;
+        if (tab !== 'all' && tab !== 'downloaded' && f.category !== tab) return false;
+        // Project filter
+        if (project !== 'all' && f.projectId !== project) return false;
+        // Search
+        if (query && !f.name.toLowerCase().includes(query) &&
+                     !f.projectName.toLowerCase().includes(query)) return false;
+        return true;
+    });
+
+    DOCS_STATE.filtered = filtered;
+    docsRenderGrid(filtered);
+}
+
+function docsRenderGrid(files) {
+    var grid = document.getElementById('docsFileGrid');
+    if (!grid) return;
+
+    if (!files.length) {
+        grid.innerHTML =
+            '<div class="docs-empty">' +
+                '<i class="fas fa-folder-open" style="font-size:2.5rem;color:var(--slate-2);display:block;margin-bottom:0.75rem"></i>' +
+                '<div style="font-weight:600;color:var(--slate);margin-bottom:0.35rem">No files found</div>' +
+                '<div style="font-size:0.82rem;color:var(--slate-2)">Upload files to a project or download designs from the Project Viewer.</div>' +
+            '</div>';
+        return;
+    }
+
+    grid.innerHTML = files.map(function(f) {
+        var ti       = docsTypeIcon(f.category, f.mime, f.name);
+        var srcBadge = f.source === 'downloaded'
+            ? '<span class="docs-src-badge docs-src-dl"><i class="fas fa-download"></i> Download</span>'
+            : '<span class="docs-src-badge docs-src-proj"><i class="fas fa-paperclip"></i> Project</span>';
+        var preview  = _docsCanPreview(f) ? '<button class="docs-card-btn" onclick="event.stopPropagation();docsPreview(\''+_docsEsc(f.id)+'\')"><i class="fas fa-eye"></i></button>' : '';
+
+        return '<div class="docs-file-card" onclick="docsPreview(\''+_docsEsc(f.id)+'\')">' +
+                '<div class="docs-card-icon-wrap" style="--ic:'+ti.color+'">' +
+                    '<i class="fas '+ti.icon+' docs-card-icon"></i>' +
+                '</div>' +
+                '<div class="docs-card-info">' +
+                    '<div class="docs-card-name" title="'+_docsEsc(f.name)+'">'+_docsEsc(f.name)+'</div>' +
+                    '<div class="docs-card-meta">' +
+                        '<span class="docs-card-project"><i class="fas fa-folder" style="font-size:0.6rem"></i> '+_docsEsc(f.projectName)+'</span>' +
+                        '<span class="docs-card-size">'+docsFormatSize(f.size)+'</span>' +
+                        '<span class="docs-card-time">'+docsRelTime(f.createdAt)+'</span>' +
+                    '</div>' +
+                    '<div class="docs-card-badges">'+srcBadge+'</div>' +
+                '</div>' +
+                '<div class="docs-card-actions">' +
+                    preview +
+                    '<a class="docs-card-btn" href="'+f.url+'" download="'+_docsEsc(f.name)+'" target="_blank" onclick="event.stopPropagation()" title="Download"><i class="fas fa-download"></i></a>' +
+                '</div>' +
+            '</div>';
+    }).join('');
+}
+
+/* ── Preview ───────────────────────────────────────────────────────────────── */
+function _docsCanPreview(f) {
+    return f.category === 'image' || f.category === 'pdf';
+}
+
+function docsPreview(fileId) {
+    var f = DOCS_STATE.allFiles.find(function(x){ return x.id === fileId; });
+    if (!f) return;
+
+    var overlay = document.getElementById('docsPreviewOverlay');
+    var title   = document.getElementById('docsPreviewTitle');
+    var body    = document.getElementById('docsPreviewBody');
+    var meta    = document.getElementById('docsPreviewMeta');
+    var dlBtn   = document.getElementById('docsPreviewDownloadBtn');
+
+    title.textContent = f.name;
+    dlBtn.href        = f.url;
+    dlBtn.download    = f.name;
+
+    // Build preview content
+    if (f.category === 'image') {
+        body.innerHTML = '<img src="'+f.url+'" alt="'+_docsEsc(f.name)+'" class="docs-preview-img" onerror="this.style.display=\'none\';document.getElementById(\'docsPreviewBody\').innerHTML=\'<div class=docs-preview-unavail><i class=\\\"fas fa-image\\\"></i><div>Image could not be loaded.</div><div style=\\\"font-size:0.8rem;color:#64748b;margin-top:0.35rem\\\">The file may require the backend server.</div></div>\'">';
+    } else if (f.category === 'pdf') {
+        body.innerHTML = '<iframe src="'+f.url+'" class="docs-preview-iframe" title="'+_docsEsc(f.name)+'"></iframe>';
+    } else {
+        // Non-previewable — show info card
+        var ti = docsTypeIcon(f.category, f.mime, f.name);
+        body.innerHTML =
+            '<div class="docs-preview-unavail">' +
+                '<i class="fas '+ti.icon+'" style="font-size:3rem;color:'+ti.color+'"></i>' +
+                '<div style="font-size:1rem;font-weight:600;margin-top:0.75rem">'+_docsEsc(f.name)+'</div>' +
+                '<div style="font-size:0.82rem;color:#64748b;margin-top:0.35rem">Preview not available for this file type.</div>' +
+                '<a href="'+f.url+'" download="'+_docsEsc(f.name)+'" target="_blank" class="docs-preview-download-cta"><i class="fas fa-download"></i> Download to open</a>' +
+            '</div>';
+    }
+
+    meta.innerHTML =
+        '<span><i class="fas fa-folder" style="color:var(--cyan);font-size:0.7rem"></i> '+_docsEsc(f.projectName)+'</span>' +
+        '<span>'+docsFormatSize(f.size)+'</span>' +
+        '<span>'+docsRelTime(f.createdAt)+'</span>' +
+        (f.source === 'downloaded' ? '<span style="color:var(--violet)"><i class="fas fa-download" style="font-size:0.7rem"></i> Downloaded file</span>' : '<span style="color:var(--cyan)"><i class="fas fa-paperclip" style="font-size:0.7rem"></i> Project attachment</span>');
+
+    overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function docsClosePreview(e) {
+    if (e && e.target !== document.getElementById('docsPreviewOverlay')) return;
+    document.getElementById('docsPreviewOverlay').style.display = 'none';
+    document.getElementById('docsPreviewBody').innerHTML = '';
+    document.body.style.overflow = '';
+}
+
+/* ── Upload ────────────────────────────────────────────────────────────────── */
+function docsOpenUpload() {
+    _docsPopulateProjectFilters(DOCS_STATE.projects);
+    DOCS_STATE.uploadFiles = [];
+    _docsRenderUploadPreviews();
+    document.getElementById('docsFileInput').value = '';
+    document.getElementById('docsUploadProject').value = '';
+    document.getElementById('docsUploadOverlay').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function docsCloseUpload(e) {
+    if (e && e.target !== document.getElementById('docsUploadOverlay')) return;
+    document.getElementById('docsUploadOverlay').style.display = 'none';
+    document.body.style.overflow = '';
+    DOCS_STATE.uploadFiles = [];
+}
+
+function docsHandleFileSelect(e) {
+    Array.from(e.target.files).forEach(function(f){ _docsAddUploadFile(f); });
+    _docsRenderUploadPreviews();
+}
+
+function docsHandleDrop(e) {
+    e.preventDefault();
+    document.getElementById('docsDropZone').classList.remove('dragover');
+    Array.from(e.dataTransfer.files).forEach(function(f){ _docsAddUploadFile(f); });
+    _docsRenderUploadPreviews();
+}
+
+function _docsAddUploadFile(file) {
+    if (DOCS_STATE.uploadFiles.length >= 10) { showToast('Maximum 10 files allowed.', 'error'); return; }
+    DOCS_STATE.uploadFiles.push(file);
+}
+
+function _docsRenderUploadPreviews() {
+    var wrap = document.getElementById('docsUploadPreview');
+    if (!wrap) return;
+    if (!DOCS_STATE.uploadFiles.length) { wrap.innerHTML = ''; return; }
+    wrap.innerHTML = DOCS_STATE.uploadFiles.map(function(f, i) {
+        var ti = docsTypeIcon(docsGetTypeCategory(f.type, f.name), f.type, f.name);
+        return '<div class="docs-upload-file-item">' +
+            '<i class="fas '+ti.icon+'" style="color:'+ti.color+';font-size:1rem;flex-shrink:0"></i>' +
+            '<div class="docs-upload-file-name">'+_docsEsc(f.name)+'</div>' +
+            '<div class="docs-upload-file-size">'+docsFormatSize(f.size)+'</div>' +
+            '<button class="docs-upload-file-remove" onclick="docsRemoveUploadFile('+i+')"><i class="fas fa-times"></i></button>' +
+        '</div>';
+    }).join('');
+}
+
+function docsRemoveUploadFile(idx) {
+    DOCS_STATE.uploadFiles.splice(idx, 1);
+    _docsRenderUploadPreviews();
+}
+
+async function docsSubmitUpload() {
+    var projectId = document.getElementById('docsUploadProject').value;
+    if (!projectId)                      { showToast('Please select a project.', 'error'); return; }
+    if (!DOCS_STATE.uploadFiles.length)  { showToast('Please select at least one file.', 'error'); return; }
+
+    var btn = document.getElementById('docsUploadSubmitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading…';
+
+    try {
+        var fd = new FormData();
+        DOCS_STATE.uploadFiles.forEach(function(f){ fd.append('attachments', f); });
+        // Keep other fields minimal (PUT update)
+        var r = await fetch(CLIENT_API + '/client/projects/' + projectId, {
+            method: 'PUT',
+            headers: { 'Authorization': 'Bearer ' + getToken() },
+            body: fd
+        });
+        var d = await r.json();
+        if (!d.success) throw new Error(d.message || 'Upload failed.');
+        showToast('Files uploaded successfully!', 'success');
+        docsCloseUpload();
+        await loadDocuments();
+    } catch(e) {
+        showToast(e.message || 'Upload failed.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-upload"></i> Upload';
+    }
+}
+
+function _docsEsc(str) {
+    return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// Expose globals needed by HTML onclick attributes
+window.docsSetTab         = docsSetTab;
+window.docsApplyFilters   = docsApplyFilters;
+window.docsOpenUpload     = docsOpenUpload;
+window.docsCloseUpload    = docsCloseUpload;
+window.docsHandleFileSelect = docsHandleFileSelect;
+window.docsHandleDrop     = docsHandleDrop;
+window.docsRemoveUploadFile = docsRemoveUploadFile;
+window.docsSubmitUpload   = docsSubmitUpload;
+window.docsPreview        = docsPreview;
+window.docsClosePreview   = docsClosePreview;
+window.loadDocuments      = loadDocuments;
