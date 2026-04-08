@@ -125,9 +125,9 @@ body{background:var(--bg);color:var(--white);font-family:'Inter',-apple-system,B
 /* ── CANVAS AREA ── */
 .canvas-wrap{flex:1;position:relative;overflow:hidden;background:var(--bg);}
 #viewCanvas{display:block;width:100%;height:100%;position:absolute;top:0;left:0;}
-#interiorContainer{position:absolute;inset:0;display:none;width:100%;height:100%;}
-#interiorCanvas{width:100%;height:100%;display:block;}
-#threeContainer{position:absolute;inset:0;display:none;}
+#interiorContainer{position:absolute;top:0;left:0;right:0;bottom:0;display:none;width:100%;height:100%;background:#0a0a0f;}
+#interiorCanvas{width:100%;height:100%;display:block;position:absolute;top:0;left:0;}
+#threeContainer{position:absolute;top:0;left:0;right:0;bottom:0;display:none;width:100%;height:100%;}
 
 /* Room info overlay */
 .interior-room-info{position:absolute;top:1rem;right:1rem;background:rgba(9,14,26,0.88);border:1px solid var(--border);border-radius:10px;padding:0.65rem 0.85rem;min-width:140px;z-index:20;display:none;backdrop-filter:blur(10px);}
@@ -413,42 +413,74 @@ body{background:var(--bg);color:var(--white);font-family:'Inter',-apple-system,B
     let lookTarget=new THREE.Vector3(0,1.5,0),lookCurrent=new THREE.Vector3(0,1.5,0);
 
     window.initInteriorView = function(projectData){
-        if(!projectData||typeof THREE==='undefined')return;
+        if(!projectData||typeof THREE==='undefined'){
+            console.error('initInteriorView: missing projectData or THREE');
+            return;
+        }
         currentStyle=projectData.style||'modern';
         const T=STYLE_THEMES[currentStyle]||STYLE_THEMES.modern;
         const container=document.getElementById('interiorContainer');
-        const canvas=document.getElementById('interiorCanvas');
         if(animId)cancelAnimationFrame(animId);
-        if(renderer){renderer.dispose();}
+        if(renderer){try{renderer.dispose();}catch(e){}}
+        // Remove any previously injected canvas (keep the static #interiorCanvas hidden)
+        const oldInjected=container.querySelector('canvas.injected-gl');
+        if(oldInjected)oldInjected.remove();
         groups={furniture:[],roof:[],walls:[],labels:[]};
         layers.furniture=document.getElementById('layerFurniture')?.checked!==false;
         layers.roof=document.getElementById('layerRoof')?.checked===true;
         layers.walls=document.getElementById('layerWalls')?.checked!==false;
         layers.labels=document.getElementById('layerLabels')?.checked!==false;
-        const W=container.clientWidth||800,H=container.clientHeight||600;
+        // Always use the canvasWrap dimensions — it is permanently visible and correctly sized
+        const wrap=document.getElementById('canvasWrap')||container.parentElement;
+        const W=Math.max(wrap?wrap.clientWidth:0, window.innerWidth-270)||800;
+        const H=Math.max(wrap?wrap.clientHeight:0, window.innerHeight-100)||600;
+
+        // ── DEBUG overlay ──────────────────────────────────────────────────────
+        let dbg=document.getElementById('_3dDebug');
+        if(!dbg){dbg=document.createElement('div');dbg.id='_3dDebug';
+            dbg.style.cssText='position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:999;background:rgba(0,0,0,0.8);color:#0ff;font:11px monospace;padding:6px 10px;border-radius:6px;pointer-events:none;white-space:pre;';
+            container.appendChild(dbg);}
+        dbg.textContent=`Canvas: ${W}×${H} | totalWidth:${projectData.totalWidth} totalDepth:${projectData.totalDepth} | floors:${(projectData.floors||[]).length} | style:${currentStyle}`;
+        // ──────────────────────────────────────────────────────────────────────
+
         scene=new THREE.Scene();
         scene.background=new THREE.Color(T.bg);
         scene.fog=new THREE.FogExp2(T.fog,T.fogDensity);
         camera=new THREE.PerspectiveCamera(52,W/H,0.1,300);
-        renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+        // Create a FRESH canvas element — avoids all stale-size issues with reused canvases
+        const canvas=document.createElement('canvas');
+        canvas.className='injected-gl';
+        canvas.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;display:block;';
+        container.appendChild(canvas);
+        renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});
         renderer.setPixelRatio(Math.min(devicePixelRatio,2));
         renderer.setSize(W,H);
         renderer.shadowMap.enabled=true;
         renderer.shadowMap.type=THREE.PCFSoftShadowMap;
         renderer.toneMapping=THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure=T.exposure||1.0;
-        buildScene(projectData);
+        try{
+            buildScene(projectData);
+        }catch(err){
+            console.error('buildScene error:',err);
+            dbg.textContent+=' | BUILD ERROR: '+err.message;
+            dbg.style.color='#f88';
+        }
         setupInteriorMouseControls(canvas);
         updateCameraPosition();
         animate();
         window._interiorScene=scene;
         window._interiorCamera=camera;
         window._interiorRenderer=renderer;
+        window._interiorCanvas=canvas;
         Object.keys(groups).forEach(k=>groups[k].forEach(m=>m.visible=layers[k]));
+        // Log mesh counts for debugging
+        console.log('Interior built:',{W,H,walls:groups.walls.length,furniture:groups.furniture.length,roof:groups.roof.length,labels:groups.labels.length,sceneChildren:scene.children.length});
+        dbg.textContent+=` | meshes w:${groups.walls.length} f:${groups.furniture.length}`;
     };
 
     function buildScene(pd){
-        const HW=pd.totalWidth,HD=pd.totalDepth,ox=-HW/2,oz=-HD/2;
+        const HW=pd.totalWidth||20,HD=pd.totalDepth||15,ox=-HW/2,oz=-HD/2;
         const T=STYLE_THEMES[currentStyle]||STYLE_THEMES.modern;
         const floors=pd.floors||[{rooms:[],height:WALL_H}];
         let totalH=0;floors.forEach(f=>{totalH+=f.height||WALL_H;});
@@ -802,11 +834,19 @@ body{background:var(--bg);color:var(--white);font-family:'Inter',-apple-system,B
 
     function animate(){
         animId=requestAnimationFrame(animate);
+        window._interiorAnimId=animId;
         updateCameraPosition();
         scene.children.forEach((c,i)=>{if(c.isPointLight&&c.userData.baseIntensity!==undefined){c.intensity=c.userData.baseIntensity+Math.sin(Date.now()*0.0008*(1+i*0.2)+i)*0.04;}});
         renderer.render(scene,camera);
-        const cont=document.getElementById('interiorContainer');
-        if(cont&&renderer){const w=cont.clientWidth,h=cont.clientHeight;if(renderer.domElement.width!==w*devicePixelRatio){renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();}}
+        if(!window._fpMode){
+            const wrap=document.getElementById('canvasWrap');
+            if(wrap&&renderer){
+                const w=wrap.clientWidth,h=wrap.clientHeight;
+                if(w>0&&h>0&&(Math.abs(renderer.domElement.width - Math.round(w*devicePixelRatio))>4)){
+                    renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();
+                }
+            }
+        }
     }
 
     // ── Public API (mirrors architect.html / interior.js) ─────────────────────
@@ -1117,25 +1157,38 @@ function switchMode(mode){
     cc.style.display='flex';
     draw2D();
   } else if(INTERIOR_MODES.has(mode)){
-    // KEY FIX: make container visible BEFORE init so clientWidth/Height are non-zero
     intDiv.style.display='block';
     layerS.style.display='flex';
     openTopT.style.display='flex';
     camPA.style.display='block';
-    // Defer init by one frame so layout paints first
+    // Single rAF is enough — we read from canvasWrap which is always visible
     requestAnimationFrame(()=>buildInterior(mode));
   } else if(mode==='wireframe'){
     threeDiv.style.display='block';
     buildThree(true,false);
   } else if(mode==='walkthrough'){
-    threeDiv.style.display='block';
+    intDiv.style.display='block';
+    layerS.style.display='flex';
+    camPA.style.display='block';
     walkHud.style.display='flex';
     walkHint.style.display='block';
-    buildWalkthrough();
+    const lrRoof = document.getElementById('layerRoof');
+    if(lrRoof) lrRoof.checked=false;
+    requestAnimationFrame(()=>{
+      if(!projectData)return;
+      interiorActive=true;
+      window.initInteriorView(projectData);
+      if(window._setInteriorSubView) window._setInteriorSubView('interior');
+      requestAnimationFrame(()=>activateWalkthroughMode());
+    });
   }
 }
 
 function cleanupInterior(){
+  // Stop any FPS walk loop (walkthrough mode reuses the interior container)
+  if(_walkFpsId){cancelAnimationFrame(_walkFpsId);_walkFpsId=null;}
+  window._fpMode=false;
+  if(window._interiorAnimId){cancelAnimationFrame(window._interiorAnimId);window._interiorAnimId=null;}
   if(window._interiorRenderer){try{window._interiorRenderer.dispose();}catch(e){}}
   window._interiorRenderer=null;window._interiorScene=null;window._interiorCamera=null;
   interiorActive=false;
@@ -1146,7 +1199,6 @@ function cleanupInterior(){
 function buildInterior(mode){
   if(!projectData)return;
   interiorActive=true;
-  // Set layer checkboxes before init reads them
   const lrRoof = document.getElementById('layerRoof');
   if(lrRoof){
     if(mode==='interior'||mode==='dollhouse') lrRoof.checked=false;
@@ -1157,11 +1209,27 @@ function buildInterior(mode){
 }
 
 function refreshInterior(){
-  if(INTERIOR_MODES.has(currentMode)){
+  const isWalk = currentMode==='walkthrough';
+  if(INTERIOR_MODES.has(currentMode)||isWalk){
     cleanupInterior();
+    // Remove FPS listeners if switching from walkthrough
+    if(isWalk){
+      _walkFpsListeners.forEach(([el,ev,fn])=>{ try{el.removeEventListener(ev,fn);}catch(e){} });
+      _walkFpsListeners=[];
+    }
     const intDiv=document.getElementById('interiorContainer');
     intDiv.style.display='block';
-    requestAnimationFrame(()=>buildInterior(currentMode));
+    if(isWalk){
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        if(!projectData)return;
+        interiorActive=true;
+        window.initInteriorView(projectData);
+        if(window._setInteriorSubView) window._setInteriorSubView('interior');
+        requestAnimationFrame(()=>activateWalkthroughMode());
+      }));
+    } else {
+      requestAnimationFrame(()=>requestAnimationFrame(()=>buildInterior(currentMode)));
+    }
   }
 }
 
@@ -1335,76 +1403,134 @@ function cleanupThree(){
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  WALKTHROUGH
+//  WALKTHROUGH — uses the full interior engine, injecting an FPS camera on top
 // ─────────────────────────────────────────────────────────────────────────────
-function buildWalkthrough(){
-  cleanupThree();
-  const container=document.getElementById('threeContainer');container.innerHTML='';
-  const W3=container.clientWidth||800,H3=container.clientHeight||600;
-  const p=projectData,{totalWidth:W,totalDepth:D,floors=[]}=p;
-  const scene=new THREE.Scene();scene.background=new THREE.Color(0x0d1220);
-  scene.fog=new THREE.FogExp2(0x0d1220,0.04);
-  walkScene=scene;
-  walkCamera=new THREE.PerspectiveCamera(75,W3/H3,0.1,200);
-  walkPos={x:0,y:1.65,z:0};walkYaw=0;walkPitch=0;
-  walkCamera.position.set(0,1.65,0);
-  const renderer=new THREE.WebGLRenderer({antialias:true});
-  renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(W3,H3);
-  renderer.shadowMap.enabled=true;
-  renderer.domElement.style.cssText='display:block;width:100%;height:100%;position:absolute;top:0;left:0;';
-  container.appendChild(renderer.domElement);walkRenderer=renderer;
-  scene.add(new THREE.AmbientLight(0x8899cc,0.5));
-  const sun=new THREE.DirectionalLight(0xffffff,0.8);sun.position.set(20,40,15);scene.add(sun);
-  // Floor
-  const floorM=new THREE.MeshStandardMaterial({color:0x2a3550,roughness:0.9});
-  scene.add(Object.assign(new THREE.Mesh(new THREE.PlaneGeometry(W+10,D+10),floorM),{rotation:{x:-Math.PI/2}}));
-  // Rooms as boxes
-  let baseY=0;
-  floors.forEach(floor=>{
-    const fH=floor.height||2.7;
-    (floor.rooms||[]).forEach(room=>{
-      const wMat=new THREE.MeshStandardMaterial({color:0x1e2d48,roughness:0.8,side:THREE.BackSide});
-      const wGeo=new THREE.BoxGeometry(room.width-0.1,fH,room.depth-0.1);
-      const wMesh=new THREE.Mesh(wGeo,wMat);
-      wMesh.position.set(-W/2+room.x+room.width/2,baseY+fH/2,-D/2+(room.z||0)+(room.depth||3)/2);
-      scene.add(wMesh);
-      const fMat=new THREE.MeshStandardMaterial({color:0x3a4a6b,roughness:0.85});
-      const fGeo=new THREE.BoxGeometry(room.width-0.15,0.04,room.depth-0.15);
-      const fMesh=new THREE.Mesh(fGeo,fMat);fMesh.position.copy(wMesh.position);fMesh.position.y=baseY+0.02;scene.add(fMesh);
-      const pl=new THREE.PointLight(0xffffff,0.4,Math.max(room.width,room.depth)*2);
-      pl.position.set(wMesh.position.x,baseY+fH-0.5,wMesh.position.z);scene.add(pl);
-    });
-    baseY+=fH;
-  });
-  // Walk controls
-  let isDrag=false,lX=0,lY=0;
-  renderer.domElement.addEventListener('mousedown',e=>{isDrag=true;lX=e.clientX;lY=e.clientY;});
-  document.addEventListener('mouseup',()=>isDrag=false);
-  document.addEventListener('mousemove',e=>{if(!isDrag)return;walkYaw-=(e.clientX-lX)*0.003;walkPitch=Math.max(-1.2,Math.min(1.2,walkPitch-(e.clientY-lY)*0.003));lX=e.clientX;lY=e.clientY;});
-  renderer.domElement.addEventListener('touchstart',e=>{isDrag=true;lX=e.touches[0].clientX;lY=e.touches[0].clientY;});
-  document.addEventListener('touchend',()=>isDrag=false);
-  document.addEventListener('touchmove',e=>{if(!isDrag)return;walkYaw-=(e.touches[0].clientX-lX)*0.003;walkPitch=Math.max(-1.2,Math.min(1.2,walkPitch-(e.touches[0].clientY-lY)*0.003));lX=e.touches[0].clientX;lY=e.touches[0].clientY;});
-  document.addEventListener('keydown',e=>walkKeys[e.key.toLowerCase()]=true);
-  document.addEventListener('keyup',e=>walkKeys[e.key.toLowerCase()]=false);
-  function walkAnimate(){
-    walkAnimId=requestAnimationFrame(walkAnimate);
-    const spd=0.06;
-    const fx=Math.sin(walkYaw),fz=Math.cos(walkYaw);
-    if(walkKeys['w']||walkKeys['arrowup']){walkPos.x+=fx*spd;walkPos.z-=fz*spd;}
-    if(walkKeys['s']||walkKeys['arrowdown']){walkPos.x-=fx*spd;walkPos.z+=fz*spd;}
-    if(walkKeys['a']||walkKeys['arrowleft']){walkPos.x-=fz*spd;walkPos.z-=fx*spd;}
-    if(walkKeys['d']||walkKeys['arrowright']){walkPos.x+=fz*spd;walkPos.z+=fx*spd;}
-    walkCamera.position.set(walkPos.x,walkPos.y,walkPos.z);
-    walkCamera.rotation.order='YXZ';walkCamera.rotation.y=walkYaw;walkCamera.rotation.x=walkPitch;
-    renderer.render(scene,walkCamera);
+
+// State for the FPS walk loop running on top of the interior engine
+let _walkFpsId = null;
+let _walkFpsDrag = false;
+let _walkFpsLX = 0, _walkFpsLY = 0;
+let _walkFpsListeners = [];   // so we can remove them on cleanup
+
+function activateWalkthroughMode(){
+  const scene    = window._interiorScene;
+  const renderer = window._interiorRenderer;
+  if(!scene || !renderer) return;
+
+  // Kill the interior engine's own animation loop (we take over)
+  if(window._interiorAnimId){ cancelAnimationFrame(window._interiorAnimId); window._interiorAnimId=null; }
+
+  const p = projectData;
+  const W = p.totalWidth||20, D = p.totalDepth||15;
+  const floors = p.floors||[];
+  const fH = floors[0]?.height||2.7;
+
+  // Place the FPS camera inside the first room (ground floor, first room centroid)
+  const firstRoom = floors[0]?.rooms?.find(r=>r.type!=='staircase') || {x:W*0.3, z:D*0.3, width:4, depth:4};
+  const startX = -W/2 + (firstRoom.x||0) + (firstRoom.width||4)/2;
+  const startZ = -D/2 + (firstRoom.z||0) + (firstRoom.depth||4)/2;
+
+  // Replace interior camera with FPS camera
+  const canvas = window._interiorCanvas || renderer.domElement;
+  const cW = canvas.clientWidth||renderer.domElement.width||800;
+  const cH = canvas.clientHeight||renderer.domElement.height||600;
+  const fpsCam = new THREE.PerspectiveCamera(75, cW/cH, 0.05, 300);
+  fpsCam.position.set(startX, 0.22 + 1.65, startZ);
+  fpsCam.rotation.order = 'YXZ';
+  window._interiorCamera = fpsCam;
+  window._fpMode = true;
+
+  walkPos   = {x: startX, y: 0.22 + 1.65, z: startZ};
+  walkYaw   = 0;
+  walkPitch = 0;
+  walkKeys  = {};
+
+  // Clean up any old listeners
+  _walkFpsListeners.forEach(([el,ev,fn])=>el.removeEventListener(ev,fn));
+  _walkFpsListeners = [];
+
+  function addL(el, ev, fn, opts){
+    el.addEventListener(ev, fn, opts||false);
+    _walkFpsListeners.push([el, ev, fn]);
   }
-  walkAnimate();
+
+  // Mouse look
+  const onDown = e=>{_walkFpsDrag=true;_walkFpsLX=e.clientX;_walkFpsLY=e.clientY;};
+  const onUp   = ()=>_walkFpsDrag=false;
+  const onMove = e=>{
+    if(!_walkFpsDrag)return;
+    walkYaw  -=(e.clientX-_walkFpsLX)*0.003;
+    walkPitch = Math.max(-1.2,Math.min(1.2,walkPitch-(e.clientY-_walkFpsLY)*0.003));
+    _walkFpsLX=e.clientX; _walkFpsLY=e.clientY;
+  };
+  addL(canvas,'mousedown',onDown);
+  addL(document,'mouseup',onUp);
+  addL(document,'mousemove',onMove);
+
+  // Touch look
+  const onTD = e=>{_walkFpsDrag=true;_walkFpsLX=e.touches[0].clientX;_walkFpsLY=e.touches[0].clientY;};
+  const onTE = ()=>_walkFpsDrag=false;
+  const onTM = e=>{
+    if(!_walkFpsDrag)return;
+    walkYaw  -=(e.touches[0].clientX-_walkFpsLX)*0.003;
+    walkPitch = Math.max(-1.2,Math.min(1.2,walkPitch-(e.touches[0].clientY-_walkFpsLY)*0.003));
+    _walkFpsLX=e.touches[0].clientX; _walkFpsLY=e.touches[0].clientY;
+    e.preventDefault();
+  };
+  addL(canvas,'touchstart',onTD);
+  addL(document,'touchend',onTE);
+  addL(document,'touchmove',onTM,{passive:false});
+
+  // Keyboard
+  const onKD = e=>walkKeys[e.key.toLowerCase()]=true;
+  const onKU = e=>walkKeys[e.key.toLowerCase()]=false;
+  addL(document,'keydown',onKD);
+  addL(document,'keyup',onKU);
+
+  // Resize
+  const onResize = ()=>{
+    const w=canvas.clientWidth,h=canvas.clientHeight;
+    if(w&&h){renderer.setSize(w,h);fpsCam.aspect=w/h;fpsCam.updateProjectionMatrix();}
+  };
+  addL(window,'resize',onResize);
+
+  // FPS animation loop
+  if(_walkFpsId) cancelAnimationFrame(_walkFpsId);
+  function fpsTick(){
+    _walkFpsId = requestAnimationFrame(fpsTick);
+    const spd = 0.07;
+    const fx = Math.sin(walkYaw), fz = Math.cos(walkYaw);
+    if(walkKeys['w']||walkKeys['arrowup'])   {walkPos.x+=fx*spd; walkPos.z-=fz*spd;}
+    if(walkKeys['s']||walkKeys['arrowdown']) {walkPos.x-=fx*spd; walkPos.z+=fz*spd;}
+    if(walkKeys['a']||walkKeys['arrowleft']) {walkPos.x-=fz*spd; walkPos.z-=fx*spd;}
+    if(walkKeys['d']||walkKeys['arrowright']){walkPos.x+=fz*spd; walkPos.z+=fx*spd;}
+    // Clamp to building footprint
+    walkPos.x = Math.max(-W/2+0.3, Math.min(W/2-0.3, walkPos.x));
+    walkPos.z = Math.max(-D/2+0.3, Math.min(D/2-0.3, walkPos.z));
+    fpsCam.position.set(walkPos.x, walkPos.y, walkPos.z);
+    fpsCam.rotation.y = walkYaw;
+    fpsCam.rotation.x = walkPitch;
+    // Animate point lights (same as interior engine does)
+    scene.children.forEach((c,i)=>{
+      if(c.isPointLight&&c.userData.baseIntensity!==undefined){
+        c.intensity=c.userData.baseIntensity+Math.sin(Date.now()*0.0008*(1+i*0.2)+i)*0.04;
+      }
+    });
+    renderer.render(scene, fpsCam);
+  }
+  fpsTick();
 }
 
 function cleanupWalk(){
-  if(walkAnimId)cancelAnimationFrame(walkAnimId);walkAnimId=null;
-  if(walkRenderer){walkRenderer.dispose();try{walkRenderer.domElement.remove();}catch(e){}}
-  walkRenderer=null;walkScene=null;walkCamera=null;walkKeys={};
+  // Stop FPS loop
+  if(_walkFpsId){cancelAnimationFrame(_walkFpsId);_walkFpsId=null;}
+  // Remove all FPS event listeners
+  _walkFpsListeners.forEach(([el,ev,fn])=>{ try{el.removeEventListener(ev,fn);}catch(e){} });
+  _walkFpsListeners=[];
+  window._fpMode=false;
+  walkKeys={};
+  // Also clean up the underlying interior engine
+  cleanupInterior();
 }
 
 function wMove(dir,active){
