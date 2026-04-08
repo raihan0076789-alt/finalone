@@ -1050,7 +1050,7 @@
         </div>
 
         <div class="float-badge float-badge-1">
-            <div class="badge-icon"><i class="fas fa-shield-check"></i></div>
+            <div class="badge-icon"><i class="fas fa-shield-alt"></i></div>
             Verified & Insured
         </div>
         <div class="float-badge float-badge-2">
@@ -1168,14 +1168,25 @@
 <section class="cta-section">
     <div class="cta-box reveal">
         <div class="cta-glow"></div>
+
         <h2 class="cta-h2">Ready to Find Your<br>Dream Architect?</h2>
-        <p class="cta-p">Join thousands of homeowners and clients who built their vision with SmartArch's verified professionals.</p>
+        <p class="cta-p">
+            Join thousands of homeowners and clients who built their vision with SmartArch's verified professionals.
+        </p>
+
         <div class="cta-btns">
-            <button class="btn-hero-primary" onclick="showRegister()">
+            <!-- Guest -->
+            <button id="ctaClientGuest" class="btn-hero-primary" onclick="showRegister()">
                 <i class="fas fa-rocket"></i> Create Free Client Account
             </button>
-            <button class="btn-hero-outline" onclick="showLogin()">
+
+            <button id="ctaClientLogin" class="btn-hero-outline" onclick="showLogin()">
                 <i class="fas fa-sign-in-alt"></i> Sign In
+            </button>
+
+            <!-- Logged In -->
+            <button id="ctaClientUser" class="btn-hero-primary" style="display:none;" onclick="openClientDashboard()">
+                <i class="fas fa-compass"></i> Explore Architects
             </button>
         </div>
     </div>
@@ -1481,6 +1492,31 @@ const clientApi = {
     forgotPassword(email){ return this.request('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) }); }
 };
 
+function updateClientCTA() {
+    const user = localStorage.getItem('user');
+    const token = localStorage.getItem('token');
+
+    const guestBtn = document.getElementById('ctaClientGuest');
+    const loginBtn = document.getElementById('ctaClientLogin');
+    const userBtn  = document.getElementById('ctaClientUser');
+
+    if (!guestBtn || !loginBtn || !userBtn) return;
+
+    if (user && token) {
+        // Logged in
+        guestBtn.style.display = 'none';
+        loginBtn.style.display = 'none';
+        userBtn.style.display = 'inline-flex';
+    } else {
+        // Guest
+        guestBtn.style.display = 'inline-flex';
+        loginBtn.style.display = 'inline-flex';
+        userBtn.style.display = 'none';
+    }
+}
+function openClientDashboard() {
+    window.location.href = "client-dashboard.html";
+}
 // ── UTILITIES ──────────────────────────────────────────────────────────────────
 function showToast(msg, type = 'info') {
     const c = document.getElementById('toastContainer');
@@ -1812,6 +1848,7 @@ setInterval(()=>{
 // Init
 document.addEventListener('DOMContentLoaded', ()=>{
     checkClientAuth();
+     updateClientCTA();
     const p = new URLSearchParams(window.location.search);
     const m = p.get('modal');
     if (m==='login') showLogin();

@@ -1178,6 +1178,7 @@ document.addEventListener("DOMContentLoaded", function() {
     } else {
         _localCheckAuth();
     }
+    updateCTABand();
 });
 
 function _localCheckAuth() {
@@ -1206,8 +1207,26 @@ function _localCheckAuth() {
     }
 }
 
-</script>
-<script>
+function updateCTABand() {
+    const user = localStorage.getItem('user');
+    const token = localStorage.getItem('token');
+
+    const guestBtn = document.getElementById('ctaGuest');
+    const userBtn = document.getElementById('ctaUser');
+
+    if (!guestBtn || !userBtn) return;
+
+    if (user && token) {
+        // Logged in
+        guestBtn.style.display = 'none';
+        userBtn.style.display = 'inline-flex';
+    } else {
+        // Guest
+        guestBtn.style.display = 'inline-flex';
+        userBtn.style.display = 'none';
+    }
+}
+
 (function() {
     var wrap = document.getElementById('userMenuWrap');
     var avatar = document.getElementById('userAvatar');

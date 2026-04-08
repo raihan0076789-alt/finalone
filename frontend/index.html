@@ -2124,12 +2124,12 @@
 </section>
 
 <!-- ═══ CTA ──────────────────────────────────────────────────────────────── -->
-<section class="cta-section">
+<section class="cta-section" >
     <div class="cta-box reveal">
         <div class="cta-glow"></div>
         <h2 class="cta-h2">Ready to Design<br>Your Dream Home?</h2>
         <p class="cta-p">Join thousands of architects and homeowners using AI to design faster, smarter, and better.</p>
-        <div class="cta-btns">
+        <div class="cta-btns" id="ctaButtons">
             <button class="btn-hero-primary" onclick="showRegister()">
                 <i class="fas fa-rocket"></i> Create Free Account
             </button>
@@ -3411,6 +3411,36 @@ async function handleGoogleAccessToken(accessToken) {
         populateDropdownHeader();
     }
 })();
+
+function renderCTAButtons() {
+    const cta = document.getElementById('ctaButtons');
+
+    // Example: check login (adjust based on your auth system)
+    const user = JSON.parse(localStorage.getItem('user'));
+
+    if (user) {
+        // Logged in UI
+        cta.innerHTML = `
+            <button class="btn-hero-primary" onclick="openDashboard()">
+                <i class="fas fa-tachometer-alt"></i> Open Dashboard
+            </button>
+        `;
+    } else {
+        // Guest UI
+        cta.innerHTML = `
+            <button class="btn-hero-primary" onclick="showRegister()">
+                <i class="fas fa-rocket"></i> Create Free Account
+            </button>
+            <button class="btn-hero-outline" onclick="showLogin()">
+                <i class="fas fa-sign-in-alt"></i> Sign In
+            </button>
+        `;
+    }
+}
+function openDashboard() {
+        window.location.href = "dashboard.html";
+    }
+ document.addEventListener("DOMContentLoaded", renderCTAButtons);
 </script>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
