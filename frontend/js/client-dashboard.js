@@ -330,6 +330,12 @@ function loadUser() {
         var firstName = user.name ? user.name.split(' ')[0] : 'there';
         document.getElementById('topbarSub').textContent = greeting + ', ' + firstName + '! Welcome back!';
 
+        // Dashboard hero greeting + name
+        var dbGreetEl = document.getElementById('dbGreeting');
+        var dbNameEl  = document.getElementById('dbFirstName');
+        if (dbGreetEl) dbGreetEl.textContent = greeting;
+        if (dbNameEl)  dbNameEl.textContent  = firstName;
+
         // Plan badge
         var pb   = document.getElementById('topbarPlan');
         var plan = user.plan || 'free';
@@ -337,6 +343,62 @@ function loadUser() {
         pb.className   = 'plan-badge plan-' + plan;
 
     } catch (e) { console.error('loadUser error', e); }
+}
+
+/* ============================================================
+   DASHBOARD STATS
+   ============================================================ */
+async function loadDashboardStats() {
+    function countUp(el, target) {
+        if (!el) return;
+        if (target === 0) { el.textContent = '0'; return; }
+        var start = 0;
+        var step = Math.ceil(target / 56);
+        var timer = setInterval(function() {
+            start += step;
+            if (start >= target) { start = target; clearInterval(timer); }
+            el.textContent = start;
+        }, 16);
+    }
+
+    var statArch = document.getElementById('dbStatArchitects');
+    var statConn = document.getElementById('dbStatConnections');
+    var statProj = document.getElementById('dbStatProjects');
+    var statDel  = document.getElementById('dbStatDelivered');
+
+    [statArch, statConn, statProj, statDel].forEach(function(el) { if (el) el.textContent = '...'; });
+
+    try {
+        var results = await Promise.allSettled([
+            fetch(CLIENT_API + '/client/architects?limit=1', { headers: authHeaders() }).then(function(r) { return r.json(); }),
+            fetch(CLIENT_API + '/connections/my',            { headers: authHeaders() }).then(function(r) { return r.json(); }),
+            fetch(CLIENT_API + '/client/projects',           { headers: authHeaders() }).then(function(r) { return r.json(); }),
+            fetch(CLIENT_API + '/client/shared-projects',    { headers: authHeaders() }).then(function(r) { return r.json(); })
+        ]);
+
+        if (results[0].status === 'fulfilled' && results[0].value.pagination) {
+            countUp(statArch, results[0].value.pagination.total || 0);
+        } else { if (statArch) statArch.textContent = '0'; }
+
+        if (results[1].status === 'fulfilled' && results[1].value.success) {
+            var accepted = (results[1].value.data || []).filter(function(c) { return c.status === 'accepted'; }).length;
+            countUp(statConn, accepted);
+        } else { if (statConn) statConn.textContent = '0'; }
+
+        if (results[2].status === 'fulfilled' && results[2].value.success) {
+            var active = (results[2].value.data || []).filter(function(p) {
+                return p.status === 'active' || p.status === 'in_progress' || p.status === 'draft';
+            }).length;
+            countUp(statProj, active);
+        } else { if (statProj) statProj.textContent = '0'; }
+
+        if (results[3].status === 'fulfilled' && results[3].value.success) {
+            countUp(statDel, (results[3].value.data || []).length);
+        } else { if (statDel) statDel.textContent = '0'; }
+
+    } catch (e) {
+        [statArch, statConn, statProj, statDel].forEach(function(el) { if (el) el.textContent = '0'; });
+    }
 }
 
 /* ============================================================
@@ -704,6 +766,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
     loadUser();
+    loadDashboardStats();
 
     // Hide loader
     var loader = document.getElementById('pageLoader');
