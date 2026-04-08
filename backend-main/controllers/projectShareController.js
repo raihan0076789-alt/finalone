@@ -53,7 +53,7 @@ exports.shareProject = async (req, res) => {
                 existing.viewedAt  = null;
                 existing.viewCount = 0;
                 await existing.save();
-                const populated = await existing.populate('project', 'name type status metadata floors totalWidth totalDepth materials specifications');
+                const populated = await existing.populate('project', 'name type status metadata floors totalWidth totalDepth style materials specifications');
                 return res.json({ success: true, data: populated, message: 'Share updated.' });
             }
 
@@ -70,7 +70,7 @@ exports.shareProject = async (req, res) => {
             conn.unreadByClient += 1;
             await conn.save();
 
-            await share.populate('project', 'name type status metadata floors totalWidth totalDepth materials specifications');
+            await share.populate('project', 'name type status metadata floors totalWidth totalDepth style materials specifications');
             return res.status(201).json({ success: true, data: share, message: 'Project shared successfully!' });
 
         } else if (mode === 'link') {
@@ -146,7 +146,7 @@ exports.getMySharedProjects = async (req, res) => {
             isRevoked:  false,
             $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }]
         })
-        .populate('project',  'name type status metadata floors totalWidth totalDepth materials specifications thumbnail description tags')
+        .populate('project',  'name type status metadata floors totalWidth totalDepth style materials specifications thumbnail description tags')
         .populate('sharedBy', 'name email avatar specialization rating')
         .sort('-createdAt');
 
@@ -166,7 +166,7 @@ exports.getShareByToken = async (req, res) => {
             isRevoked:  false,
             $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }]
         })
-        .populate('project',  'name type status metadata floors totalWidth totalDepth materials specifications thumbnail description tags')
+        .populate('project',  'name type status metadata floors totalWidth totalDepth style materials specifications thumbnail description tags')
         .populate('sharedBy', 'name email avatar specialization company rating');
 
         if (!share) {

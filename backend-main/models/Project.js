@@ -53,6 +53,7 @@ const projectSchema = new mongoose.Schema({
     type: { type: String, enum: ['residential', 'commercial', 'industrial', 'mixed'], default: 'residential' },
     totalWidth: { type: Number, required: true, min: 0 },
     totalDepth: { type: Number, required: true, min: 0 },
+    style: { type: String, enum: ['modern', 'minimalist', 'traditional', 'luxury'], default: 'modern' },
     floors: [floorSchema],
     materials: {
         exterior: {
