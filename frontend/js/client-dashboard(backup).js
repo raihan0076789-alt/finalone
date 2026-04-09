@@ -381,7 +381,7 @@ async function loadDashboardStats() {
             fetch(CLIENT_API + '/client/architects?limit=1', { headers: authHeaders() }).then(function(r) { return r.json(); }),
             fetch(CLIENT_API + '/connections/my',            { headers: authHeaders() }).then(function(r) { return r.json(); }),
             fetch(CLIENT_API + '/client/projects',           { headers: authHeaders() }).then(function(r) { return r.json(); }),
-            fetch(CLIENT_API + '/shares/my',                 { headers: authHeaders() }).then(function(r) { return r.json(); })
+            fetch(CLIENT_API + '/client/shared-projects',    { headers: authHeaders() }).then(function(r) { return r.json(); })
         ]);
 
         if (results[0].status === 'fulfilled' && results[0].value.pagination) {

@@ -4,11 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SmartArch — Client Dashboard</title>
+    <!-- Inline SVG favicon — eliminates the favicon.ico 404 -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23060a12'/%3E%3Cpath d='M16 5L28 13v14H4V13z' fill='none' stroke='%2300d4c8' stroke-width='2' stroke-linejoin='round'/%3E%3Crect x='12' y='20' width='8' height='7' fill='%2300d4c8' opacity='.7'/%3E%3C/svg%3E">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/client-dashboard.css">
-    
 </head>
 <body>
 
@@ -26,7 +27,7 @@
 
 <!-- SIDEBAR -->
 <aside class="sidebar" id="sidebar">
-     <div class="sidebar-header">
+    <div class="sidebar-header">
         <a href="client-index.html" style="text-decoration: none;">
         <div class="sidebar-logo"><i class="fas fa-users"></i></div>
         <div>
@@ -37,7 +38,7 @@
     <div class="sidebar-user">
         <img id="sidebarAvatar" src="" alt="" class="sidebar-avatar">
         <div class="sidebar-user-info">
-            <div class="sidebar-user-name"  id="sidebarName">Loading...</div>
+            <div class="sidebar-user-name" id="sidebarName">Loading...</div>
             <div class="sidebar-user-email" id="sidebarEmail">-</div>
         </div>
     </div>
@@ -69,21 +70,21 @@
             <span id="sharedNavBadge" style="display:none;background:linear-gradient(135deg,#00d4c8,#7c3aed);color:#fff;border-radius:20px;padding:1px 7px;font-size:0.68rem;font-weight:700;margin-left:auto;"></span>
         </a>
 
-        
-       
         <a href="#" class="nav-item" onclick="comingSoon(event,'Favourites')">
             <span class="nav-icon"><i class="fas fa-heart"></i></span>
             Favourites
             <span class="nav-badge soon">Soon</span>
         </a>
-        <a href="#" class="nav-item" onclick="comingSoon(event,'Budget Tracker')">
-            <span class="nav-icon"><i class="fas fa-rupee-sign"></i></span>
-            Budget Tracker
-            <span class="nav-badge soon">Soon</span>
-        </a>
         <a href="#" class="nav-item" id="nav-documents" onclick="showView('documents', event)">
             <span class="nav-icon"><i class="fas fa-file-alt"></i></span>
             Documents
+        </a>
+
+        <div class="nav-section-label">Market Intelligence</div>
+        <a href="#" class="nav-item" id="nav-market" onclick="mmOpenMarket(event)">
+            <span class="nav-icon"><i class="fas fa-globe"></i></span>
+            Global Market Map
+            <span class="nav-badge" style="background:linear-gradient(135deg,#00d4c8,#8b5cf6);color:#fff;border-radius:20px;padding:1px 7px;font-size:0.63rem;font-weight:800;margin-left:auto;letter-spacing:0.03em;">LIVE</span>
         </a>
 
         <div class="nav-section-label">Account</div>
@@ -111,7 +112,7 @@
     <div class="topbar-left">
         <div>
             <div class="topbar-title" id="topbarTitle">Dashboard</div>
-            <div class="topbar-sub"   id="topbarSub">Welcome to your client portal</div>
+            <div class="topbar-sub" id="topbarSub">Welcome to your client portal</div>
         </div>
     </div>
     <div class="topbar-right">
@@ -137,10 +138,10 @@
         </button>
         <span id="topbarPlan" class="plan-badge plan-free" style="display:none">Free</span>
         <a href="#" onclick="showView('settings', event)">
-        <img id="topbarAvatar" src="" alt="" class="topbar-avatar" title="Profile"></a>
+            <img id="topbarAvatar" src="" alt="" class="topbar-avatar" title="Profile">
+        </a>
     </div>
 </header>
-
 
 <!-- VIEW: DASHBOARD -->
 <main class="main" id="view-dashboard">
@@ -258,19 +259,14 @@
                         </div>
                         <i class="fas fa-arrow-right db-qa-arrow"></i>
                     </button>
-
-
                     <button class="db-qa-btn" onclick="showView('documents')">
-                        <div class="db-qa-icon" style="background:rgba(36, 31, 183, 0.1);color:var(--blue)"><i class="fas fa-file-alt"></i></div>
+                        <div class="db-qa-icon" style="background:rgba(36,31,183,0.1);color:var(--blue)"><i class="fas fa-file-alt"></i></div>
                         <div>
                             <div class="db-qa-title">Document Vault</div>
                             <div class="db-qa-sub">All your project files and downloaded designs</div>
                         </div>
                         <i class="fas fa-arrow-right db-qa-arrow"></i>
                     </button>
-
-
-
                     <button class="db-qa-btn" onclick="showView('support')">
                         <div class="db-qa-icon" style="background:rgba(244,63,94,0.1);color:var(--rose)"><i class="fas fa-headset"></i></div>
                         <div>
@@ -443,7 +439,7 @@
     <!-- Grid -->
     <div class="grid-area">
         <div class="architect-grid" id="architectGrid"></div>
-        <div class="pagination"     id="pagination"></div>
+        <div class="pagination" id="pagination"></div>
     </div>
 </div>
 
@@ -460,7 +456,6 @@
         </div>
     </div>
 </div>
-
 
 <!-- VIEW: MY PROJECTS -->
 <div class="proj-main" id="view-projects" style="display:none">
@@ -860,7 +855,7 @@
                             <div class="profile-overview-meta">
                                 <div class="meta-row">
                                     <i class="fas fa-envelope meta-icon"></i>
-                                    <span  id="cs-overviewEmail" class="profile-email">—</span>
+                                    <span id="cs-overviewEmail" class="profile-email">—</span>
                                 </div>
                             </div>
                             <div class="profile-overview-grid">
@@ -939,7 +934,7 @@
                                         </div>
                                         <div class="ep-field">
                                             <label class="ep-label">Phone Number</label>
-                                            <input type="tel" id="cs-editPhone" class="ep-input" placeholder="+91 9876543210" pattern="^\+91\s?[6-9]\d{9}$" title="Enter a valid Indian phone number (+91 9876543210)" required >
+                                            <input type="tel" id="cs-editPhone" class="ep-input" placeholder="+91 9876543210" pattern="^\+91\s?[6-9]\d{9}$" title="Enter a valid Indian phone number (+91 9876543210)" required>
                                         </div>
                                         <div class="ep-field">
                                             <label class="ep-label">Location</label>
@@ -976,25 +971,27 @@
                             <div class="settings-card-title">Change Password</div>
                             <div class="settings-card-desc">Use a strong, unique password to keep your account secure.</div>
                         </div>
-                        <form onsubmit="updateClientPassword(event)">
+                        <form onsubmit="updateClientPassword(event)" autocomplete="on">
+                            <!-- Hidden username field for password-manager accessibility -->
+                            <input type="text" id="cs-username-hint" name="username" autocomplete="username" style="display:none" aria-hidden="true">
                             <div class="form-group">
                                 <label class="form-label">Current Password</label>
                                 <div class="cs-pw-wrap">
-                                    <input type="password" id="cs-currentPw" class="form-control" placeholder="Enter current password">
+                                    <input type="password" id="cs-currentPw" class="form-control" placeholder="Enter current password" autocomplete="current-password">
                                     <i class="fas fa-eye cs-toggle-eye" onclick="csTogglePw('cs-currentPw', this)"></i>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">New Password</label>
                                 <div class="cs-pw-wrap">
-                                    <input type="password" id="cs-newPw" class="form-control" placeholder="Min. 8 characters" minlength="8">
+                                    <input type="password" id="cs-newPw" class="form-control" placeholder="Min. 8 characters" minlength="8" autocomplete="new-password">
                                     <i class="fas fa-eye cs-toggle-eye" onclick="csTogglePw('cs-newPw', this)"></i>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Confirm New Password</label>
                                 <div class="cs-pw-wrap">
-                                    <input type="password" id="cs-confirmPw" class="form-control" placeholder="Repeat new password">
+                                    <input type="password" id="cs-confirmPw" class="form-control" placeholder="Repeat new password" autocomplete="new-password">
                                     <i class="fas fa-eye cs-toggle-eye" onclick="csTogglePw('cs-confirmPw', this)"></i>
                                 </div>
                             </div>
@@ -1102,7 +1099,7 @@
 
     <!-- Support section header bar -->
     <div class="support-header-bar" style="margin-left: 15px;">
-        <div class="support-header-left" >
+        <div class="support-header-left">
             <h2>Support <span>Center</span></h2>
             <p>Ask a question, report an issue, or send feedback — we reply within 1–2 business days.</p>
         </div>
@@ -1335,9 +1332,267 @@
     </div>
 </div>
 
+<!-- ══════════════════════════════════════════════════════════════════════════
+     MARKET MAP VIEW — Plugin HTML
+     Injected non-destructively. All IDs are namespaced with "mm-" prefix.
+     ══════════════════════════════════════════════════════════════════════════ -->
+<link rel="stylesheet" href="css/market-map.css">
+
+<div id="view-market" style="display:none">
+
+  <!-- ── FILTER SIDEBAR ─────────────────────────────────────────────────── -->
+  <aside class="mm-sidebar">
+
+    <div class="mm-sidebar-header">
+      <div class="mm-sidebar-title">
+        <i class="fas fa-globe-americas"></i> Market Filters
+      </div>
+      <!-- Location search -->
+      <div class="mm-search-wrap">
+        <i class="fas fa-search"></i>
+        <input type="text" id="mm-search-input" class="mm-search-input" placeholder="Search city or country…" autocomplete="off">
+        <div id="mm-search-results" class="mm-search-results" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="mm-filters-scroll">
+
+      <!-- Price range -->
+      <div class="mm-filter-group">
+        <div class="mm-filter-label"><i class="fas fa-dollar-sign"></i> Max Price / m²</div>
+        <div class="mm-range-wrap">
+          <div class="mm-range-display">
+            <span>$500</span>
+            <span id="mm-price-val">$25,000</span>
+          </div>
+          <input type="range" id="mm-price-slider" class="mm-slider"
+                 min="500" max="25000" step="100" value="25000">
+        </div>
+      </div>
+
+      <!-- Rent yield -->
+      <div class="mm-filter-group">
+        <div class="mm-filter-label"><i class="fas fa-percentage"></i> Min Rental Yield</div>
+        <div class="mm-range-wrap">
+          <div class="mm-range-display">
+            <span>0%</span>
+            <span id="mm-yield-val">0.0%</span>
+          </div>
+          <input type="range" id="mm-yield-slider" class="mm-slider"
+                 min="0" max="10" step="0.5" value="0">
+        </div>
+      </div>
+
+      <!-- Proximity to town centre -->
+      <div class="mm-filter-group">
+        <div class="mm-filter-label"><i class="fas fa-map-pin"></i> Location Type</div>
+        <div class="mm-range-wrap">
+          <div class="mm-range-display">
+            <span>City Centre</span>
+            <span id="mm-prox-val">All</span>
+          </div>
+          <input type="range" id="mm-prox-slider" class="mm-slider"
+                 min="1" max="5" step="1" value="5">
+        </div>
+      </div>
+
+      <!-- Affordability tier -->
+      <div class="mm-filter-group">
+        <div class="mm-filter-label"><i class="fas fa-layer-group"></i> Affordability Tier</div>
+        <div class="mm-chip-row">
+          <div class="mm-chip" data-tier="A" style="border-color:rgba(16,185,129,0.3);color:#10b981">A · Best</div>
+          <div class="mm-chip" data-tier="B" style="border-color:rgba(0,212,200,0.3);color:#00d4c8">B · Good</div>
+          <div class="mm-chip" data-tier="C" style="border-color:rgba(245,158,11,0.3);color:#f59e0b">C · Mid</div>
+          <div class="mm-chip" data-tier="D" style="border-color:rgba(239,68,68,0.3);color:#ef4444">D · Premium</div>
+        </div>
+      </div>
+
+      <!-- Property type -->
+      <div class="mm-filter-group">
+        <div class="mm-filter-label"><i class="fas fa-home"></i> Property Type</div>
+        <div class="mm-chip-row">
+          <div class="mm-chip" data-type="apartment">Apartment</div>
+          <div class="mm-chip" data-type="villa">Villa</div>
+          <div class="mm-chip" data-type="condo">Condo</div>
+        </div>
+      </div>
+
+      <!-- Infrastructure requirements -->
+      <div class="mm-filter-group">
+        <div class="mm-filter-label"><i class="fas fa-city"></i> Must Have</div>
+
+        <div class="mm-toggle-row">
+          <span class="mm-toggle-label"><i class="fas fa-bolt" style="color:#f59e0b;margin-right:0.4rem;font-size:0.75rem"></i> Electricity Grid</span>
+          <label class="mm-toggle">
+            <input type="checkbox" id="mm-toggle-electricity">
+            <span class="mm-toggle-track"></span>
+          </label>
+        </div>
+
+        <div class="mm-toggle-row">
+          <span class="mm-toggle-label"><i class="fas fa-train" style="color:#00d4c8;margin-right:0.4rem;font-size:0.75rem"></i> Public Transport</span>
+          <label class="mm-toggle">
+            <input type="checkbox" id="mm-toggle-transport">
+            <span class="mm-toggle-track"></span>
+          </label>
+        </div>
+
+        <div class="mm-toggle-row">
+          <span class="mm-toggle-label"><i class="fas fa-school" style="color:#8b5cf6;margin-right:0.4rem;font-size:0.75rem"></i> Nearby Schools</span>
+          <label class="mm-toggle">
+            <input type="checkbox" id="mm-toggle-schools">
+            <span class="mm-toggle-track"></span>
+          </label>
+        </div>
+      </div>
+
+      <button id="mm-apply-btn" class="mm-apply-btn">
+        <i class="fas fa-filter"></i> Apply Filters
+      </button>
+      <button id="mm-reset-btn" class="mm-reset-btn">
+        <i class="fas fa-undo" style="margin-right:0.35rem;font-size:0.7rem"></i> Reset All
+      </button>
+    </div><!-- /mm-filters-scroll -->
+
+    <!-- Results list -->
+    <div class="mm-results-panel">
+      <div class="mm-results-header">
+        <i class="fas fa-list-ul"></i> Ranked Locations
+        <span id="mm-results-count" class="mm-results-count">0</span>
+      </div>
+      <div id="mm-results-list"></div>
+    </div>
+
+  </aside><!-- /mm-sidebar -->
+
+  <!-- ── MAP AREA ────────────────────────────────────────────────────────── -->
+  <div class="mm-map-wrap">
+
+    <!-- Loading overlay -->
+    <div class="mm-loading" id="mm-loading" style="display:none">
+      <div class="mm-loading-spinner"></div>
+      <div class="mm-loading-text">Loading global market data…</div>
+    </div>
+
+    <!-- Stat pills + layer switcher -->
+    <div class="mm-map-topbar">
+      <div class="mm-stat-pill">
+        <div class="pill-val" id="mm-stat-locations">—</div>
+        <div class="pill-sub">Locations</div>
+      </div>
+      <div class="mm-stat-pill">
+        <div class="pill-val" id="mm-stat-avg-price">—</div>
+        <div class="pill-sub">Avg $/m²</div>
+      </div>
+      <div class="mm-stat-pill">
+        <div class="pill-val" id="mm-stat-avg-yield">—</div>
+        <div class="pill-sub">Avg Yield</div>
+      </div>
+      <div class="mm-stat-pill">
+        <div class="pill-val" id="mm-stat-top-score">—</div>
+        <div class="pill-sub">Top Score</div>
+      </div>
+
+      <!-- Layer switcher -->
+      <div class="mm-layer-btns">
+        <button class="mm-layer-btn active" data-layer="markers">
+          <i class="fas fa-map-marker-alt"></i> Pins
+        </button>
+        <button class="mm-layer-btn" data-layer="heat">
+          <i class="fas fa-fire"></i> Heat
+        </button>
+        <button class="mm-layer-btn" data-layer="infra">
+          <i class="fas fa-bolt"></i> Infra
+        </button>
+      </div>
+    </div>
+
+    <!-- The actual Leaflet map -->
+    <div id="mm-leaflet-map"></div>
+
+  </div><!-- /mm-map-wrap -->
+
+</div><!-- /view-market -->
+
 <!-- Scripts -->
 <script src="js/presence.js"></script>
 <script src="js/client-dashboard.js"></script>
+<script src="js/market-map.js"></script>
+
+<!-- Market Map standalone controller — does NOT touch VIEWS or showView internals -->
+<script>
+(function () {
+  /* All known view element IDs — used to hide them when market opens */
+  var ALL_VIEW_IDS = [
+    'view-dashboard', 'view-architects', 'view-connections', 'view-projects',
+    'view-shared', 'view-settings', 'view-support', 'view-documents'
+  ];
+
+  /* Open the market view — replaces the VIEWS-based showView for this one tab */
+  window.mmOpenMarket = function (event) {
+    if (event) event.preventDefault();
+
+    /* Hide every other view */
+    ALL_VIEW_IDS.forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+
+    /* Remove active class from all nav items */
+    document.querySelectorAll('.nav-item').forEach(function (el) {
+      el.classList.remove('active');
+    });
+
+    /* Show market view */
+    var mv = document.getElementById('view-market');
+    if (mv) mv.style.display = 'flex';
+
+    /* Activate market nav item */
+    var nm = document.getElementById('nav-market');
+    if (nm) nm.classList.add('active');
+
+    /* Update topbar labels */
+    var tt = document.getElementById('topbarTitle');
+    var ts = document.getElementById('topbarSub');
+    if (tt) tt.textContent = 'Global Market Map';
+    if (ts) ts.textContent = 'Real-time housing prices, affordability & infrastructure worldwide';
+
+    /* Hide dashboard-only topbar controls */
+    var nw = document.getElementById('notifWrap');
+    var sb = document.getElementById('topbarSearchBtn');
+    var tp = document.getElementById('topbarPlan');
+    if (nw) nw.style.display = 'none';
+    if (sb) sb.style.display = 'none';
+    if (tp) tp.style.display = 'none';
+
+    /* Close mobile sidebar if open */
+    if (typeof closeSidebar === 'function') closeSidebar();
+
+    /* Initialise / refresh the map */
+    setTimeout(function () {
+      if (typeof mmInit === 'function') mmInit();
+      setTimeout(function () {
+        if (window.MM && window.MM.map) window.MM.map.invalidateSize();
+      }, 150);
+    }, 40);
+  };
+
+  /* Patch showView so it hides the market view when switching to any other tab */
+  document.addEventListener('DOMContentLoaded', function () {
+    /* showView is a function declaration → lives on window */
+    if (typeof window.showView !== 'function') return;
+    var _orig = window.showView;
+    window.showView = function (name, event) {
+      /* Hide market view & deactivate its nav whenever switching away */
+      var mv = document.getElementById('view-market');
+      var nm = document.getElementById('nav-market');
+      if (mv) mv.style.display = 'none';
+      if (nm) nm.classList.remove('active');
+      _orig(name, event);
+    };
+  });
+})();
+</script>
 
 </body>
 </html>
