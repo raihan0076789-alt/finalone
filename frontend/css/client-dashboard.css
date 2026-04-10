@@ -1197,9 +1197,16 @@ body::before {
 }
 .project-pick-item:hover { border-color: rgba(139,92,246,0.4); background: rgba(139,92,246,0.05); }
 .project-pick-item input[type="radio"] { accent-color: var(--violet); }
-.project-pick-label { display: flex; flex-direction: column; }
+.project-pick-label { display: flex; flex-direction: column; flex: 1; }
 .project-pick-name { font-size: 0.85rem; font-weight: 600; color: var(--white); }
 .project-pick-type { font-size: 0.72rem; color: var(--slate); text-transform: capitalize; }
+.project-pick-connected-badge {
+    display: inline-flex; align-items: center; gap: 0.25rem;
+    padding: 2px 8px; border-radius: 20px; font-size: 0.68rem; font-weight: 700;
+    background: rgba(0, 212, 200, 0.15); color: #00d4c8;
+    border: 1px solid rgba(0, 212, 200, 0.35);
+    white-space: nowrap; flex-shrink: 0;
+}
 
 /* ── Intro message textarea ─────────────────────────────────────────── */
 .connect-textarea {
@@ -1651,6 +1658,8 @@ text-overflow: ellipsis;
     margin-bottom: 0.45rem;
 }
 .wizard-label .req { color: var(--rose); }
+.wizard-field-hint { font-size: 0.7rem; color: var(--slate); margin-top: 3px; }
+.wizard-input-error { border-color: #f87171 !important; }
 .wizard-input {
     background: rgba(255,255,255,0.05);
     color: var(--white);
@@ -3298,4 +3307,4 @@ text-overflow: ellipsis;
     .docs-stats   { padding: 0.5rem 1.25rem; }
     .docs-body    { padding: 1rem 1.25rem 3rem; }
     .docs-preview-modal { max-width: 100%; max-height: 100%; border-radius: 0; }
-} 
+}

@@ -543,18 +543,20 @@
             <div class="wizard-step" id="wstep-2" style="display:none">
                 <div class="wizard-row-2">
                     <div class="wizard-field">
-                        <label class="wizard-label">Min Budget (₹)</label>
-                        <input class="wizard-input" id="wf-budgetMin" type="number" min="0" placeholder="e.g. 2500000" required>
+                        <label class="wizard-label">Min Budget (₹) <span class="req">*</span></label>
+                        <input class="wizard-input" id="wf-budgetMin" type="number" min="100000" max="500000000" placeholder="e.g. 2500000" oninput="this.classList.remove('wizard-input-error')">
+                        
                     </div>
                     <div class="wizard-field">
-                        <label class="wizard-label">Max Budget (₹)</label>
-                        <input class="wizard-input" id="wf-budgetMax" type="number" min="0" placeholder="e.g. 5000000" required>
+                        <label class="wizard-label">Max Budget (₹) <span class="req">*</span></label>
+                        <input class="wizard-input" id="wf-budgetMax" type="number" min="100000" max="500000000" placeholder="e.g. 5000000" oninput="this.classList.remove('wizard-input-error')">
+                        
                     </div>
                 </div>
                 <div class="wizard-row-2">
                     <div class="wizard-field">
-                        <label class="wizard-label">Land Size</label>
-                        <input class="wizard-input" id="wf-landVal" type="number" min="0" placeholder="e.g. 2400">
+                        <label class="wizard-label">Land Size <span class="req">*</span></label>
+                        <input class="wizard-input" id="wf-landVal" type="number" min="1" max="100000" placeholder="e.g. 2400" oninput="this.classList.remove('wizard-input-error')">
                     </div>
                     <div class="wizard-field">
                         <label class="wizard-label">Unit</label>
@@ -602,14 +604,22 @@
                     </div>
                 </div>
                 <div class="wizard-field">
-                    <label class="wizard-label">Timeline</label>
-                    <select class="wizard-input" id="wf-timeline">
+                    <label class="wizard-label">Timeline <span class="req">*</span></label>
+                    <select class="wizard-input" id="wf-timeline" onchange="handleTimelineChange(this)">
                         <option value="flexible">Flexible</option>
                         <option value="asap">As soon as possible</option>
                         <option value="1-3months">1–3 months</option>
                         <option value="3-6months">3–6 months</option>
                         <option value="6-12months">6–12 months</option>
+                        <option value="pick-date">Pick a specific date…</option>
                     </select>
+                    <div id="wf-timeline-date-wrap" style="display:none;margin-top:8px;">
+                        <input type="date" class="wizard-input" id="wf-timeline-date"
+                            style="cursor:pointer;"
+                            oninput="handleTimelineDateInput(this)"
+                            onchange="handleTimelineDateInput(this)">
+                        <div id="wf-timeline-date-error" style="color:#f87171;font-size:0.76rem;margin-top:4px;display:none;">Please select a future date.</div>
+                    </div>
                 </div>
                 <div class="wizard-field">
                     <label class="wizard-label">Description</label>

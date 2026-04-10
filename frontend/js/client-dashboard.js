@@ -875,12 +875,16 @@ async function openConnectModal(archId, archName, archSpec, archAvatar) {
             listEl.innerHTML = '<div style="color:var(--slate);font-size:0.83rem;padding:0.4rem 0">No projects yet — you can still connect without one.</div>' + createNewHtml;
         } else {
             listEl.innerHTML = projects.map(function(p) {
+                var badge = p.hasAcceptedConnection
+                    ? '<span class="project-pick-connected-badge"><i class="fas fa-check-circle"></i> Connected</span>'
+                    : '';
                 return '<label class="project-pick-item">' +
                     '<input type="radio" name="connectProject" value="' + p._id + '" onchange="selectConnectProject(\'' + p._id + '\')">' +
                     '<span class="project-pick-label">' +
                         '<span class="project-pick-name">' + esc(p.title || p.name) + '</span>' +
                         '<span class="project-pick-type">' + esc(p.projectType || p.type || 'project') + '</span>' +
                     '</span>' +
+                    badge +
                 '</label>';
             }).join('') +
             '<label class="project-pick-item">' +
@@ -1429,7 +1433,66 @@ function resetWizardFields() {
     cpState.projectType = '';
     document.getElementById('attachPreviewGrid').innerHTML = '';
     document.getElementById('wf-desc-count').textContent = '0';
+    // Reset timeline date picker
+    var tlDateWrap = document.getElementById('wf-timeline-date-wrap');
+    var tlDateInput = document.getElementById('wf-timeline-date');
+    var tlDateErr = document.getElementById('wf-timeline-date-error');
+    if (tlDateWrap) tlDateWrap.style.display = 'none';
+    if (tlDateInput) { tlDateInput.value = ''; tlDateInput.style.borderColor = ''; }
+    if (tlDateErr) tlDateErr.style.display = 'none';
 }
+/* ── Timeline date picker ─────────────────────────────────────────────────── */
+function handleTimelineChange(sel) {
+    var wrap = document.getElementById('wf-timeline-date-wrap');
+    var dateInput = document.getElementById('wf-timeline-date');
+    var err = document.getElementById('wf-timeline-date-error');
+    if (sel.value === 'pick-date') {
+        var tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        dateInput.min = tomorrow.toISOString().split('T')[0];
+        dateInput.value = '';
+        wrap.style.display = '';
+        err.style.display = 'none';
+    } else {
+        wrap.style.display = 'none';
+        dateInput.value = '';
+        err.style.display = 'none';
+    }
+}
+
+function handleTimelineDateInput(input) {
+    var err = document.getElementById('wf-timeline-date-error');
+    var today = new Date(); today.setHours(0,0,0,0);
+    var picked = new Date(input.value + 'T00:00:00');
+    if (!input.value || picked <= today) {
+        err.style.display = '';
+        input.style.borderColor = '#f87171';
+    } else {
+        err.style.display = 'none';
+        input.style.borderColor = '';
+    }
+}
+
+function getTimelineValue() {
+    var sel = document.getElementById('wf-timeline');
+    if (sel.value === 'pick-date') {
+        var dateInput = document.getElementById('wf-timeline-date');
+        if (dateInput && dateInput.value) return 'date:' + dateInput.value;
+        return 'pick-date';
+    }
+    return sel.value;
+}
+
+function getTimelineLabel(val) {
+    if (!val) return 'Flexible';
+    if (val.startsWith('date:')) {
+        var d = new Date(val.slice(5) + 'T00:00:00');
+        return 'By ' + d.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+    }
+    return val.replace(/-/g, ' ');
+}
+
+
 
 /* ── Step navigation ──────────────────────────────────────────────────────── */
 function goWizardStep(n) {
@@ -1468,6 +1531,75 @@ function wizardNext() {
         }
         goWizardStep(2);
     } else if (s === 2) {
+        // ── Required field & limit validation ────────────────────────────────
+        var bMin = parseFloat(document.getElementById('wf-budgetMin').value);
+        var bMax = parseFloat(document.getElementById('wf-budgetMax').value);
+        var lVal = parseFloat(document.getElementById('wf-landVal').value);
+        var tlVal = document.getElementById('wf-timeline').value;
+
+        // Clear previous error highlights
+        ['wf-budgetMin','wf-budgetMax','wf-landVal'].forEach(function(id) {
+            document.getElementById(id).classList.remove('wizard-input-error');
+        });
+
+        // Min Budget required + limits (₹1L – ₹50Cr)
+        if (!document.getElementById('wf-budgetMin').value) {
+            document.getElementById('wf-budgetMin').classList.add('wizard-input-error');
+            showToast('Please enter a minimum budget.', 'error'); return;
+        }
+        if (isNaN(bMin) || bMin < 100000) {
+            document.getElementById('wf-budgetMin').classList.add('wizard-input-error');
+            showToast('Minimum budget must be at least ₹1,00,000.', 'error'); return;
+        }
+        if (bMin > 500000000) {
+            document.getElementById('wf-budgetMin').classList.add('wizard-input-error');
+            showToast('Minimum budget cannot exceed ₹50 Crore.', 'error'); return;
+        }
+
+        // Max Budget required + limits
+        if (!document.getElementById('wf-budgetMax').value) {
+            document.getElementById('wf-budgetMax').classList.add('wizard-input-error');
+            showToast('Please enter a maximum budget.', 'error'); return;
+        }
+        if (isNaN(bMax) || bMax < 100000) {
+            document.getElementById('wf-budgetMax').classList.add('wizard-input-error');
+            showToast('Maximum budget must be at least ₹1,00,000.', 'error'); return;
+        }
+        if (bMax > 500000000) {
+            document.getElementById('wf-budgetMax').classList.add('wizard-input-error');
+            showToast('Maximum budget cannot exceed ₹50 Crore.', 'error'); return;
+        }
+        if (bMax < bMin) {
+            document.getElementById('wf-budgetMax').classList.add('wizard-input-error');
+            showToast('Maximum budget must be greater than or equal to minimum budget.', 'error'); return;
+        }
+
+        // Land Size required + limits (1 – 1,00,000 of any unit)
+        if (!document.getElementById('wf-landVal').value) {
+            document.getElementById('wf-landVal').classList.add('wizard-input-error');
+            showToast('Please enter the land size.', 'error'); return;
+        }
+        if (isNaN(lVal) || lVal < 1) {
+            document.getElementById('wf-landVal').classList.add('wizard-input-error');
+            showToast('Land size must be at least 1.', 'error'); return;
+        }
+        if (lVal > 100000) {
+            document.getElementById('wf-landVal').classList.add('wizard-input-error');
+            showToast('Land size cannot exceed 1,00,000 units.', 'error'); return;
+        }
+
+        // Timeline required — must not be left on the placeholder (flexible is valid, but pick-date needs a date)
+        if (tlVal === 'pick-date') {
+            var tlDateInput = document.getElementById('wf-timeline-date');
+            var today = new Date(); today.setHours(0,0,0,0);
+            var picked = tlDateInput.value ? new Date(tlDateInput.value + 'T00:00:00') : null;
+            if (!picked || picked <= today) {
+                document.getElementById('wf-timeline-date-error').style.display = '';
+                tlDateInput.style.borderColor = '#f87171';
+                showToast('Please select a future date for your timeline.', 'error');
+                return;
+            }
+        }
         goWizardStep(3);
     } else if (s === 3) {
         goWizardStep(4);
@@ -1550,7 +1682,7 @@ function buildReviewCard() {
     var garage  = document.getElementById('wf-garage').checked;
     var pool    = document.getElementById('wf-pool').checked;
     var garden  = document.getElementById('wf-garden').checked;
-    var timeline= document.getElementById('wf-timeline').value;
+    var timeline= getTimelineValue();
     var desc    = document.getElementById('wf-desc').value.trim();
     var files   = cpState.attachFiles.length;
 
@@ -1571,7 +1703,7 @@ function buildReviewCard() {
         (style ? '<div class="review-row"><span class="review-lbl">Style</span><span class="review-val" style="text-transform:capitalize">' + esc(style) + '</span></div>' : '') +
         ((beds||baths||floors) ? '<div class="review-row"><span class="review-lbl">Rooms</span><span class="review-val">' + [beds&&(beds+'BD'),baths&&(baths+'BA'),floors&&(floors+' fl')].filter(Boolean).join(' · ') + '</span></div>' : '') +
         (extrasArr.length ? '<div class="review-row"><span class="review-lbl">Extras</span><span class="review-val">' + extrasArr.join(', ') + '</span></div>' : '') +
-        '<div class="review-row"><span class="review-lbl">Timeline</span><span class="review-val" style="text-transform:capitalize">' + esc(timeline.replace('-',' ')) + '</span></div>' +
+        '<div class="review-row"><span class="review-lbl">Timeline</span><span class="review-val">' + esc(getTimelineLabel(timeline)) + '</span></div>' +
         (desc ? '<div class="review-row review-desc"><span class="review-lbl">Description</span><div class="review-val" style="margin-top:4px">' + esc(desc) + '</div></div>' : '') +
         '<div class="review-row"><span class="review-lbl">Attachments</span><span class="review-val">' + files + ' file' + (files!==1?'s':'') + '</span></div>';
 }
@@ -1587,7 +1719,7 @@ async function submitWizard() {
         fd.append('title',       document.getElementById('wf-title').value.trim());
         fd.append('projectType', cpState.projectType);
         fd.append('style',       document.getElementById('wf-style').value);
-        fd.append('timeline',    document.getElementById('wf-timeline').value);
+        fd.append('timeline',    getTimelineValue());
         fd.append('description', document.getElementById('wf-desc').value.trim());
         fd.append('budget', JSON.stringify({
             min: parseFloat(document.getElementById('wf-budgetMin').value) || null,
@@ -1737,7 +1869,7 @@ function renderProjectDetail(p) {
         ['Budget',      bStr || '—'],
         ['Land Size',   lStr || '—'],
         ['Style',       p.style || '—'],
-        ['Timeline',    (p.timeline || 'flexible').replace('-',' ')],
+        ['Timeline',    getTimelineLabel(p.timeline || 'flexible')],
         ['Bedrooms',    r.bedrooms  || '—'],
         ['Bathrooms',   r.bathrooms || '—'],
         ['Floors',      r.floors    || '—'],
@@ -1794,7 +1926,18 @@ async function editClientProject(id) {
         resetWizardFields();
         document.getElementById('wf-title').value       = p.title || '';
         document.getElementById('wf-style').value       = p.style || '';
-        document.getElementById('wf-timeline').value    = p.timeline || 'flexible';
+        var tlVal = p.timeline || 'flexible';
+        if (tlVal.startsWith('date:')) {
+            document.getElementById('wf-timeline').value = 'pick-date';
+            var tlDateInput = document.getElementById('wf-timeline-date');
+            var tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+            tlDateInput.min = tomorrow.toISOString().split('T')[0];
+            tlDateInput.value = tlVal.slice(5);
+            document.getElementById('wf-timeline-date-wrap').style.display = '';
+        } else {
+            document.getElementById('wf-timeline').value = tlVal;
+            document.getElementById('wf-timeline-date-wrap').style.display = 'none';
+        }
         document.getElementById('wf-desc').value        = p.description || '';
         document.getElementById('wf-desc-count').textContent = (p.description||'').length;
         if (p.budget) {

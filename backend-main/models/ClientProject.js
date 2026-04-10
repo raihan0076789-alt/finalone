@@ -66,7 +66,20 @@ const clientProjectSchema = new mongoose.Schema({
     },
     timeline: {
         type: String,
-        enum: ['asap', '1-3months', '3-6months', '6-12months', 'flexible', ''],
+        validate: {
+            validator: function(v) {
+                const allowed = ['asap', '1-3months', '3-6months', '6-12months', 'flexible', ''];
+                if (allowed.includes(v)) return true;
+                // Allow specific future date in format date:YYYY-MM-DD
+                if (/^date:\d{4}-\d{2}-\d{2}$/.test(v)) {
+                    const picked = new Date(v.slice(5) + 'T00:00:00');
+                    const today  = new Date(); today.setHours(0, 0, 0, 0);
+                    return picked > today;
+                }
+                return false;
+            },
+            message: props => `"${props.value}" is not a valid timeline value.`
+        },
         default: 'flexible'
     },
 

@@ -2,6 +2,7 @@
 const path          = require('path');
 const fs            = require('fs');
 const ClientProject = require('../models/ClientProject');
+const Connection    = require('../models/Connection');
 
 // ── POST /api/client/projects ─────────────────────────────────────────────────
 // Creates a new client project. Accepts multipart/form-data.
@@ -86,9 +87,25 @@ exports.getProjects = async (req, res) => {
 
         const total = await ClientProject.countDocuments(filter);
 
+        // Find which project IDs already have an accepted connection for this client
+        const projectIds = projects.map(p => p._id);
+        const acceptedConns = await Connection.find({
+            client:  req.user._id,
+            project: { $in: projectIds },
+            status:  'accepted'
+        }).select('project');
+        const acceptedProjectIds = new Set(acceptedConns.map(c => c.project.toString()));
+
+        // Annotate each project with hasAcceptedConnection flag
+        const annotated = projects.map(p => {
+            const obj = p.toObject();
+            obj.hasAcceptedConnection = acceptedProjectIds.has(p._id.toString());
+            return obj;
+        });
+
         res.json({
             success: true,
-            data:    projects,
+            data:    annotated,
             pagination: {
                 total,
                 page:  parseInt(page),
