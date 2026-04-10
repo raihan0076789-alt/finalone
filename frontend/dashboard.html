@@ -655,6 +655,271 @@
         }
         #chatImgLightbox.open { display: flex; }
         #chatImgLightbox img { max-width: 92vw; max-height: 88vh; border-radius: 12px; box-shadow: 0 24px 80px rgba(0,0,0,0.7); }
+
+        /* ══════════════════════════════════════════════════════
+           PROJECT STATUS STEPPER
+           ═════════════════════════════════════════════════════ */
+        .ps-stepper {
+            margin: 0.6rem 0 0.4rem;
+            padding: 0.75rem 0.9rem;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 10px;
+        }
+        .ps-steps {
+            display: flex; align-items: center; gap: 0; margin-bottom: 0.65rem;
+        }
+        .ps-step {
+            display: flex; flex-direction: column; align-items: center; gap: 3px;
+            flex: 0 0 auto;
+        }
+        .ps-dot {
+            width: 26px; height: 26px; border-radius: 50%;
+            background: rgba(255,255,255,0.06);
+            border: 1.5px solid rgba(255,255,255,0.12);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.6rem; color: #475569; transition: all 0.2s;
+        }
+        .ps-label {
+            font-size: 0.58rem; font-weight: 600; color: #475569;
+            text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;
+        }
+        .ps-line {
+            flex: 1; height: 1.5px;
+            background: rgba(255,255,255,0.08);
+            margin: 0 4px; margin-bottom: 14px;
+        }
+        /* Active step */
+        .ps-step.active .ps-dot {
+            background: rgba(0,212,200,0.15);
+            border-color: #00d4c8; color: #00d4c8;
+        }
+        .ps-step.active .ps-label { color: #00d4c8; }
+        /* Done step */
+        .ps-step.done .ps-dot {
+            background: rgba(16,185,129,0.15);
+            border-color: #10b981; color: #10b981;
+        }
+        .ps-step.done .ps-label { color: #10b981; }
+        /* Action row */
+        .ps-action { display: flex; align-items: center; }
+        .ps-advance-btn {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            padding: 4px 12px; font-size: 0.72rem; font-weight: 700;
+            background: rgba(0,212,200,0.1); color: #00d4c8;
+            border: 1px solid rgba(0,212,200,0.3); border-radius: 20px;
+            cursor: pointer; transition: all 0.18s; white-space: nowrap;
+        }
+        .ps-advance-btn:hover {
+            background: rgba(0,212,200,0.2); border-color: #00d4c8;
+            transform: translateY(-1px);
+        }
+        .ps-advance-btn i { font-size: 0.6rem; }
+        .ps-complete-badge {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            padding: 4px 12px; font-size: 0.72rem; font-weight: 700;
+            background: rgba(16,185,129,0.1); color: #10b981;
+            border: 1px solid rgba(16,185,129,0.25); border-radius: 20px;
+        }
+        .ps-complete-badge i { font-size: 0.7rem; }
+
+
+        .arch-db-home { display: flex; flex-direction: column; gap: 2rem; padding-bottom: 2rem; }
+
+        /* ── Hero Banner ── */
+        .arch-db-hero {
+            position: relative; display: flex; align-items: center;
+            gap: 2rem; padding: 2.25rem 2.5rem; border-radius: 20px;
+            background: linear-gradient(135deg, rgba(0,212,200,0.08) 0%, rgba(99,102,241,0.10) 100%);
+            border: 1px solid rgba(0,212,200,0.18); overflow: hidden;
+        }
+        .arch-db-hero::before {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(ellipse at 80% 50%, rgba(0,212,200,0.06) 0%, transparent 65%);
+            pointer-events: none;
+        }
+        .arch-db-hero-text { flex: 1; min-width: 0; position: relative; z-index: 1; }
+        .arch-db-greeting {
+            font-size: 0.78rem; font-weight: 700; letter-spacing: 0.07em;
+            color: #00d4c8; text-transform: uppercase; margin-bottom: 0.4rem;
+        }
+        .arch-db-hero-title {
+            font-family: 'Syne', sans-serif; font-size: 1.85rem; font-weight: 800;
+            color: #f1f5f9; margin: 0 0 0.65rem; line-height: 1.2;
+        }
+        .arch-db-hero-title span { color: #00d4c8; }
+        .arch-db-hero-sub {
+            font-size: 0.9rem; color: #64748b; line-height: 1.6;
+            max-width: 500px; margin-bottom: 1.5rem;
+        }
+        .arch-db-hero-actions { display: flex; gap: 0.875rem; flex-wrap: wrap; }
+
+        /* ── Animated ring visual ── */
+        .arch-db-hero-visual { flex-shrink: 0; position: relative; z-index: 1; }
+        .arch-db-hero-ring {
+            position: relative; width: 120px; height: 120px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .arch-db-hero-ring-inner {
+            width: 72px; height: 72px; border-radius: 50%;
+            background: linear-gradient(135deg, rgba(0,212,200,0.2), rgba(99,102,241,0.2));
+            border: 2px solid rgba(0,212,200,0.35);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.6rem; color: #00d4c8; position: relative; z-index: 2;
+        }
+        .arch-db-orbit {
+            position: absolute; border-radius: 50%; border: 1px dashed rgba(0,212,200,0.25);
+        }
+        .arch-db-orbit span {
+            position: absolute; width: 8px; height: 8px; border-radius: 50%;
+            background: #00d4c8; top: -4px; left: 50%; transform: translateX(-50%);
+        }
+        .arch-db-orbit-1 { width: 96px;  height: 96px;  top: 12px; left: 12px; animation: archOrbit1 4s linear infinite; }
+        .arch-db-orbit-2 { width: 116px; height: 116px; top: 2px;  left: 2px;  animation: archOrbit1 7s linear infinite reverse; }
+        .arch-db-orbit-3 { width: 108px; height: 108px; top: 6px;  left: 6px;  animation: archOrbit1 5.5s linear infinite; }
+        .arch-db-orbit-2 span { background: #8b5cf6; }
+        .arch-db-orbit-3 span { background: #f59e0b; width: 6px; height: 6px; top: -3px; }
+        @keyframes archOrbit1 { to { transform: rotate(360deg); } }
+
+        /* ── Stat Cards ── */
+        .arch-db-stats-row {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;
+        }
+        .arch-db-stat-card {
+            display: flex; align-items: center; gap: 1rem; padding: 1.25rem 1.35rem;
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 16px; cursor: pointer; transition: all 0.2s;
+        }
+        .arch-db-stat-card:hover {
+            background: rgba(0,212,200,0.06); border-color: rgba(0,212,200,0.25);
+            transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,212,200,0.08);
+        }
+        .arch-db-stat-card:hover .arch-db-stat-arrow { opacity: 1; transform: translateX(3px); }
+        .arch-db-stat-body { flex: 1; min-width: 0; }
+        .arch-db-stat-value {
+            font-family: 'Syne', sans-serif; font-size: 1.6rem; font-weight: 800;
+            color: #f1f5f9; line-height: 1;
+        }
+        .arch-db-stat-label { font-size: 0.72rem; color: #64748b; font-weight: 500; margin-top: 0.25rem; }
+        .arch-db-stat-arrow {
+            color: #64748b; font-size: 0.75rem; opacity: 0;
+            transition: all 0.2s; flex-shrink: 0;
+        }
+
+        /* ── Mid Grid ── */
+        .arch-db-mid-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;
+        }
+        .arch-db-panel {
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 16px; overflow: hidden;
+        }
+        .arch-db-panel-header {
+            padding: 1rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .arch-db-panel-title {
+            font-size: 0.82rem; font-weight: 700; color: #f1f5f9; letter-spacing: 0.02em;
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+        .arch-db-panel-title i { color: #00d4c8; font-size: 0.8rem; }
+
+        /* Quick Actions */
+        .arch-db-quick-actions { padding: 0.5rem 0; }
+        .arch-db-qa-btn {
+            width: 100%; display: flex; align-items: center; gap: 1rem;
+            padding: 0.85rem 1.5rem; background: transparent; border: none;
+            border-bottom: 1px solid rgba(255,255,255,0.04); cursor: pointer;
+            transition: background 0.15s; text-align: left;
+        }
+        .arch-db-qa-btn:last-child { border-bottom: none; }
+        .arch-db-qa-btn:hover { background: rgba(0,212,200,0.04); }
+        .arch-db-qa-btn:hover .arch-db-qa-arrow { opacity: 1; color: #00d4c8; }
+        .arch-db-qa-icon {
+            width: 38px; height: 38px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem; flex-shrink: 0;
+        }
+        .arch-db-qa-title { font-size: 0.85rem; font-weight: 600; color: #f1f5f9; }
+        .arch-db-qa-sub   { font-size: 0.72rem; color: #64748b; margin-top: 0.1rem; }
+        .arch-db-qa-arrow {
+            margin-left: auto; color: #475569; font-size: 0.75rem;
+            opacity: 0; transition: all 0.2s; flex-shrink: 0;
+        }
+
+        /* Steps */
+        .arch-db-steps { padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 0; }
+        .arch-db-step  { display: flex; align-items: flex-start; gap: 1rem; padding: 0.5rem 0; }
+        .arch-db-step-num {
+            font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800;
+            color: rgba(0,212,200,0.25); line-height: 1; flex-shrink: 0; width: 36px;
+        }
+        .arch-db-step-title { font-size: 0.85rem; font-weight: 600; color: #f1f5f9; margin-bottom: 0.2rem; }
+        .arch-db-step-desc  { font-size: 0.77rem; color: #64748b; line-height: 1.55; }
+        .arch-db-step-divider {
+            width: 1px; height: 20px; background: rgba(0,212,200,0.12);
+            margin: 2px 0 2px 17px;
+        }
+
+        /* Section label */
+        .arch-db-section-label {
+            display: flex; align-items: center; gap: 0.6rem;
+            font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em;
+            color: #64748b; text-transform: uppercase;
+        }
+        .arch-db-section-label i { color: #00d4c8; font-size: 0.75rem; }
+
+        /* Coming Soon cards grid */
+        .arch-db-cs-grid {
+            display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem;
+        }
+        .arch-db-cs-card {
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 14px; padding: 1.25rem 1.1rem;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .arch-db-cs-card:hover { border-color: rgba(0,212,200,0.2); background: rgba(0,212,200,0.04); }
+        .arch-db-cs-icon {
+            width: 40px; height: 40px; border-radius: 10px;
+            background: rgba(139,92,246,0.08); color: #8b5cf6;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; margin-bottom: 0.85rem;
+        }
+        .arch-db-cs-title { font-size: 0.85rem; font-weight: 700; color: #f1f5f9; margin-bottom: 0.4rem; }
+        .arch-db-cs-desc  { font-size: 0.72rem; color: #64748b; line-height: 1.55; margin-bottom: 0.85rem; }
+        .arch-db-cs-badge {
+            display: inline-block; font-size: 0.65rem; font-weight: 700;
+            letter-spacing: 0.05em; padding: 2px 9px; border-radius: 20px;
+            background: rgba(0,212,200,0.08); color: #00d4c8;
+            border: 1px solid rgba(0,212,200,0.2);
+        }
+
+        /* Tips strip */
+        .arch-db-tips-strip {
+            display: flex; align-items: flex-start; gap: 1.5rem; flex-wrap: wrap;
+            background: rgba(0,212,200,0.04); border: 1px solid rgba(0,212,200,0.15);
+            border-radius: 14px; padding: 1.25rem 1.5rem;
+        }
+        .arch-db-tip {
+            display: flex; align-items: flex-start; gap: 0.75rem;
+            flex: 1; min-width: 200px; font-size: 0.8rem; color: #64748b; line-height: 1.6;
+        }
+        .arch-db-tip i { color: #00d4c8; font-size: 0.85rem; margin-top: 2px; flex-shrink: 0; }
+        .arch-db-tip strong { color: #f1f5f9; }
+        .arch-db-tip-divider { width: 1px; background: rgba(255,255,255,0.07); align-self: stretch; }
+
+        /* Responsive */
+        @media (max-width: 1100px) { .arch-db-cs-grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 900px)  {
+            .arch-db-stats-row { grid-template-columns: repeat(2, 1fr); }
+            .arch-db-mid-grid  { grid-template-columns: 1fr; }
+            .arch-db-cs-grid   { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 600px)  {
+            .arch-db-hero { flex-direction: column; padding: 1.5rem; }
+            .arch-db-hero-visual { display: none; }
+            .arch-db-stats-row { grid-template-columns: 1fr; }
+            .arch-db-cs-grid   { grid-template-columns: 1fr; }
+        }
 </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 </head>
@@ -676,8 +941,12 @@
             </div>
         </div>
         <nav class="sidebar-nav">
+            <div class="nav-section-label">Main</div>
+            <button class="nav-item active" data-section="dashboard">
+                <i class="fas fa-th-large"></i><span>Dashboard</span>
+            </button>
             <div class="nav-section-label">Workspace</div>
-            <button class="nav-item active" data-section="projects">
+            <button class="nav-item" data-section="projects">
                 <i class="fas fa-folder-open"></i><span>My Projects</span>
             </button>
              <button class="nav-item" data-section="connections">
@@ -720,7 +989,7 @@
     <div class="main-content">
         <header class="main-header">
             <div class="header-left">
-                <h1 id="headerTitle">My Projects</h1>
+                <h1 id="headerTitle">Dashboard</h1>
             </div>
             <div class="header-right">
                 <button class="plan-pill-btn" id="planPillBtn" onclick="window.showUpgradeModal && window.showUpgradeModal()" title="Your current plan">
@@ -728,7 +997,7 @@
                 <span class="plan-pill-label" id="planPillLabel">Free</span>
                 <span class="plan-pill-glow" id="planPillGlow"></span>
                 </button>
-                <button class="btn btn-primary" id="headerActionBtn" onclick="showNewProjectModal()">
+                <button class="btn btn-primary" id="headerActionBtn" onclick="showNewProjectModal()" style="display:none">
                     <i class="fas fa-plus"></i> New Project
                 </button>
 
@@ -758,8 +1027,250 @@
 
         <div class="content-area">
 
+            <!-- ══════════════════════ DASHBOARD SECTION ══════════════════════ -->
+            <div class="content-section active" id="dashboardSection">
+                <div class="arch-db-home">
+
+                    <!-- HERO BANNER -->
+                    <div class="arch-db-hero">
+                        <div class="arch-db-hero-text">
+                            <div class="arch-db-greeting" id="archDbGreeting">Good morning</div>
+                            <h1 class="arch-db-hero-title">Welcome back, <span id="archDbFirstName">Architect</span> 👋</h1>
+                            <p class="arch-db-hero-sub">Your SmartArch studio is ready. Design floor plans, manage client briefs, and grow your practice — all in one place.</p>
+                            <div class="arch-db-hero-actions">
+                                <button class="btn btn-primary" onclick="document.querySelector('[data-section=projects]').click()">
+                                    <i class="fas fa-folder-open"></i> My Projects
+                                </button>
+                                <button class="btn btn-ghost" onclick="document.querySelector('[data-section=connections]').click()">
+                                    <i class="fas fa-user-check"></i> Client Requests
+                                </button>
+                            </div>
+                        </div>
+                        <div class="arch-db-hero-visual">
+                            <div class="arch-db-hero-ring">
+                                <div class="arch-db-hero-ring-inner">
+                                    <i class="fas fa-drafting-compass"></i>
+                                </div>
+                                <div class="arch-db-orbit arch-db-orbit-1"><span></span></div>
+                                <div class="arch-db-orbit arch-db-orbit-2"><span></span></div>
+                                <div class="arch-db-orbit arch-db-orbit-3"><span></span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STAT CARDS -->
+                    <div class="arch-db-stats-row">
+                        <div class="arch-db-stat-card" onclick="document.querySelector('[data-section=projects]').click()">
+                            <div class="stat-icon" style="background:rgba(0,212,200,0.12);color:#00d4c8;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">
+                                <i class="fas fa-folder-open"></i>
+                            </div>
+                            <div class="arch-db-stat-body">
+                                <div class="arch-db-stat-value" id="archDbStatProjects">—</div>
+                                <div class="arch-db-stat-label">Total Projects</div>
+                            </div>
+                            <div class="arch-db-stat-arrow"><i class="fas fa-chevron-right"></i></div>
+                        </div>
+                        <div class="arch-db-stat-card" onclick="document.querySelector('[data-section=connections]').click()">
+                            <div class="stat-icon" style="background:rgba(139,92,246,0.12);color:#8b5cf6;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">
+                                <i class="fas fa-user-check"></i>
+                            </div>
+                            <div class="arch-db-stat-body">
+                                <div class="arch-db-stat-value" id="archDbStatClients">—</div>
+                                <div class="arch-db-stat-label">Client Requests</div>
+                            </div>
+                            <div class="arch-db-stat-arrow"><i class="fas fa-chevron-right"></i></div>
+                        </div>
+                        <div class="arch-db-stat-card">
+                            <div class="stat-icon" style="background:rgba(16,185,129,0.12);color:#10b981;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="arch-db-stat-body">
+                                <div class="arch-db-stat-value" id="archDbStatApproved">—</div>
+                                <div class="arch-db-stat-label">Approved Designs</div>
+                            </div>
+                            <div class="arch-db-stat-arrow"><i class="fas fa-chevron-right"></i></div>
+                        </div>
+                        <div class="arch-db-stat-card" onclick="document.querySelector('[data-section=analytics]').click()">
+                            <div class="stat-icon" style="background:rgba(245,158,11,0.12);color:#f59e0b;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <div class="arch-db-stat-body">
+                                <div class="arch-db-stat-value" id="archDbStatValue">—</div>
+                                <div class="arch-db-stat-label">Portfolio Value</div>
+                            </div>
+                            <div class="arch-db-stat-arrow"><i class="fas fa-chevron-right"></i></div>
+                        </div>
+                    </div>
+
+                    <!-- MID GRID: Quick Actions + How It Works -->
+                    <div class="arch-db-mid-grid">
+
+                        <!-- Quick Actions -->
+                        <div class="arch-db-panel">
+                            <div class="arch-db-panel-header">
+                                <span class="arch-db-panel-title"><i class="fas fa-bolt"></i> Quick Actions</span>
+                            </div>
+                            <div class="arch-db-quick-actions">
+                                <button class="arch-db-qa-btn" onclick="showNewProjectModal()">
+                                    <div class="arch-db-qa-icon" style="background:rgba(0,212,200,0.1);color:#00d4c8"><i class="fas fa-plus-circle"></i></div>
+                                    <div>
+                                        <div class="arch-db-qa-title">New Project</div>
+                                        <div class="arch-db-qa-sub">Start a fresh floor plan design</div>
+                                    </div>
+                                    <i class="fas fa-arrow-right arch-db-qa-arrow"></i>
+                                </button>
+                                <button class="arch-db-qa-btn" onclick="document.querySelector('[data-section=projects]').click()">
+                                    <div class="arch-db-qa-icon" style="background:rgba(139,92,246,0.1);color:#8b5cf6"><i class="fas fa-folder-open"></i></div>
+                                    <div>
+                                        <div class="arch-db-qa-title">My Projects</div>
+                                        <div class="arch-db-qa-sub">View and manage your designs</div>
+                                    </div>
+                                    <i class="fas fa-arrow-right arch-db-qa-arrow"></i>
+                                </button>
+                                <button class="arch-db-qa-btn" onclick="document.querySelector('[data-section=connections]').click()">
+                                    <div class="arch-db-qa-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b"><i class="fas fa-user-check"></i></div>
+                                    <div>
+                                        <div class="arch-db-qa-title">Client Requests</div>
+                                        <div class="arch-db-qa-sub">Review incoming project briefs</div>
+                                    </div>
+                                    <i class="fas fa-arrow-right arch-db-qa-arrow"></i>
+                                </button>
+                                <button class="arch-db-qa-btn" onclick="document.querySelector('[data-section=templates]').click()">
+                                    <div class="arch-db-qa-icon" style="background:rgba(16,185,129,0.1);color:#10b981"><i class="fas fa-layer-group"></i></div>
+                                    <div>
+                                        <div class="arch-db-qa-title">Templates</div>
+                                        <div class="arch-db-qa-sub">Start fast with a pre-built layout</div>
+                                    </div>
+                                    <i class="fas fa-arrow-right arch-db-qa-arrow"></i>
+                                </button>
+                                <button class="arch-db-qa-btn" onclick="document.querySelector('[data-section=analytics]').click()">
+                                    <div class="arch-db-qa-icon" style="background:rgba(99,102,241,0.1);color:#6366f1"><i class="fas fa-chart-bar"></i></div>
+                                    <div>
+                                        <div class="arch-db-qa-title">Analytics</div>
+                                        <div class="arch-db-qa-sub">Portfolio stats at a glance</div>
+                                    </div>
+                                    <i class="fas fa-arrow-right arch-db-qa-arrow"></i>
+                                </button>
+                                <button class="arch-db-qa-btn" onclick="document.querySelector('[data-section=settings]').click()">
+                                    <div class="arch-db-qa-icon" style="background:rgba(148,163,184,0.1);color:#94a3b8"><i class="fas fa-cog"></i></div>
+                                    <div>
+                                        <div class="arch-db-qa-title">Account Settings</div>
+                                        <div class="arch-db-qa-sub">Update profile, bio & preferences</div>
+                                    </div>
+                                    <i class="fas fa-arrow-right arch-db-qa-arrow"></i>
+                                </button>
+                                <button class="arch-db-qa-btn" onclick="document.querySelector('[data-section=Guide]').click()">
+                                    <div class="arch-db-qa-icon" style="background:rgba(244,63,94,0.1);color:#f43f5e"><i class="fas fa-book-open"></i></div>
+                                    <div>
+                                        <div class="arch-db-qa-title">Tutorials</div>
+                                        <div class="arch-db-qa-sub">Learn the design tools step by step</div>
+                                    </div>
+                                    <i class="fas fa-arrow-right arch-db-qa-arrow"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- How SmartArch Works for Architects -->
+                        <div class="arch-db-panel">
+                            <div class="arch-db-panel-header">
+                                <span class="arch-db-panel-title"><i class="fas fa-map-signs"></i> Your Architect Workflow</span>
+                            </div>
+                            <div class="arch-db-steps">
+                                <div class="arch-db-step">
+                                    <div class="arch-db-step-num">01</div>
+                                    <div class="arch-db-step-body">
+                                        <div class="arch-db-step-title">Receive Client Briefs</div>
+                                        <div class="arch-db-step-desc">Clients connect with you and share project briefs — budget, timeline, style, and site requirements.</div>
+                                    </div>
+                                </div>
+                                <div class="arch-db-step-divider"></div>
+                                <div class="arch-db-step">
+                                    <div class="arch-db-step-num">02</div>
+                                    <div class="arch-db-step-body">
+                                        <div class="arch-db-step-title">Design the Floor Plan</div>
+                                        <div class="arch-db-step-desc">Use the 2D/3D design studio to create detailed, multi-floor plans with rooms, doors, windows and staircases.</div>
+                                    </div>
+                                </div>
+                                <div class="arch-db-step-divider"></div>
+                                <div class="arch-db-step">
+                                    <div class="arch-db-step-num">03</div>
+                                    <div class="arch-db-step-body">
+                                        <div class="arch-db-step-title">Get AI Feedback</div>
+                                        <div class="arch-db-step-desc">Run the AI Design Feedback tool to score your layout on space efficiency, natural light, and flow.</div>
+                                    </div>
+                                </div>
+                                <div class="arch-db-step-divider"></div>
+                                <div class="arch-db-step">
+                                    <div class="arch-db-step-num">04</div>
+                                    <div class="arch-db-step-body">
+                                        <div class="arch-db-step-title">Export & Deliver</div>
+                                        <div class="arch-db-step-desc">Export finished designs as CAD, OBJ, STL, or GLTF and deliver securely through your portal.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- COMING SOON FEATURES -->
+                    <div class="arch-db-section-label">
+                        <i class="fas fa-rocket"></i> Coming Soon — Features in the Pipeline
+                    </div>
+                    <div class="arch-db-cs-grid">
+                        <div class="arch-db-cs-card">
+                            <div class="arch-db-cs-icon"><i class="fas fa-comments"></i></div>
+                            <div class="arch-db-cs-title">Direct Messaging</div>
+                            <div class="arch-db-cs-desc">Real-time chat with clients — share files, sketches, and feedback securely without leaving the platform.</div>
+                            <div class="arch-db-cs-badge">Coming Soon</div>
+                        </div>
+                        <div class="arch-db-cs-card">
+                            <div class="arch-db-cs-icon" style="background:rgba(0,212,200,0.08);color:#00d4c8"><i class="fas fa-chart-line"></i></div>
+                            <div class="arch-db-cs-title">Advanced Analytics</div>
+                            <div class="arch-db-cs-desc">Deep insights into your project history, revenue trends, client satisfaction scores and design performance metrics.</div>
+                            <div class="arch-db-cs-badge">Coming Soon</div>
+                        </div>
+                        <div class="arch-db-cs-card">
+                            <div class="arch-db-cs-icon" style="background:rgba(245,158,11,0.08);color:#f59e0b"><i class="fas fa-file-contract"></i></div>
+                            <div class="arch-db-cs-title">Contract & Invoicing</div>
+                            <div class="arch-db-cs-desc">Generate professional contracts, send invoices, and track payment milestones directly inside SmartArch.</div>
+                            <div class="arch-db-cs-badge">Coming Soon</div>
+                        </div>
+                        <div class="arch-db-cs-card">
+                            <div class="arch-db-cs-icon" style="background:rgba(16,185,129,0.08);color:#10b981"><i class="fas fa-calendar-alt"></i></div>
+                            <div class="arch-db-cs-title">Project Scheduling</div>
+                            <div class="arch-db-cs-desc">Set milestones, due dates and get automated reminders so every project stays on track from concept to completion.</div>
+                            <div class="arch-db-cs-badge">Coming Soon</div>
+                        </div>
+                        <div class="arch-db-cs-card">
+                            <div class="arch-db-cs-icon" style="background:rgba(139,92,246,0.08);color:#8b5cf6"><i class="fas fa-star"></i></div>
+                            <div class="arch-db-cs-title">Client Reviews</div>
+                            <div class="arch-db-cs-desc">Collect verified ratings after each project and showcase your track record to attract new clients on SmartArch.</div>
+                            <div class="arch-db-cs-badge">Coming Soon</div>
+                        </div>
+                    </div>
+
+                    <!-- TIPS STRIP -->
+                    <div class="arch-db-tips-strip">
+                        <div class="arch-db-tip">
+                            <i class="fas fa-lightbulb"></i>
+                            <span><strong>Pro Tip:</strong> Use keyboard shortcuts in the design studio — <strong>R</strong> to add rooms, <strong>D</strong> for doors, <strong>W</strong> for windows and <strong>Ctrl+S</strong> to save instantly.</span>
+                        </div>
+                        <div class="arch-db-tip-divider"></div>
+                        <div class="arch-db-tip">
+                            <i class="fas fa-robot"></i>
+                            <span><strong>AI Feedback:</strong> After saving a design, run AI Design Feedback to get scored on space efficiency, natural light flow, and layout quality.</span>
+                        </div>
+                        <div class="arch-db-tip-divider"></div>
+                        <div class="arch-db-tip">
+                            <i class="fas fa-shield-alt"></i>
+                            <span><strong>Verified Badge:</strong> Keep your profile complete — clients filter by specialization, experience and ratings when looking for architects.</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
             <!-- PROJECTS SECTION -->
-            <div class="content-section active" id="projectsSection">
+            <div class="content-section" id="projectsSection">
                 <div class="filters">
                     <div class="filter-buttons">
                         <button class="filter-btn active" data-filter="all" onclick="filterByStatus('all')">All</button>

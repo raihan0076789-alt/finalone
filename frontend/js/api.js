@@ -93,6 +93,7 @@ class API {
     async getProject(id)                       { return this.request(`/projects/${id}`); }
     async createProject(projectData)           { return this.request('/projects', { method: 'POST', body: JSON.stringify(projectData) }); }
     async updateProject(id, projectData)       { return this.request(`/projects/${id}`, { method: 'PUT',  body: JSON.stringify(projectData) }); }
+    async updateProjectStatus(id, status, clientFeedback) { return this.request(`/projects/${id}/status`, { method: 'PUT', body: JSON.stringify({ status, clientFeedback }) }); }
     async deleteProject(id)                    { return this.request(`/projects/${id}`, { method: 'DELETE' }); }
     async addCollaborator(projectId, data)     { return this.request(`/projects/${projectId}/collaborators`, { method: 'POST', body: JSON.stringify(data) }); }
     async getProjectVersions(projectId)        { return this.request(`/projects/${projectId}/versions`); }

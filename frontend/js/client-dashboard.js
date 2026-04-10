@@ -2582,7 +2582,10 @@ function renderSharedProjects(shares) {
             '<div class="shared-card-body">' +
                 '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.5rem;">' +
                     '<div class="shared-card-title">' + esc(proj.name || 'Untitled Project') + '</div>' +
-                    newBadge +
+                    '<div style="display:flex;gap:0.4rem;align-items:center;flex-shrink:0;">' +
+                        clientProjectStatusChip(proj.status) +
+                        newBadge +
+                    '</div>' +
                 '</div>' +
                 '<div class="shared-card-arch">' +
                     '<img src="' + archAvatar + '" alt="' + esc(arch.name || '') + '" style="width:20px;height:20px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.src=\'https://ui-avatars.com/api/?name=A&background=7c3aed&color=fff&bold=true\'">' +
@@ -2598,6 +2601,7 @@ function renderSharedProjects(shares) {
                     '<button class="shared-view-btn" onclick="event.stopPropagation();openSharedProject(\'' + share.shareToken + '\')">' +
                         '<i class="fas fa-eye"></i> Open Project Viewer' +
                     '</button>' +
+                    clientProjectStatusHtml(proj, share) +
                 '</div>' +
             '</div>' +
         '</div>';
@@ -2607,6 +2611,65 @@ function renderSharedProjects(shares) {
 function openSharedProject(token) {
     window.open('project-viewer.html?token=' + token, '_blank');
 }
+
+// ── Project Status Helpers (client side) ──────────────────────────────────────
+function clientProjectStatusChip(status) {
+    var STATUS_MAP = {
+        draft:       { label: 'Draft',       color: '#94a3b8', bg: 'rgba(148,163,184,0.12)', border: 'rgba(148,163,184,0.25)' },
+        in_progress: { label: 'In Progress', color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',  border: 'rgba(245,158,11,0.3)'  },
+        review:      { label: 'Awaiting Your Approval', color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)', border: 'rgba(139,92,246,0.3)' },
+        approved:    { label: 'Completed',   color: '#10b981', bg: 'rgba(16,185,129,0.12)',  border: 'rgba(16,185,129,0.3)'  }
+    };
+    if (!status) return '';
+    var s = STATUS_MAP[status] || { label: status, color: '#94a3b8', bg: 'rgba(148,163,184,0.1)', border: 'rgba(148,163,184,0.2)' };
+    return '<span style="display:inline-flex;align-items:center;gap:0.3rem;padding:2px 8px;border-radius:20px;font-size:0.65rem;font-weight:700;letter-spacing:0.03em;' +
+        'background:' + s.bg + ';color:' + s.color + ';border:1px solid ' + s.border + ';white-space:nowrap;">' +
+        s.label + '</span>';
+}
+
+function clientProjectStatusHtml(proj, share) {
+    if (!proj || !proj._id) return '';
+    if (proj.status !== 'review') return '';
+    // Only show approve button when project is in review stage
+    return '<button class="client-approve-btn" onclick="event.stopPropagation();clientApproveProject(\'' + proj._id + '\',\'' + share._id + '\')">' +
+        '<i class="fas fa-check-circle"></i> Approve & Complete' +
+        '</button>';
+}
+
+async function clientApproveProject(projectId, shareId) {
+    if (!confirm('Approve this project as complete? This will notify your architect.')) return;
+    try {
+        var token = localStorage.getItem('token');
+        var r = await fetch((window.CLIENT_API || 'http://localhost:5000/api') + '/projects/' + projectId + '/status', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ status: 'approved' })
+        });
+        var data = await r.json();
+        if (!data.success) {
+            alert(data.message || 'Could not approve project.');
+            return;
+        }
+        showToastClient('Project approved! Your architect has been notified. ✓', 'success');
+        // Refresh the shared projects view to reflect new status
+        if (typeof loadSharedProjects === 'function') loadSharedProjects();
+    } catch (e) {
+        alert('Failed to approve project. Please try again.');
+    }
+}
+
+function showToastClient(msg, type) {
+    // Use existing showToast if available, otherwise fallback
+    if (typeof showToast === 'function') { showToast(msg, type); return; }
+    var t = document.createElement('div');
+    t.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;padding:12px 20px;border-radius:10px;font-size:0.85rem;font-weight:600;color:#fff;' +
+        (type === 'success' ? 'background:#10b981;' : 'background:#ef4444;');
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(function(){ t.remove(); }, 3500);
+}
+
+
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    CLIENT SUPPORT — Ticket System

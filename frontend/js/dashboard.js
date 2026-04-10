@@ -29,6 +29,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // Pre-fetch connections on load so the badge count is accurate immediately
     if (typeof loadArchConnections === 'function') loadArchConnections();
 
+    // Init architect dashboard home section
+    initArchDashboard();
+
     // open section from URL
     setTimeout(() => {
         openSectionFromURL();
@@ -57,12 +60,83 @@ function loadUserInfo() {
     }
 }
 
+// ── Architect Dashboard Home Section ─────────────────────────────────────────
+function initArchDashboard() {
+    // Set greeting based on time of day
+    const greetingEl = document.getElementById('archDbGreeting');
+    if (greetingEl) {
+        const hour = new Date().getHours();
+        greetingEl.textContent = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+    }
+
+    // Set first name
+    const firstNameEl = document.getElementById('archDbFirstName');
+    if (firstNameEl) {
+        try {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const firstName = (user.name || 'Architect').split(' ')[0];
+            firstNameEl.textContent = firstName;
+        } catch (e) {}
+    }
+
+    // Populate stat cards from projects data (re-runs after projects load)
+    populateArchDashStats();
+
+    // Re-populate once projects are fully loaded (projects load is async)
+    const _origRender = window.renderProjects;
+    if (typeof _origRender === 'function') {
+        window.renderProjects = function () {
+            _origRender.apply(this, arguments);
+            populateArchDashStats();
+        };
+    }
+}
+
+function populateArchDashStats() {
+    // Total projects
+    const total = (window.projects || []).length;
+    const valEl = document.getElementById('archDbStatProjects');
+    if (valEl) valEl.textContent = total || '—';
+
+    // Approved designs
+    const approved = (window.projects || []).filter(p => p.status === 'approved').length;
+    const appEl = document.getElementById('archDbStatApproved');
+    if (appEl) appEl.textContent = approved || '0';
+
+    // Portfolio value (sum of estimatedCost across projects)
+    const totalVal = (window.projects || []).reduce((sum, p) => sum + (p.estimatedCost || 0), 0);
+    const portEl = document.getElementById('archDbStatValue');
+    if (portEl) portEl.textContent = totalVal > 0 ? '$' + totalVal.toLocaleString() : '—';
+
+    // Client requests — try reading from connection badge count
+    const badge = document.getElementById('archConnBadge');
+    const clientEl = document.getElementById('archDbStatClients');
+    if (clientEl && badge && badge.textContent) {
+        clientEl.textContent = badge.textContent;
+    } else if (clientEl && clientEl.textContent === '—') {
+        // Will be updated when connections load; start at 0
+        clientEl.textContent = '0';
+    }
+}
+
+// Expose so loadArchConnections can update our badge after it resolves
+const _origLoadArchConn = window.loadArchConnections;
+if (typeof _origLoadArchConn === 'function') {
+    window.loadArchConnections = async function () {
+        const result = await _origLoadArchConn.apply(this, arguments);
+        // After connections load, refresh the client count card
+        setTimeout(populateArchDashStats, 300);
+        return result;
+    };
+}
+
 // Handle URL hash navigation (e.g. dashboard.html#messagesSection)
 function openSectionFromURL() {
     const hash = window.location.hash;
     if (!hash) return;
 
     const sectionMap = {
+        '#dashboardSection':    'dashboard',
         '#projectsSection':     'projects',
         '#templatesSection':    'templates',
         '#analyticsSection':    'analytics',
@@ -88,7 +162,7 @@ function openSectionFromURL() {
     if (navBtn) navBtn.classList.add('active');
 
     // Update header title
-    const headerTitles = { projects:'My Projects', templates:'Project Templates', analytics:'Analytics', settings:'Settings', messages:'My Messages', connections:'Client Requests' };
+    const headerTitles = { dashboard:'Dashboard', projects:'My Projects', templates:'Project Templates', analytics:'Analytics', settings:'Settings', messages:'My Messages', connections:'Client Requests' };
     const headerEl = document.getElementById('headerTitle');
     if (headerEl) headerEl.textContent = headerTitles[section] || section;
 
@@ -114,6 +188,7 @@ function setupNavigation() {
             if (secEl) secEl.classList.add('active');
 
             const headers = {
+                dashboard:    'Dashboard',
                 projects:     'My Projects',
                 templates:    'Project Templates',
                 analytics:    'Analytics',
@@ -129,6 +204,7 @@ function setupNavigation() {
             // Show/hide New Project button
             const actionBtn = document.getElementById('headerActionBtn');
             if (actionBtn) actionBtn.style.display = (section === 'projects') ? '' : 'none';
+
 
             if (section === 'analytics') {
                 updateAnalytics();
@@ -278,6 +354,7 @@ function renderProjects() {
                     <span class="proj-rating-badge" id="rating-${project._id}">${ratingBadgeHtml(project)}</span>
                 </div>
                 ${estimatedCostBadgeHtml(project)}
+                ${statusStepperHtml(project)}
                 <div class="project-actions" onclick="event.stopPropagation()">
                     <button class="btn btn-sm btn-primary" onclick="openProject('${project._id}')">
                         <i class="fas fa-edit"></i> Edit
@@ -335,6 +412,60 @@ function aiScoreStripHtml(project) {
         '<div class="ai-score-dots">' + dots + '</div>' +
         '<span class="ai-score-value" style="color:' + color + '">' + score + '/10</span>' +
     '</div>';
+}
+
+// ── Project Status Workflow ───────────────────────────────────────────────────
+// Renders a compact stepper strip + advance button on each project card.
+// Steps: Draft → In Progress → Review → Approved
+function statusStepperHtml(project) {
+    const STEPS = [
+        { key: 'draft',       label: 'Draft',       icon: 'fa-pencil-alt' },
+        { key: 'in_progress', label: 'In Progress',  icon: 'fa-tools' },
+        { key: 'review',      label: 'Review',       icon: 'fa-search' },
+        { key: 'approved',    label: 'Complete',     icon: 'fa-check-circle' }
+    ];
+    const ORDER    = STEPS.map(s => s.key);
+    const curIdx   = ORDER.indexOf(project.status);
+    const nextStep = STEPS[curIdx + 1];
+
+    const stepsHtml = STEPS.map((step, i) => {
+        const done    = i < curIdx;
+        const active  = i === curIdx;
+        const cls     = done ? 'ps-step done' : active ? 'ps-step active' : 'ps-step';
+        return `<div class="${cls}">
+            <div class="ps-dot"><i class="fas ${step.icon}"></i></div>
+            <div class="ps-label">${step.label}</div>
+        </div>`;
+    }).join('<div class="ps-line"></div>');
+
+    const advBtn = nextStep
+        ? `<button class="ps-advance-btn" onclick="event.stopPropagation();advanceProjectStatus('${project._id}','${nextStep.key}','${nextStep.label}')">
+               <i class="fas fa-arrow-right"></i> Mark as ${nextStep.label}
+           </button>`
+        : `<span class="ps-complete-badge"><i class="fas fa-check-circle"></i> Complete</span>`;
+
+    return `<div class="ps-stepper" onclick="event.stopPropagation()">
+        <div class="ps-steps">${stepsHtml}</div>
+        <div class="ps-action">${advBtn}</div>
+    </div>`;
+}
+
+async function advanceProjectStatus(projectId, newStatus, label) {
+    try {
+        const result = await api.updateProjectStatus(projectId, newStatus);
+        if (!result.success) {
+            showToast(result.message || 'Could not update status', 'error');
+            return;
+        }
+        // Update local projects array so re-render reflects new status immediately
+        const proj = projects.find(p => p._id === projectId);
+        if (proj) proj.status = newStatus;
+        renderProjects();
+        populateArchDashStats();
+        showToast(`Project marked as "${label}" ✓`, 'success');
+    } catch (err) {
+        showToast('Failed to update status', 'error');
+    }
 }
 
 function estimatedCostBadgeHtml(project) {
@@ -399,6 +530,7 @@ function filterProjects() {
                     <span class="proj-rating-badge" id="rating-${project._id}">${ratingBadgeHtml(project)}</span>
                 </div>
                 ${estimatedCostBadgeHtml(project)}
+                ${statusStepperHtml(project)}
                 <div class="project-actions" onclick="event.stopPropagation()">
                     <button class="btn btn-sm btn-primary" onclick="openProject('${project._id}')">
                         <i class="fas fa-edit"></i> Edit
