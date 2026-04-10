@@ -1608,6 +1608,14 @@
     };
   });
 })();
+
+// Handle ?view= query param from external links (e.g. "My Connections" in dropdown)
+document.addEventListener('DOMContentLoaded', function () {
+    var view = new URLSearchParams(window.location.search).get('view');
+    if (view && typeof window.showView === 'function') {
+        setTimeout(function () { window.showView(view); }, 300);
+    }
+});
 </script>
 
 </body>

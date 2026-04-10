@@ -335,7 +335,7 @@
                         </div>
                     </div>
                     <a href="client-dashboard.html"><i class="fas fa-th-large"></i> Dashboard</a>
-                    <a href="client-dashboard.html#connections"><i class="fas fa-user-friends"></i> My Connections</a>
+                    <a href="client-dashboard.html?view=connections"><i class="fas fa-user-friends"></i> My Connections</a>
                     <a href="#" class="logout-link" onclick="doLogout(); return false;"><i class="fas fa-sign-out-alt"></i> Logout</a>
                 </div>
             </div>
@@ -685,7 +685,7 @@
     function updateCharCount(el) { document.getElementById('charCount').textContent = el.value.length; }
     function redirectToLogin()    { window.location.href = 'client-index.html?modal=login'; }
     function redirectToRegister() { window.location.href = 'client-index.html?modal=register'; }
-    function doLogout() { localStorage.removeItem('token'); localStorage.removeItem('user'); window.location.href = 'client-index.html'; }
+    function doLogout() { localStorage.removeItem('client_token'); localStorage.removeItem('client_user'); showToast('Logged out successfully', 'info'); setTimeout(() => { window.location.href = 'client-index.html'; }, 800); }
     function toggleMobileMenu()   { document.getElementById('mobileMenu').classList.toggle('open'); }
     function closeMobileMenu()    { document.getElementById('mobileMenu').classList.remove('open'); }
 
@@ -715,7 +715,7 @@
         btn.disabled = true;
 
         try {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('client_token');
             const headers = { 'Content-Type': 'application/json' };
             if (token) headers['Authorization'] = 'Bearer ' + token;
 
@@ -759,8 +759,8 @@
 
     // Auth check
     function checkAuthState() {
-        const token   = localStorage.getItem('token');
-        const userStr = localStorage.getItem('user');
+        const token   = localStorage.getItem('client_token');
+        const userStr = localStorage.getItem('client_user');
         const navAuth = document.getElementById('navAuth');
         const navUser = document.getElementById('navUser');
         const mobileNavAuth = document.getElementById('mobileNavAuth');

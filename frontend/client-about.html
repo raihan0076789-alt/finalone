@@ -327,6 +327,14 @@
             .stats-band { grid-template-columns: 1fr 1fr; }
             .footer-inner { grid-template-columns: 1fr; }
         }
+        .toast-container { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; }
+        .toast { display: flex; align-items: center; gap: 0.75rem; padding: 0.875rem 1.25rem; background: var(--ink-2); border: 1px solid var(--border); border-radius: var(--r); box-shadow: 0 20px 60px rgba(0,0,0,0.5); font-size: 0.875rem; min-width: 280px; animation: toastIn 0.3s ease; border-left: 3px solid var(--violet); }
+        .toast.success { border-left-color: var(--emerald); }
+        .toast.error   { border-left-color: var(--rose); }
+        .toast i { color: var(--violet); }
+        .toast.success i { color: var(--emerald); }
+        .toast.error   i { color: var(--rose); }
+        @keyframes toastIn { from{opacity:0;transform:translateX(50px)} to{opacity:1;transform:none} }
     </style>
 </head>
 <body>
@@ -334,6 +342,7 @@
 <div class="ambient a1"></div>
 <div class="ambient a2"></div>
 <div class="ambient a3"></div>
+<div class="toast-container" id="toastContainer"></div>
 
 <!-- NAVBAR -->
 <nav class="navbar">
@@ -372,7 +381,7 @@
                         </div>
                     </div>
                     <a href="client-dashboard.html"><i class="fas fa-th-large"></i> Dashboard</a>
-                    <a href="client-dashboard.html#connections"><i class="fas fa-user-friends"></i> My Connections</a>
+                    <a href="client-dashboard.html?view=connections"><i class="fas fa-user-friends"></i> My Connections</a>
                     <a href="#" class="logout-link" onclick="doLogout(); return false;"><i class="fas fa-sign-out-alt"></i> Logout</a>
                 </div>
             </div>
@@ -810,10 +819,21 @@
 <script>
     function redirectToLogin()    { window.location.href = 'client-index.html?modal=login'; }
     function redirectToRegister() { window.location.href = 'client-index.html?modal=register'; }
+    function showToast(msg, type) {
+        const c = document.getElementById('toastContainer');
+        const t = document.createElement('div');
+        t.className = 'toast ' + (type||'');
+        const ic = { success:'fa-check-circle', error:'fa-exclamation-circle', info:'fa-info-circle' };
+        t.innerHTML = '<i class="fas '+(ic[type]||ic.info)+'"></i><span>'+msg+'</span>';
+        c.appendChild(t);
+        setTimeout(() => { t.style.cssText='opacity:0;transform:translateX(60px);transition:all 0.3s'; setTimeout(()=>t.remove(),350); }, 3500);
+    }
+
     function doLogout() {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        window.location.href = 'client-index.html';
+        localStorage.removeItem('client_token');
+        localStorage.removeItem('client_user');
+        showToast('Logged out successfully', 'info');
+        setTimeout(() => { window.location.href = 'client-index.html'; }, 800);
     }
     function toggleMobileMenu() { document.getElementById('mobileMenu').classList.toggle('open'); }
     function closeMobileMenu()  { document.getElementById('mobileMenu').classList.remove('open'); }
@@ -826,8 +846,8 @@
 
     // Auth state check
     function checkAuthState() {
-        const token   = localStorage.getItem('token');
-        const userStr = localStorage.getItem('user');
+        const token   = localStorage.getItem('client_token');
+        const userStr = localStorage.getItem('client_user');
         const navAuth = document.getElementById('navAuth');
         const navUser = document.getElementById('navUser');
         const mobileNavAuth = document.getElementById('mobileNavAuth');

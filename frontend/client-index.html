@@ -841,6 +841,163 @@
 
         .form-input-no-icon { padding-left: 1rem !important; }
 
+        /* ── CLIENT FORGOT PASSWORD MODAL ─────────────────────────────────── */
+        .c-help-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(5px);
+            z-index: 4000;
+            align-items: center;
+            justify-content: center;
+        }
+        .c-help-modal.active { display: flex; animation: cFadeIn 0.25s ease; }
+        @keyframes cFadeIn  { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes cSlideUp { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
+
+        .c-help-modal-content {
+            background: var(--ink-2);
+            border: 1px solid var(--border);
+            border-radius: var(--r-lg);
+            padding: 2.5rem;
+            max-width: 450px;
+            width: 90%;
+            box-shadow: 0 25px 100px rgba(0,0,0,0.55);
+            animation: cSlideUp 0.3s ease;
+            position: relative;
+        }
+
+        .c-modal-close {
+            position: absolute;
+            top: 1.25rem; right: 1.25rem;
+            background: transparent;
+            border: none;
+            color: var(--slate);
+            font-size: 1.4rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            padding: 0.4rem;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 8px;
+        }
+        .c-modal-close:hover { color: var(--white); transform: rotate(90deg); background: rgba(255,255,255,0.05); }
+
+        .c-modal-header { margin-bottom: 1.5rem; }
+        .c-modal-header h2 { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--white); margin: 0 0 0.35rem; }
+        .c-modal-header p  { color: var(--slate); font-size: 0.875rem; margin: 0; }
+
+        .c-modal-tabs {
+            display: flex; gap: 0.5rem; margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .c-modal-tab {
+            background: transparent; border: none;
+            color: var(--slate); padding: 0.7rem 1.1rem;
+            font-size: 0.875rem; font-weight: 600; cursor: pointer;
+            border-bottom: 2px solid transparent; transition: all 0.2s;
+            position: relative; bottom: -1px; font-family: 'Outfit', sans-serif;
+            display: flex; align-items: center; gap: 0.4rem;
+        }
+        .c-modal-tab.active { color: var(--violet); border-bottom-color: var(--violet); }
+        .c-modal-tab:hover:not(.active) { color: var(--white); }
+
+        .c-tab-content { display: none; }
+        .c-tab-content.active { display: block; animation: cFadeIn 0.2s ease; }
+
+        .c-info-box {
+            background: rgba(139,92,246,0.06);
+            border: 1px solid rgba(139,92,246,0.18);
+            border-radius: var(--r); padding: 1rem;
+            margin-bottom: 1.5rem;
+            display: flex; gap: 0.9rem; align-items: flex-start;
+        }
+        .c-info-icon {
+            width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+            background: rgba(139,92,246,0.12);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--violet); font-size: 1.1rem;
+        }
+        .c-info-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.9rem; color: var(--white); margin-bottom: 0.2rem; }
+        .c-info-desc  { color: var(--slate); font-size: 0.8rem; line-height: 1.5; }
+
+        .c-modal-form { display: flex; flex-direction: column; gap: 1.25rem; }
+
+        .c-input-wrap {
+            position: relative; display: flex; align-items: center;
+            background: rgba(255,255,255,0.03);
+            border: 1.5px solid rgba(255,255,255,0.1);
+            border-radius: 12px; padding: 0 1rem;
+            transition: border-color 0.2s;
+        }
+        .c-input-wrap:focus-within { border-color: rgba(139,92,246,0.5); background: rgba(139,92,246,0.04); box-shadow: 0 0 0 3px rgba(139,92,246,0.1); }
+        .c-input-wrap > i { color: var(--slate); font-size: 0.875rem; margin-right: 0.75rem; flex-shrink: 0; }
+        .c-input-wrap input {
+            flex: 1; background: transparent; border: none; outline: none;
+            color: var(--white); font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem; padding: 0.85rem 0;
+        }
+        .c-input-wrap input::placeholder { color: var(--slate-2); }
+
+        .c-modal-btns { display: flex; gap: 0.75rem; margin-top: 0.25rem; }
+        .c-btn {
+            flex: 1; padding: 0.875rem 1.25rem; background: transparent;
+            color: var(--slate); border: 1.5px solid rgba(255,255,255,0.13);
+            border-radius: 10px; font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.5px;
+            text-decoration: none; text-align: center;
+            display: inline-flex; align-items: center; justify-content: center;
+        }
+        .c-btn:hover { color: var(--white); border-color: rgba(255,255,255,0.28); background: rgba(255,255,255,0.04); }
+        .c-btn-primary { background: var(--violet); color: #fff; border: none; }
+        .c-btn-primary:hover { background: #7c3aed; box-shadow: 0 8px 24px rgba(139,92,246,0.35); color: #fff; }
+        .c-btn-primary:disabled { opacity: 0.7; pointer-events: none; }
+
+        .c-modal-error {
+            background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
+            color: #fca5a5; padding: 0.8rem 1rem; border-radius: var(--r);
+            font-size: 0.85rem; line-height: 1.5; display: none; margin-bottom: 0.75rem;
+        }
+        .c-modal-error.show { display: block; }
+        .c-modal-success {
+            background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3);
+            color: #86efac; padding: 1rem; border-radius: var(--r);
+            font-size: 0.875rem; line-height: 1.6; display: none; margin-bottom: 0.75rem;
+        }
+        .c-modal-success.show { display: block; }
+
+        /* Support tab */
+        .c-contact-list { display: flex; flex-direction: column; gap: 0.9rem; margin-bottom: 1.5rem; }
+        .c-contact-item { display: flex; gap: 0.9rem; align-items: flex-start; }
+        .c-contact-icon {
+            width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+            background: rgba(139,92,246,0.1);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--violet); font-size: 1rem;
+        }
+        .c-contact-label { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.8rem; color: var(--white); margin-bottom: 0.2rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .c-contact-value { color: var(--violet); font-size: 0.875rem; text-decoration: none; display: block; transition: color 0.2s; }
+        .c-contact-value:hover { color: #a78bfa; text-decoration: underline; }
+
+        /* FAQ tab */
+        .c-faq-grid { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem; }
+        .c-faq-item {
+            background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+            border-radius: var(--r); padding: 1rem 1.25rem; cursor: pointer;
+            transition: all 0.2s; display: flex; gap: 0.9rem; align-items: center;
+        }
+        .c-faq-item:hover { border-color: rgba(139,92,246,0.25); background: rgba(139,92,246,0.04); transform: translateX(3px); }
+        .c-faq-icon {
+            width: 34px; height: 34px; border-radius: 8px; flex-shrink: 0;
+            background: rgba(139,92,246,0.1);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--violet); font-size: 0.9rem;
+        }
+        .c-faq-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.875rem; color: var(--white); margin-bottom: 0.15rem; }
+        .c-faq-desc  { color: var(--slate); font-size: 0.78rem; line-height: 1.4; }
+        .c-faq-arrow { color: var(--violet); font-size: 1rem; margin-left: auto; flex-shrink: 0; }
+
         .auth-divider { text-align: center; margin: 12px 0; color: var(--slate-2); font-size: 12px; }
 
         /* password tips */
@@ -1257,7 +1414,7 @@
                             <span class="toggle-eye" onclick="togglePw('loginPassword', this)"><i class="fas fa-eye"></i></span>
                         </div>
                         <div style="text-align:right;margin-top:6px">
-                            <a href="#" id="clientForgotLink" style="font-size:13px;color:var(--violet);text-decoration:none;">Forgot password?</a>
+                            <a href="#" id="clientForgotLink" style="font-size:13px;color:var(--violet);text-decoration:none;">Need help signing in?</a>
                         </div>
                     </div>
                     <button type="submit" class="form-submit"><i class="fas fa-sign-in-alt"></i> Sign In</button>
@@ -1465,6 +1622,149 @@
     <i class="fas fa-spinner fa-spin fa-2x"></i>
     <span id="loadingMsg" style="color:var(--slate)">Loading...</span>
 </div>
+<!-- CLIENT FORGOT PASSWORD / HELP MODAL -->
+<div class="c-help-modal" id="clientHelpModal">
+    <div class="c-help-modal-content">
+        <button class="c-modal-close" id="clientHelpModalClose" aria-label="Close">
+            <i class="fas fa-times"></i>
+        </button>
+
+        <div class="c-modal-header">
+            <h2>Need Help?</h2>
+            <p>Choose how we can assist you</p>
+        </div>
+
+        <div class="c-modal-tabs">
+            <button class="c-modal-tab active" onclick="clientSwitchTab('reset', this)">
+                <i class="fas fa-key"></i> Forgot Password
+            </button>
+            <button class="c-modal-tab" onclick="clientSwitchTab('support', this)">
+                <i class="fas fa-headset"></i> Support
+            </button>
+            <button class="c-modal-tab" onclick="clientSwitchTab('faq', this)">
+                <i class="fas fa-question-circle"></i> FAQ
+            </button>
+        </div>
+
+        <!-- TAB 1: PASSWORD RESET -->
+        <div class="c-tab-content active" id="clientResetTab">
+            <div class="c-modal-error" id="clientResetError"></div>
+            <div class="c-modal-success" id="clientResetSuccess"></div>
+
+            <div class="c-info-box">
+                <div class="c-info-icon"><i class="fas fa-lock"></i></div>
+                <div>
+                    <div class="c-info-title">Password Reset</div>
+                    <div class="c-info-desc">Enter your registered email and we'll send you a reset link.</div>
+                </div>
+            </div>
+
+            <form class="c-modal-form" id="clientResetForm">
+                <div class="form-group" style="margin-bottom:0">
+                    <label class="form-label" for="clientResetEmail">Email Address</label>
+                    <div class="c-input-wrap">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="clientResetEmail" placeholder="your@email.com" required autocomplete="email">
+                    </div>
+                </div>
+                <div class="c-modal-btns">
+                    <button type="button" class="c-btn" id="clientResetCancelBtn">Cancel</button>
+                    <button type="submit" class="c-btn c-btn-primary" id="clientResetBtn">
+                        <i class="fas fa-paper-plane" style="margin-right:0.4rem"></i>Send Reset Link
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- TAB 2: SUPPORT -->
+        <div class="c-tab-content" id="clientSupportTab">
+            <div class="c-info-box">
+                <div class="c-info-icon"><i class="fas fa-headset"></i></div>
+                <div>
+                    <div class="c-info-title">Get Support</div>
+                    <div class="c-info-desc">Our support team is ready to help you.</div>
+                </div>
+            </div>
+            <div class="c-contact-list">
+                <div class="c-contact-item">
+                    <div class="c-contact-icon"><i class="fas fa-envelope"></i></div>
+                    <div>
+                        <div class="c-contact-label">Email Support</div>
+                        <a href="client-contact.html" class="c-contact-value">clients@smartarch.pro</a>
+                    </div>
+                </div>
+                <div class="c-contact-item">
+                    <div class="c-contact-icon"><i class="fas fa-phone"></i></div>
+                    <div>
+                        <div class="c-contact-label">Phone Support</div>
+                        <a href="tel:+1234567890" class="c-contact-value">+1 (234) 567-890</a>
+                    </div>
+                </div>
+                <div class="c-contact-item">
+                    <div class="c-contact-icon"><i class="fas fa-comments"></i></div>
+                    <div>
+                        <div class="c-contact-label">Live Chat</div>
+                        <a href="#" onclick="clientOpenLiveChat(); return false;" class="c-contact-value">Start Chat Now</a>
+                    </div>
+                </div>
+                <div class="c-contact-item">
+                    <div class="c-contact-icon"><i class="fas fa-clock"></i></div>
+                    <div>
+                        <div class="c-contact-label">Support Hours</div>
+                        <span class="c-contact-value" style="color:var(--slate)">24/7 Available</span>
+                    </div>
+                </div>
+            </div>
+            <div class="c-modal-btns">
+                <button type="button" class="c-btn" onclick="closeClientHelpModal()">Close</button>
+            </div>
+        </div>
+
+        <!-- TAB 3: FAQ -->
+        <div class="c-tab-content" id="clientFaqTab">
+            <div class="c-faq-grid">
+                <div class="c-faq-item" onclick="clientExpandFaq(0)">
+                    <div class="c-faq-icon"><i class="fas fa-key"></i></div>
+                    <div>
+                        <div class="c-faq-title">How do I reset my password?</div>
+                        <div class="c-faq-desc">Click "Forgot password?" and enter your email</div>
+                    </div>
+                    <div class="c-faq-arrow"><i class="fas fa-chevron-right"></i></div>
+                </div>
+                <div class="c-faq-item" onclick="clientExpandFaq(1)">
+                    <div class="c-faq-icon"><i class="fas fa-user-lock"></i></div>
+                    <div>
+                        <div class="c-faq-title">Account locked or inaccessible?</div>
+                        <div class="c-faq-desc">Contact support for account recovery</div>
+                    </div>
+                    <div class="c-faq-arrow"><i class="fas fa-chevron-right"></i></div>
+                </div>
+                <div class="c-faq-item" onclick="clientExpandFaq(2)">
+                    <div class="c-faq-icon"><i class="fas fa-shield-alt"></i></div>
+                    <div>
+                        <div class="c-faq-title">Security best practices</div>
+                        <div class="c-faq-desc">Learn how to keep your account secure</div>
+                    </div>
+                    <div class="c-faq-arrow"><i class="fas fa-chevron-right"></i></div>
+                </div>
+                <div class="c-faq-item" onclick="clientExpandFaq(3)">
+                    <div class="c-faq-icon"><i class="fas fa-laptop"></i></div>
+                    <div>
+                        <div class="c-faq-title">Browser compatibility</div>
+                        <div class="c-faq-desc">Check supported browsers and requirements</div>
+                    </div>
+                    <div class="c-faq-arrow"><i class="fas fa-chevron-right"></i></div>
+                </div>
+            </div>
+            <div class="c-modal-btns">
+                <button type="button" class="c-btn" onclick="closeClientHelpModal()">Close</button>
+                <a href="client-about.html" target="_blank" class="c-btn c-btn-primary">Learn More</a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
 <div class="toast-container" id="toastContainer"></div>
 
 <script>
@@ -1848,7 +2148,7 @@ setInterval(()=>{
 // Init
 document.addEventListener('DOMContentLoaded', ()=>{
     checkClientAuth();
-     updateClientCTA();
+    updateClientCTA();
     const p = new URLSearchParams(window.location.search);
     const m = p.get('modal');
     if (m==='login') showLogin();
@@ -1862,7 +2162,122 @@ document.addEventListener('DOMContentLoaded', ()=>{
             if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth'});}
         });
     });
+
+    // ── Client Forgot Password Modal wiring ──────────────────────────────
+    const clientHelpModal   = document.getElementById('clientHelpModal');
+    const clientForgotLink  = document.getElementById('clientForgotLink');
+    const clientHelpClose   = document.getElementById('clientHelpModalClose');
+    const clientResetCancel = document.getElementById('clientResetCancelBtn');
+    const clientResetForm   = document.getElementById('clientResetForm');
+
+    if (clientForgotLink) {
+        clientForgotLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            openClientHelpModal('reset');
+        });
+    }
+    if (clientHelpClose)   clientHelpClose.addEventListener('click', closeClientHelpModal);
+    if (clientResetCancel) clientResetCancel.addEventListener('click', closeClientHelpModal);
+    if (clientHelpModal) {
+        clientHelpModal.addEventListener('click', function(e) {
+            if (e.target === clientHelpModal) closeClientHelpModal();
+        });
+    }
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && clientHelpModal && clientHelpModal.classList.contains('active')) {
+            closeClientHelpModal();
+        }
+    });
+
+    if (clientResetForm) {
+        clientResetForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const errorEl   = document.getElementById('clientResetError');
+            const successEl = document.getElementById('clientResetSuccess');
+            const btn       = document.getElementById('clientResetBtn');
+            const email     = document.getElementById('clientResetEmail').value.trim();
+
+            errorEl.classList.remove('show');
+            successEl.classList.remove('show');
+
+            if (!email) {
+                errorEl.textContent = 'Please enter your email address.';
+                errorEl.classList.add('show');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:0.4rem"></i>Sending...';
+
+            try {
+                const data = await clientApi.forgotPassword(email);
+                successEl.innerHTML = '<i class="fas fa-check-circle"></i> ' + (data.message || 'Reset link sent! Check your inbox.');
+                successEl.classList.add('show');
+                clientResetForm.reset();
+                setTimeout(closeClientHelpModal, 3000);
+            } catch (err) {
+                errorEl.textContent = err.message || 'Failed to send reset link. Please try again.';
+                errorEl.classList.add('show');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane" style="margin-right:0.4rem"></i>Send Reset Link';
+            }
+        });
+    }
 });
+
+function openClientHelpModal(tab) {
+    const modal = document.getElementById('clientHelpModal');
+    if (!modal) return;
+    modal.classList.add('active');
+    if (tab) clientSwitchTabByName(tab);
+}
+
+function closeClientHelpModal() {
+    const modal = document.getElementById('clientHelpModal');
+    if (!modal) return;
+    modal.classList.remove('active');
+    const form = document.getElementById('clientResetForm');
+    if (form) form.reset();
+    const err = document.getElementById('clientResetError');
+    const suc = document.getElementById('clientResetSuccess');
+    if (err) err.classList.remove('show');
+    if (suc) suc.classList.remove('show');
+}
+
+function clientSwitchTab(tabName, btnEl) {
+    document.querySelectorAll('#clientHelpModal .c-tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('#clientHelpModal .c-modal-tab').forEach(b => b.classList.remove('active'));
+    const tab = document.getElementById('client' + tabName.charAt(0).toUpperCase() + tabName.slice(1) + 'Tab');
+    if (tab) tab.classList.add('active');
+    if (btnEl) btnEl.classList.add('active');
+}
+
+function clientSwitchTabByName(tabName) {
+    document.querySelectorAll('#clientHelpModal .c-tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('#clientHelpModal .c-modal-tab').forEach(b => b.classList.remove('active'));
+    const tab = document.getElementById('client' + tabName.charAt(0).toUpperCase() + tabName.slice(1) + 'Tab');
+    if (tab) tab.classList.add('active');
+    document.querySelectorAll('#clientHelpModal .c-modal-tab').forEach(b => {
+        if (b.getAttribute('onclick') && b.getAttribute('onclick').includes("'" + tabName + "'")) {
+            b.classList.add('active');
+        }
+    });
+}
+
+function clientOpenLiveChat() {
+    alert('Live chat is loading...\n\nIn production, this would open your chat widget.');
+}
+
+function clientExpandFaq(index) {
+    const answers = [
+        'Click "Forgot password?" on the login form, enter your registered email, and follow the link sent to your inbox.',
+        'Contact our support team at clients@smartarch.pro or call +1 (234) 567-890 for account recovery.',
+        'Use a strong unique password and never share your credentials with anyone.',
+        'SmartArch works best on Chrome, Firefox, Safari, and Edge (latest versions).'
+    ];
+    alert(answers[index] || 'More info coming soon.');
+}
 </script>
 </body>
 </html>
