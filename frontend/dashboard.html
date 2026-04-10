@@ -1961,7 +1961,7 @@
                                                 </div>
                                                 <div class="ep-field">
                                                     <label class="ep-label">Email Address</label>
-                                                    <input type="email" id="profileEmail" class="ep-input" placeholder="you@example.com" readonly>
+                                                    <input type="email" id="profileEmail" class="ep-input" placeholder="you@example.com">
                                                 </div>
                                                 <div class="ep-field">
                                                     <label class="ep-label">Company</label>
@@ -1994,25 +1994,9 @@
                                                     <input type="text" id="profileLocation" class="ep-input" placeholder="e.g. Chennai, India">
                                                 </div>
                                                 <div class="ep-field">
-                                                <label class="ep-label">Specialization</label>
-                                                
-                                                <input 
-                                                    list="specializations" 
-                                                    id="profileSpecialization" 
-                                                    class="ep-input ep-datalist" 
-                                                    placeholder="e.g. Residential"
-                                                    autocomplete="off" >
-                                                <datalist id="specializations">
-                                                    <option value="Residential">
-                                                    <option value="Commercial">
-                                                    <option value="Interior Design">
-                                                    <option value="Landscape">
-                                                    <option value="Urban Planning">
-                                                    <option value="Sustainable">
-                                                    <option value="Industrial">
-                                                    <option value="Restoration">
-                                                </datalist>
-                                            </div>
+                                                    <label class="ep-label">Specialization</label>
+                                                    <input type="text" id="profileSpecialization" class="ep-input" placeholder="e.g. Residential, Commercial">
+                                                </div>
                                                 <div class="ep-field">
                                                     <label class="ep-label">Years of Experience</label>
                                                     <input type="number" id="profileExperience" class="ep-input" placeholder="e.g. 5" min="0" max="60">
@@ -2368,39 +2352,72 @@
         </div>
     </div>
 </div>
-<!-- ── Profile Setup Modal ─────────────────────────────────── -->
-<div class="modal" id="profileSetupModal">
-    <div class="modal-content">
-        <div class="modal-top-bar" style="background:linear-gradient(90deg,#3a7bd5,#00d4c8);"></div>
-        <div class="modal-inner">
-            <div class="modal-header">
-                <div class="modal-title"><i class="fas fa-user-circle"></i> Complete Your Profile</div>
-            </div>
-            <p style="color:#94a3b8;font-size:0.9rem;margin:0 0 1.2rem;">Help others recognise you. You can always update this later in Settings.</p>
+<!-- ── Profile Completion Reminder Modal ───────────────────────── -->
+<div id="profileCompleteModal" style="display:none;position:fixed;inset:0;z-index:2000;align-items:center;justify-content:center;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);">
+    <div style="
+        position:relative;
+        width:92%;max-width:440px;
+        background:linear-gradient(160deg,#0d1526 0%,#060a12 100%);
+        border:1px solid rgba(0,212,200,0.18);
+        border-radius:20px;
+        box-shadow:0 24px 60px rgba(0,0,0,0.6),0 0 0 1px rgba(0,212,200,0.08);
+        overflow:hidden;
+        animation:pcmSlideIn 0.35s cubic-bezier(0.34,1.56,0.64,1) both;
+    ">
+        <!-- Gradient bar -->
+        <div style="height:4px;background:linear-gradient(90deg,#00d4c8,#6366f1);"></div>
 
-            <!-- Avatar upload -->
-            <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;margin-bottom:1.2rem;">
-                <img id="psModalAvatar" src="" alt="Avatar"
-                     style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid #2d3651;background:#1a2035;">
-                <label style="cursor:pointer;color:#3a7bd5;font-size:0.85rem;">
-                    <i class="fas fa-camera"></i> Upload photo
-                    <input type="file" id="psAvatarInput" accept="image/*" style="display:none;" onchange="psHandleAvatar(event)">
-                </label>
+        <!-- Body -->
+        <div style="padding:2rem 2rem 1.5rem;text-align:center;">
+            <!-- Icon -->
+            <div style="
+                width:64px;height:64px;border-radius:50%;margin:0 auto 1.25rem;
+                background:linear-gradient(135deg,rgba(0,212,200,0.15),rgba(99,102,241,0.15));
+                border:1.5px solid rgba(0,212,200,0.3);
+                display:flex;align-items:center;justify-content:center;
+            ">
+                <i class="fas fa-user-edit" style="font-size:1.5rem;color:#00d4c8;"></i>
             </div>
 
-            <!-- Fields -->
-            <div style="display:flex;flex-direction:column;gap:0.8rem;">
-                <input type="tel" id="psPhone" class="form-control" placeholder="Phone number (e.g. +91 98765 43210)">
-                <input type="text" id="psCompany" class="form-control" placeholder="Company / Studio name">
-            </div>
+            <h3 style="margin:0 0 0.5rem;font-size:1.15rem;font-weight:700;color:#f1f5f9;letter-spacing:-0.01em;">Complete Your Profile</h3>
+            <p style="margin:0 0 1.25rem;font-size:0.875rem;color:#64748b;line-height:1.6;">
+                Your profile is incomplete. Fill in your details so clients can find and connect with you.
+            </p>
 
-            <div class="modal-actions" style="margin-top:1.4rem;">
-                <button class="btn btn-ghost" onclick="psSkip()">Skip for now</button>
-                <button class="btn btn-primary" onclick="psSave()"><i class="fas fa-check"></i> Save & Continue</button>
+            <!-- Missing fields checklist -->
+            <div id="pcmChecklist" style="text-align:left;display:flex;flex-direction:column;gap:0.4rem;margin-bottom:1.75rem;"></div>
+
+            <!-- Actions -->
+            <div style="display:flex;gap:0.75rem;">
+                <button onclick="pcmSkip()" style="
+                    flex:1;padding:0.65rem 1rem;
+                    background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
+                    border-radius:10px;color:#64748b;font-size:0.875rem;font-weight:500;
+                    cursor:pointer;transition:all 0.2s;
+                " onmouseover="this.style.color='#94a3b8'" onmouseout="this.style.color='#64748b'">
+                    Skip for now
+                </button>
+                <button onclick="pcmGoEdit()" style="
+                    flex:2;padding:0.65rem 1rem;
+                    background:linear-gradient(135deg,#00d4c8,#6366f1);
+                    border:none;border-radius:10px;
+                    color:#fff;font-size:0.875rem;font-weight:600;
+                    cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;
+                    box-shadow:0 4px 14px rgba(0,212,200,0.25);
+                " onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">
+                    <i class="fas fa-arrow-right" style="margin-right:6px;font-size:0.75rem;"></i>Complete Profile
+                </button>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+@keyframes pcmSlideIn {
+    from { opacity:0; transform:translateY(24px) scale(0.96); }
+    to   { opacity:1; transform:translateY(0)    scale(1);    }
+}
+</style>
 <div class="toast-container" id="toastContainer"></div>
 
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
@@ -2527,106 +2544,116 @@ function togglePassword(inputId, icon) {
 
 
 
-// ── Profile Setup Modal ─────────────────────────────────────────
+// ── Profile Completion Reminder Modal ─────────────────────────────
 (function () {
-    let psAvatarDataUrl = null;
 
-    async function checkAndShowProfileSetup() {
-        const userStr = localStorage.getItem('user');
-        if (!userStr) return;
-        const user = JSON.parse(userStr);
-        const uid = user.id || user._id;
-        if (!uid) return;
+    // Fields that must ALL be filled for a "complete" profile
+    var REQUIRED_FIELDS = [
+        { key: 'phone',          label: 'Phone number' },
+        { key: 'company',        label: 'Company / Studio name' },
+        { key: 'bio',            label: 'Bio' },
+        { key: 'location',       label: 'Location' },
+        { key: 'specialization', label: 'Specialization' },
+        { key: 'experience',     label: 'Years of experience',
+          check: function(v){ return v !== null && v !== undefined && v !== '' && Number(v) > 0; } },
+        { key: 'avatar',         label: 'Profile photo' }
+    ];
 
-        // Already done on this browser for this user → skip
-        if (localStorage.getItem('profileSetupDone_' + uid)) return;
-
-        // Show only if any field is missing
-        if (user.phone && user.avatar && user.company) {
-            localStorage.setItem('profileSetupDone_' + uid, 'true');
-            return;
-        }
-
-        // Pre-fill existing values
-        if (user.phone)   document.getElementById('psPhone').value   = user.phone;
-        if (user.company) document.getElementById('psCompany').value = user.company;
-
-        // Pre-fill avatar preview
-        const savedAvatar = localStorage.getItem('user_avatar_' + uid) || user.avatar;
-        const avatarEl = document.getElementById('psModalAvatar');
-        if (savedAvatar) {
-            avatarEl.src = savedAvatar;
-        } else {
-            avatarEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'U')}&background=00d4c8&color=060a12&bold=true&size=80`;
-        }
-
-        document.getElementById('profileSetupModal').style.display = 'flex';
+    function getMissingFields(user) {
+        return REQUIRED_FIELDS.filter(function(f) {
+            if (f.check) return !f.check(user[f.key]);
+            return !user[f.key] || String(user[f.key]).trim() === '';
+        });
     }
 
-    window.psHandleAvatar = function (event) {
-        const file = event.target.files[0];
-        if (!file || !file.type.startsWith('image/')) return;
-        if (file.size > 5 * 1024 * 1024) { showToast('Image must be under 5MB', 'error'); return; }
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            psAvatarDataUrl = e.target.result;
-            document.getElementById('psModalAvatar').src = psAvatarDataUrl;
-        };
-        reader.readAsDataURL(file);
-    };
+    function buildChecklist(missing) {
+        var el = document.getElementById('pcmChecklist');
+        if (!el) return;
+        el.innerHTML = missing.slice(0, 5).map(function(f) {
+            return '<div style="display:flex;align-items:center;gap:0.5rem;padding:0.35rem 0.6rem;' +
+                   'background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.15);' +
+                   'border-radius:8px;font-size:0.8rem;color:#94a3b8;">' +
+                   '<i class="fas fa-times-circle" style="color:#ef4444;font-size:0.75rem;flex-shrink:0;"></i>' +
+                   f.label + '</div>';
+        }).join('') +
+        (missing.length > 5
+            ? '<div style="font-size:0.75rem;color:#475569;margin-top:0.25rem;padding-left:0.4rem;">+ ' +
+              (missing.length - 5) + ' more field(s)</div>'
+            : '');
+    }
 
-    window.psSave = async function () {
-        const userStr = localStorage.getItem('user');
-        const user = JSON.parse(userStr);
-        const uid = user.id || user._id;
-        const phone   = document.getElementById('psPhone').value.trim();
-        const company = document.getElementById('psCompany').value.trim();
+    function showProfileCompleteModal() {
+        var userStr = localStorage.getItem('user');
+        if (!userStr) return;
+        var user;
+        try { user = JSON.parse(userStr); } catch(e) { return; }
+        var uid = user.id || user._id;
+        if (!uid) return;
 
+        // Skip if already skipped this session
+        if (sessionStorage.getItem('pcmSkipped_' + uid)) return;
+
+        var missing = getMissingFields(user);
+        if (missing.length === 0) return; // profile complete
+
+        buildChecklist(missing);
+        var modal = document.getElementById('profileCompleteModal');
+        if (modal) modal.style.display = 'flex';
+    }
+
+    window.pcmSkip = function () {
+        var modal = document.getElementById('profileCompleteModal');
+        if (modal) modal.style.display = 'none';
+        // Only skip for this session — will remind again next login
         try {
-            showLoading('Saving profile...');
-            const payload = {};
-            if (phone)   payload.phone   = phone;
-            if (company) payload.company = company;
-            if (psAvatarDataUrl) payload.avatar = psAvatarDataUrl;
+            var user = JSON.parse(localStorage.getItem('user') || '{}');
+            var uid = user.id || user._id;
+            if (uid) sessionStorage.setItem('pcmSkipped_' + uid, '1');
+        } catch(e) {}
+    };
 
-            if (Object.keys(payload).length > 0) {
-                await api.updateProfile(payload);
-                // Update cached user object
-                Object.assign(user, payload);
-                localStorage.setItem('user', JSON.stringify(user));
-                // Save avatar to per-user key so dashboard-profile.js picks it up
-                if (psAvatarDataUrl) {
-                    localStorage.setItem('user_avatar_' + uid, psAvatarDataUrl);
-                    if (typeof setAllAvatars === 'function') setAllAvatars(psAvatarDataUrl);
-                }
-                loadUserInfo();
+    window.pcmGoEdit = function () {
+        var modal = document.getElementById('profileCompleteModal');
+        if (modal) modal.style.display = 'none';
+
+        // Navigate to Settings section, then switch to Edit Profile tab
+        document.querySelectorAll('.sidebar-nav .nav-item').forEach(function(n){ n.classList.remove('active'); });
+        document.querySelectorAll('.content-section').forEach(function(s){ s.classList.remove('active'); });
+
+        var settingsNav = document.querySelector('[data-section="settings"]');
+        var settingsSec = document.getElementById('settingsSection');
+        var headerEl    = document.getElementById('headerTitle');
+
+        if (settingsNav) settingsNav.classList.add('active');
+        if (settingsSec) settingsSec.classList.add('active');
+        if (headerEl)    headerEl.textContent = 'Settings';
+
+        if (typeof loadUserProfile === 'function') loadUserProfile();
+
+        // Make sure the Settings sub-menu is on Profile → Edit tab
+        var profileSettingsItem = document.querySelector('[data-settings="profile"]');
+        if (profileSettingsItem) {
+            document.querySelectorAll('.settings-nav-item').forEach(function(i){ i.classList.remove('active'); });
+            profileSettingsItem.classList.add('active');
+            document.querySelectorAll('.settings-panel').forEach(function(p){ p.classList.remove('active'); });
+            var profilePanel = document.getElementById('profilePanel');
+            if (profilePanel) profilePanel.classList.add('active');
+        }
+
+        // Switch to Edit tab inside the profile panel
+        setTimeout(function() {
+            var editBtn = document.querySelector('[data-profile-tab="edit"]');
+            if (editBtn && typeof switchProfileTab === 'function') {
+                switchProfileTab('edit', editBtn);
             }
-
-            localStorage.setItem('profileSetupDone_' + uid, 'true');
-            hideLoading();
-            showToast('Profile updated!', 'success');
-        } catch (e) {
-            hideLoading();
-            showToast(e.message || 'Save failed', 'error');
-            return;
-        }
-        document.getElementById('profileSetupModal').style.display = 'none';
+        }, 80);
     };
 
-    window.psSkip = function () {
-        const userStr = localStorage.getItem('user');
-        if (userStr) {
-            const user = JSON.parse(userStr);
-            const uid = user.id || user._id;
-            if (uid) localStorage.setItem('profileSetupDone_' + uid, 'true');
-        }
-        document.getElementById('profileSetupModal').style.display = 'none';
-    };
-
-    // Run after DOMContentLoaded + slight delay to let loadUserInfo() finish
+    // Trigger 5 seconds after page load
     document.addEventListener('DOMContentLoaded', function () {
-        setTimeout(checkAndShowProfileSetup, 800);
+        setTimeout(showProfileCompleteModal, 5000);
     });
+
 })();
 
 (function initPlanPill() {

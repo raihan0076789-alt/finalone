@@ -185,7 +185,7 @@ body{background:var(--bg);color:var(--white);font-family:'Inter',-apple-system,B
 
 <!-- TOPBAR -->
 <header class="topbar">
-  <a id="backBtn" href="javascript:history.back()" class="topbar-back"><i class="fas fa-arrow-left"></i> Back</a>
+  <a id="backBtn" href="#" class="topbar-back" onclick="handleBack(event)"><i class="fas fa-arrow-left"></i> Back</a>
   <div class="topbar-sep"></div>
   <div class="topbar-logo">SmartArch</div>
   <div class="topbar-sep"></div>
@@ -889,6 +889,24 @@ const COST_RATES = {
   dining:1000,office:1300,garage:700,hallway:600,
   staircase:900,entrance:800,other:900
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  BACK NAVIGATION
+// ─────────────────────────────────────────────────────────────────────────────
+function handleBack(e) {
+  e.preventDefault();
+  const params  = new URLSearchParams(location.search);
+  const backUrl = params.get('back');
+  if (backUrl) {
+    // Decode and navigate — works even when opened in a new tab
+    window.location.href = decodeURIComponent(backUrl);
+  } else if (history.length > 1) {
+    history.back();
+  } else {
+    // Last-resort fallback: go to client dashboard
+    window.location.href = 'client-dashboard.html';
+  }
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  BOOTSTRAP

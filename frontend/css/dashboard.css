@@ -949,7 +949,7 @@ body::before {
 /* MAIN CARD */
 .profile-overview-card {
     width: 100%;
-    max-width: 900px;
+    max-width: 780px;
     margin: auto;
     padding: 2.5rem 2rem;
     border-radius: 20px;
@@ -979,11 +979,11 @@ body::before {
 /* MAIN CARD */
 #profile-tab-overview .profile-overview-card {
     width: 100% !important;
-    max-width: 900px !important;
+    max-width: 780px !important;
     margin: 0 auto !important;
     padding: 2.5rem 2rem !important;
     border-radius: 20px !important;
-
+    
     background: radial-gradient(circle at top, rgba(0,212,200,0.08), transparent 60%),
                 linear-gradient(145deg, #060a12, #0b1220) !important;
 
@@ -1011,10 +1011,10 @@ body::before {
 
 /* AVATAR */
 #profile-tab-overview .profile-overview-avatar {
-    width: 120px;
-    height: 120px;
+    width: 112px;
+    height: 112px;
     border-radius: 50%;
-    margin: 50px auto 1rem;  /* 👈 increase if needed */
+    margin: 0 auto 1rem;
     background: linear-gradient(135deg, #00d4c8, #6366f1);
 
     display: flex;
@@ -1082,7 +1082,6 @@ body::before {
 
 
 #profile-tab-overview .profile-overview-avatar {
-    margin-top: 60px;
     position: relative;
     z-index: 2;
 }
@@ -1811,31 +1810,4 @@ body::before {
 .ep-btn-add-link:hover {
     background: rgba(0,212,200,0.08) !important;
     border-color: rgba(0,212,200,0.5) !important;
-}
-/* Match your existing input */
-.ep-datalist {
-    width: 100%;
-    padding: 10px 12px;
-
-    background-color: #0b1220;
-    color: #fff;
-
-    border: 1px solid #1f2a44;
-    border-radius: 8px;
-
-    font-size: 14px;
-    outline: none;
-
-    transition: border 0.2s ease, box-shadow 0.2s ease;
-}
-
-/* Focus state */
-.ep-datalist:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 2px rgba(59,130,246,0.2);
-}
-
-/* Placeholder color */
-.ep-datalist::placeholder {
-    color: #94a3b8;
 }

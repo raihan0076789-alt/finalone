@@ -2609,7 +2609,8 @@ function renderSharedProjects(shares) {
 }
 
 function openSharedProject(token) {
-    window.open('project-viewer.html?token=' + token, '_blank');
+    var backUrl = encodeURIComponent('client-dashboard.html#shared');
+    window.open('project-viewer.html?token=' + token + '&back=' + backUrl, '_blank');
 }
 
 // ── Project Status Helpers (client side) ──────────────────────────────────────
