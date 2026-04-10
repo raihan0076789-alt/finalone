@@ -1812,3 +1812,30 @@ body::before {
     background: rgba(0,212,200,0.08) !important;
     border-color: rgba(0,212,200,0.5) !important;
 }
+/* Match your existing input */
+.ep-datalist {
+    width: 100%;
+    padding: 10px 12px;
+
+    background-color: #0b1220;
+    color: #fff;
+
+    border: 1px solid #1f2a44;
+    border-radius: 8px;
+
+    font-size: 14px;
+    outline: none;
+
+    transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Focus state */
+.ep-datalist:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59,130,246,0.2);
+}
+
+/* Placeholder color */
+.ep-datalist::placeholder {
+    color: #94a3b8;
+}

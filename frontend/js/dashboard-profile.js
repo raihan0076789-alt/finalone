@@ -128,7 +128,7 @@ async function pushAvatarToBackend(avatarDataUrl) {
     try {
         const token = localStorage.getItem('token');
         if (!token) return;
-        await fetch('http://localhost:5000/api/auth/profile', {
+        await fetch('http://localhost:5000/api/architect/profile', {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
