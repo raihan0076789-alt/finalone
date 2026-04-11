@@ -258,6 +258,9 @@ function buildLineChart(projects) {
 function refreshCharts() {
     const projects = window.projects || [];
     buildCharts(projects);
+    // New charts defined in dashboard.js updateAnalytics scope — call via globals if available
+    if (typeof _buildTimelineChart  === 'function') _buildTimelineChart(projects);
+    if (typeof _buildStyleRadarChart === 'function') _buildStyleRadarChart(projects);
 }
 
 window.buildCharts    = buildCharts;

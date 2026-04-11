@@ -93,13 +93,48 @@ exports.getProjects = async (req, res) => {
             client:  req.user._id,
             project: { $in: projectIds },
             status:  'accepted'
-        }).select('project');
+        }).select('project architect').populate('architect', 'name');
         const acceptedProjectIds = new Set(acceptedConns.map(c => c.project.toString()));
 
-        // Annotate each project with hasAcceptedConnection flag
+        // Build a map: projectId → { architectName, architectProjectStatus }
+        const connMetaMap = {};
+        for (const conn of acceptedConns) {
+            const pid = conn.project.toString();
+            // Look up the architect's shared project status via ProjectShare
+            const ProjectShare = require('../models/ProjectShare');
+            const share = await ProjectShare.findOne({
+                sharedBy:  conn.architect._id,
+                sharedWith: req.user._id,
+                connection: conn._id,
+                isRevoked: false
+            }).populate('project', 'status');
+            // Fallback for legacy records
+            let archStatus = null;
+            if (share && share.project) {
+                archStatus = share.project.status;
+            } else {
+                const legacyShare = await ProjectShare.findOne({
+                    sharedBy:   conn.architect._id,
+                    sharedWith: req.user._id,
+                    isRevoked:  false
+                }).populate('project', 'status');
+                if (legacyShare && legacyShare.project) {
+                    archStatus = legacyShare.project.status;
+                }
+            }
+            connMetaMap[pid] = {
+                architectName:          conn.architect?.name || 'Your Architect',
+                architectProjectStatus: archStatus
+            };
+        }
+
+        // Annotate each project with hasAcceptedConnection flag + architect info
         const annotated = projects.map(p => {
             const obj = p.toObject();
-            obj.hasAcceptedConnection = acceptedProjectIds.has(p._id.toString());
+            const pid = p._id.toString();
+            obj.hasAcceptedConnection    = acceptedProjectIds.has(pid);
+            obj.architectName            = connMetaMap[pid]?.architectName || null;
+            obj.architectProjectStatus   = connMetaMap[pid]?.architectProjectStatus || null;
             return obj;
         });
 

@@ -1357,17 +1357,336 @@ async function createFromTemplate(templateType) {
     }
 }
 
-function updateAnalytics() {
-    const totalProjects = projects.length;
-    const totalArea     = projects.reduce((sum, p) => sum + (p.metadata?.totalArea || 0), 0);
-    const totalRooms    = projects.reduce((sum, p) => sum + (p.metadata?.totalRooms || 0), 0);
-    const totalValue    = projects.reduce((sum, p) => sum + (p.metadata?.estimatedCost || 0), 0);
+async function updateAnalytics() {
+    const projs   = window.projects || [];
+    const conns   = window._archConnectionsCache || [];
+    const el      = id => document.getElementById(id);
+    const fmt     = n => n >= 1000000 ? '$' + (n/1000000).toFixed(1) + 'M' : n >= 1000 ? '$' + (n/1000).toFixed(0) + 'k' : '$' + n;
 
-    const el = id => document.getElementById(id);
-    if (el('totalProjects')) el('totalProjects').textContent = totalProjects;
-    if (el('totalAreaStat')) el('totalAreaStat').textContent = totalArea.toLocaleString();
-    if (el('totalRoomsStat'))el('totalRoomsStat').textContent = totalRooms;
-    if (el('totalValue'))    el('totalValue').textContent = '$' + totalValue.toLocaleString();
+    // ── KPI counts ────────────────────────────────────────────────────────────
+    const totalProjects   = projs.length;
+    const completed       = projs.filter(p => p.status === 'approved').length;
+    const inProgress      = projs.filter(p => p.status === 'in_progress').length;
+    const inReview        = projs.filter(p => p.status === 'review').length;
+    const inDraft         = projs.filter(p => p.status === 'draft').length;
+    const totalArea       = projs.reduce((s, p) => s + (p.metadata?.totalArea || 0), 0);
+    const totalRooms      = projs.reduce((s, p) => s + (p.metadata?.totalRooms || 0), 0);
+    const totalValue      = projs.reduce((s, p) => s + (p.metadata?.estimatedCost || 0), 0);
+    const acceptedClients = conns.filter(c => c.status === 'accepted').length;
+    const completionPct   = totalProjects > 0 ? Math.round((completed / totalProjects) * 100) : 0;
+    const avgArea         = totalProjects > 0 ? Math.round(totalArea / totalProjects) : 0;
+    const avgRooms        = totalProjects > 0 ? (totalRooms / totalProjects).toFixed(1) : '0';
+    const avgValue        = totalProjects > 0 ? Math.round(totalValue / totalProjects) : 0;
+
+    // ── Set KPI card values ───────────────────────────────────────────────────
+    if (el('totalProjects'))    el('totalProjects').textContent    = totalProjects;
+    if (el('completedProjects'))el('completedProjects').textContent= completed;
+    if (el('totalClients'))     el('totalClients').textContent     = acceptedClients;
+    if (el('totalAreaStat'))    el('totalAreaStat').textContent    = totalArea.toLocaleString();
+    if (el('totalRoomsStat'))   el('totalRoomsStat').textContent   = totalRooms;
+    if (el('totalValue'))       el('totalValue').textContent       = fmt(totalValue);
+    if (el('analyticsLastUpdated')) el('analyticsLastUpdated').textContent = 'Updated ' + new Date().toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit'});
+
+    // ── Completion Ring (mini doughnut) ───────────────────────────────────────
+    if (el('completionRingPct'))   el('completionRingPct').textContent   = completionPct + '%';
+    if (el('completionRingLabel')) el('completionRingLabel').textContent = `${completed} of ${totalProjects} projects done`;
+    _buildCompletionRing(completionPct);
+
+    // ── Client Pipeline breakdown ──────────────────────────────────────────────
+    const pipelineEl = el('clientPipelineList');
+    if (pipelineEl) {
+        const pending  = conns.filter(c => c.status === 'pending').length;
+        const rejected = conns.filter(c => c.status === 'rejected').length;
+        const items = [
+            { label: 'Active Clients',   val: acceptedClients, color: '#10b981', pct: conns.length > 0 ? (acceptedClients/conns.length)*100 : 0 },
+            { label: 'Pending Requests', val: pending,         color: '#f59e0b', pct: conns.length > 0 ? (pending/conns.length)*100 : 0 },
+            { label: 'Declined',         val: rejected,        color: '#ef4444', pct: conns.length > 0 ? (rejected/conns.length)*100 : 0 },
+        ];
+        pipelineEl.innerHTML = items.map(it => `
+            <div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+                    <span style="font-size:0.72rem;color:#94a3b8;">${it.label}</span>
+                    <span style="font-size:0.75rem;font-weight:700;color:${it.color};">${it.val}</span>
+                </div>
+                <div style="height:5px;border-radius:3px;background:rgba(255,255,255,0.06);overflow:hidden;">
+                    <div style="height:100%;border-radius:3px;background:${it.color};width:${it.pct.toFixed(1)}%;transition:width 0.8s ease;"></div>
+                </div>
+            </div>`).join('');
+    }
+
+    // ── Averages per project ───────────────────────────────────────────────────
+    const avgEl = el('avgMetricsList');
+    if (avgEl) {
+        const metrics = [
+            { icon: 'fa-ruler-combined', label: 'Avg Area',   val: avgArea + ' m²',  color: '#00d4c8' },
+            { icon: 'fa-door-open',      label: 'Avg Rooms',  val: avgRooms,          color: '#8b5cf6' },
+            { icon: 'fa-dollar-sign',    label: 'Avg Value',  val: fmt(avgValue),     color: '#ec4899' },
+            { icon: 'fa-layer-group',    label: 'Avg Floors', val: (totalProjects > 0 ? (projs.reduce((s,p)=>(s+(p.floors?.length||1)),0)/totalProjects).toFixed(1) : '0'), color: '#f59e0b' },
+        ];
+        avgEl.innerHTML = metrics.map(m => `
+            <div style="display:flex;align-items:center;gap:0.65rem;">
+                <div style="width:28px;height:28px;border-radius:7px;background:${m.color}1a;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <i class="fas ${m.icon}" style="font-size:0.7rem;color:${m.color};"></i>
+                </div>
+                <div style="flex:1;min-width:0;">
+                    <div style="font-size:0.68rem;color:#64748b;">${m.label}</div>
+                    <div style="font-size:0.88rem;font-weight:700;color:#e2e8f0;">${m.val}</div>
+                </div>
+            </div>`).join('');
+    }
+
+    // ── Build all charts ───────────────────────────────────────────────────────
+    if (typeof buildCharts === 'function') buildCharts(projs);
+    _buildTimelineChart(projs);
+    _buildStyleRadarChart(projs);
+
+    // ── Load reviews async ────────────────────────────────────────────────────
+    _loadAllReviews(projs);
+}
+
+// ── Completion ring mini chart ─────────────────────────────────────────────────
+let _completionRingInst = null;
+function _buildCompletionRing(pct) {
+    const ctx = document.getElementById('completionRingChart');
+    if (!ctx) return;
+    if (_completionRingInst) { _completionRingInst.destroy(); _completionRingInst = null; }
+    _completionRingInst = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            datasets: [{
+                data: [pct, 100 - pct],
+                backgroundColor: ['rgba(16,185,129,0.85)', 'rgba(255,255,255,0.05)'],
+                borderColor: 'transparent',
+                borderWidth: 0,
+            }]
+        },
+        options: {
+            responsive: false,
+            cutout: '76%',
+            plugins: { legend: { display: false }, tooltip: { enabled: false } },
+            animation: { duration: 900, easing: 'easeInOutQuart' }
+        }
+    });
+}
+
+// ── Timeline chart: projects created per month ─────────────────────────────────
+let _timelineChartInst = null;
+function _buildTimelineChart(projs) {
+    const ctx = document.getElementById('timelineChart');
+    if (!ctx) return;
+    if (_timelineChartInst) { _timelineChartInst.destroy(); _timelineChartInst = null; }
+
+    // Build monthly buckets for the last 8 months
+    const months = [];
+    const counts = [];
+    const now = new Date();
+    for (let i = 7; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        months.push(d.toLocaleString('en-US', { month: 'short', year: '2-digit' }));
+        const next = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+        counts.push(projs.filter(p => {
+            if (!p.createdAt) return false;
+            const c = new Date(p.createdAt);
+            return c >= d && c < next;
+        }).length);
+    }
+
+    const gradCtx = ctx.getContext('2d');
+    const grad = gradCtx.createLinearGradient(0, 0, 0, 200);
+    grad.addColorStop(0, 'rgba(139,92,246,0.3)');
+    grad.addColorStop(1, 'rgba(139,92,246,0)');
+
+    _timelineChartInst = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: months,
+            datasets: [{
+                label: 'Projects',
+                data: counts,
+                backgroundColor: counts.map((_, i) => i === counts.length - 1 ? 'rgba(139,92,246,0.9)' : 'rgba(139,92,246,0.45)'),
+                borderColor: 'transparent',
+                borderRadius: 5,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#0d1424',
+                    borderColor: 'rgba(255,255,255,0.1)',
+                    borderWidth: 1,
+                    titleColor: '#f1f5f9',
+                    bodyColor: '#94a3b8',
+                    padding: 10,
+                    callbacks: { label: c => ` ${c.parsed.y} project${c.parsed.y !== 1 ? 's' : ''}` }
+                }
+            },
+            scales: {
+                x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 11 } }, border: { color: 'rgba(255,255,255,0.07)' } },
+                y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748b', font: { size: 11 }, stepSize: 1, callback: v => Number.isInteger(v) ? v : '' }, border: { color: 'rgba(255,255,255,0.07)' }, beginAtZero: true }
+            }
+        }
+    });
+}
+
+// ── Style radar chart ─────────────────────────────────────────────────────────
+let _styleRadarInst = null;
+function _buildStyleRadarChart(projs) {
+    const ctx = document.getElementById('styleRadarChart');
+    if (!ctx) return;
+    if (_styleRadarInst) { _styleRadarInst.destroy(); _styleRadarInst = null; }
+
+    const styleKeys = ['modern', 'minimalist', 'traditional', 'luxury'];
+    const labels    = ['Modern', 'Minimalist', 'Traditional', 'Luxury'];
+    const counts    = styleKeys.map(s => projs.filter(p => p.style === s).length);
+
+    _styleRadarInst = new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Projects',
+                data: counts,
+                backgroundColor: 'rgba(0,212,200,0.15)',
+                borderColor: 'rgba(0,212,200,0.8)',
+                pointBackgroundColor: '#00d4c8',
+                pointBorderColor: '#0d1424',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                borderWidth: 2,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#0d1424',
+                    borderColor: 'rgba(255,255,255,0.1)',
+                    borderWidth: 1,
+                    titleColor: '#f1f5f9',
+                    bodyColor: '#94a3b8',
+                    padding: 10,
+                }
+            },
+            scales: {
+                r: {
+                    grid: { color: 'rgba(255,255,255,0.07)' },
+                    angleLines: { color: 'rgba(255,255,255,0.07)' },
+                    pointLabels: { color: '#94a3b8', font: { size: 11 } },
+                    ticks: { display: false, stepSize: 1 },
+                    beginAtZero: true,
+                }
+            }
+        }
+    });
+}
+
+// ── Reviews loader ─────────────────────────────────────────────────────────────
+async function _loadAllReviews(projs) {
+    const listEl = document.getElementById('reviewsList');
+    const distEl = document.getElementById('ratingDistribution');
+    const distBarsEl = document.getElementById('ratingDistBars');
+    const badgeEl = document.getElementById('overallRatingBadge');
+    const overallValEl = document.getElementById('overallRatingVal');
+    const overallCntEl = document.getElementById('overallRatingCount');
+    const avgStatEl = document.getElementById('avgRatingStat');
+    if (!listEl) return;
+
+    if (!projs.length) {
+        listEl.innerHTML = '<div style="text-align:center;padding:2rem;color:#475569;font-size:0.82rem;">No projects yet — reviews will appear here.</div>';
+        return;
+    }
+
+    try {
+        const token = localStorage.getItem('token');
+        const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+        const allReviews = [];
+
+        // Fetch reviews for all projects in parallel
+        await Promise.all(projs.map(async p => {
+            try {
+                const res  = await fetch('http://localhost:5000/api/reviews/' + p._id, { headers });
+                const data = await res.json();
+                if (data.success && data.data?.reviews?.length) {
+                    data.data.reviews.forEach(r => {
+                        allReviews.push({ ...r, projectName: p.name, projectId: p._id });
+                    });
+                }
+            } catch (e) {}
+        }));
+
+        if (!allReviews.length) {
+            listEl.innerHTML = '<div style="text-align:center;padding:2rem;color:#475569;font-size:0.82rem;"><i class="fas fa-comment-slash" style="display:block;font-size:1.5rem;margin-bottom:0.5rem;color:#334155;"></i>No client reviews yet</div>';
+            if (badgeEl) badgeEl.style.display = 'none';
+            if (distEl) distEl.style.display = 'none';
+            return;
+        }
+
+        // Compute overall stats
+        const totalRev  = allReviews.length;
+        const sumRating = allReviews.reduce((s, r) => s + (r.rating || 0), 0);
+        const avgRating = (sumRating / totalRev).toFixed(1);
+
+        // Update KPI avg rating
+        if (avgStatEl) avgStatEl.textContent = avgRating;
+        if (badgeEl) { badgeEl.style.display = 'block'; }
+        if (overallValEl) overallValEl.textContent = avgRating;
+        if (overallCntEl) overallCntEl.textContent = totalRev + ' review' + (totalRev !== 1 ? 's' : '');
+
+        // Rating distribution bars (5→1)
+        if (distEl && distBarsEl) {
+            distEl.style.display = 'block';
+            distBarsEl.innerHTML = [5,4,3,2,1].map(star => {
+                const cnt = allReviews.filter(r => r.rating === star).length;
+                const pct = totalRev > 0 ? (cnt / totalRev) * 100 : 0;
+                const color = star >= 4 ? '#10b981' : star === 3 ? '#f59e0b' : '#ef4444';
+                return `<div style="display:flex;align-items:center;gap:0.5rem;">
+                    <span style="font-size:0.7rem;color:#94a3b8;width:14px;text-align:right;">${star}</span>
+                    <i class="fas fa-star" style="font-size:0.6rem;color:${color};flex-shrink:0;"></i>
+                    <div style="flex:1;height:7px;border-radius:4px;background:rgba(255,255,255,0.06);overflow:hidden;">
+                        <div style="height:100%;border-radius:4px;background:${color};width:${pct.toFixed(1)}%;transition:width 0.8s ease;"></div>
+                    </div>
+                    <span style="font-size:0.68rem;color:#64748b;min-width:22px;">${cnt}</span>
+                </div>`;
+            }).join('');
+        }
+
+        // Sort by newest first
+        allReviews.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+        // Render review cards
+        listEl.innerHTML = allReviews.map(r => {
+            const stars = '★'.repeat(r.rating || 0) + '☆'.repeat(5 - (r.rating || 0));
+            const starColor = (r.rating || 0) >= 4 ? '#f59e0b' : (r.rating || 0) >= 3 ? '#94a3b8' : '#ef4444';
+            const avatarUrl = r.reviewer?.avatar
+                ? r.reviewer.avatar
+                : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(r.reviewer?.name || 'C') + '&background=8b5cf6&color=fff&bold=true&size=40';
+            const timeStr = r.createdAt
+                ? new Date(r.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                : '';
+            return `<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:0.85rem;display:flex;gap:0.75rem;transition:background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">
+                <img src="${avatarUrl}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.src='https://ui-avatars.com/api/?name=C&background=8b5cf6&color=fff&bold=true&size=40'">
+                <div style="flex:1;min-width:0;">
+                    <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.25rem;">
+                        <span style="font-size:0.82rem;font-weight:700;color:#e2e8f0;">${r.reviewer?.name || 'Anonymous'}</span>
+                        <span style="font-size:0.68rem;color:#475569;">·</span>
+                        <span style="font-size:0.7rem;color:#64748b;">${r.projectName || ''}</span>
+                        <span style="font-size:0.68rem;color:#475569;margin-left:auto;">${timeStr}</span>
+                    </div>
+                    <div style="color:${starColor};font-size:0.8rem;letter-spacing:1px;margin-bottom:0.35rem;">${stars}</div>
+                    ${r.comment ? `<p style="font-size:0.78rem;color:#94a3b8;margin:0;line-height:1.55;">${r.comment}</p>` : ''}
+                </div>
+            </div>`;
+        }).join('');
+
+    } catch (err) {
+        listEl.innerHTML = '<div style="text-align:center;padding:2rem;color:#475569;font-size:0.82rem;">Could not load reviews.</div>';
+    }
 }
 
 async function loadUserProfile() {
@@ -1905,6 +2224,14 @@ async function loadArchConnections() {
         window._archConnectionsCache = data.data;
         renderArchConnections(data.data);
         updateArchConnBadge(data.data);
+        // Seed status tracker so pollArchConnBadge doesn't false-fire on first poll
+        if (typeof _lastKnownProjectStatuses !== 'undefined') {
+            (data.data || []).forEach(conn => {
+                if (conn.architectProject?._id) {
+                    _lastKnownProjectStatuses[String(conn.architectProject._id)] = conn.architectProject.status;
+                }
+            });
+        }
     } catch (e) {
         body.innerHTML = '<div style="text-align:center;padding:3rem;color:#f43f5e"><i class="fas fa-exclamation-circle" style="font-size:1.5rem"></i><div style="margin-top:1rem">Could not load connections.</div></div>';
     }
@@ -2070,7 +2397,10 @@ function connStatusStepperHtml(c) {
     ];
     const ORDER  = STEPS.map(s => s.key);
     const curIdx = ORDER.indexOf(proj.status);
-    const nextStep = STEPS[curIdx + 1] || null;
+    // Architects can only advance up to 'review' — 'approved' is set by client
+    const nextStep = (curIdx < ORDER.length - 1 && STEPS[curIdx + 1].key !== 'approved')
+        ? STEPS[curIdx + 1]
+        : null;
 
     // Build a status → timestamp map from statusHistory
     const histMap = {};
@@ -2102,11 +2432,21 @@ function connStatusStepperHtml(c) {
 
     const reviewNote = nextStep && nextStep.key === 'review'
         ? `<div style="font-size:0.65rem;color:#f59e0b;display:flex;align-items:center;gap:0.3rem;margin-left:auto;">
-               <i class="fas fa-share-alt" style="font-size:0.6rem;"></i> Auto-shares to client
+               <i class="fas fa-share-alt" style="font-size:0.6rem;"></i> Notifies &amp; shares with client
            </div>`
         : '';
 
-    const advBtn = nextStep
+    // When at 'review' — waiting for client; when 'approved' — complete
+    const atReview   = proj.status === 'review';
+    const atApproved = proj.status === 'approved';
+
+    const advBtn = atApproved
+        ? `<span class="ps-complete-badge"><i class="fas fa-check-circle"></i> Complete</span>`
+        : atReview
+        ? `<span style="font-size:0.72rem;color:#a78bfa;display:flex;align-items:center;gap:0.35rem;">
+               <i class="fas fa-hourglass-half" style="font-size:0.65rem;"></i> Awaiting client review
+           </span>`
+        : nextStep
         ? `<div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
                <button class="ps-advance-btn" onclick="event.stopPropagation();advanceConnProjectStatus('${c._id}','${proj._id}','${nextStep.key}','${nextStep.label}')">
                    <i class="fas fa-arrow-right"></i> Mark as ${nextStep.label}
@@ -2141,7 +2481,7 @@ async function advanceConnProjectStatus(connId, projectId, newStatus, label) {
         renderArchConnections(cache);
 
         let msg = `Project marked as "${label}" ✓`;
-        if (newStatus === 'review') msg += ' — Project auto-shared with connected client!';
+        if (newStatus === 'review') msg += ' — Client notified and project shared!';
         showToast(msg, 'success');
     } catch (err) {
         showToast('Failed to update project status', 'error');
@@ -2719,11 +3059,45 @@ function handleArchChatKeydown(e) {
 }
 
 // ── Poll architect badge on page load ─────────────────────────────────────────
+// Track last-known project statuses so we can detect client-driven changes
+var _lastKnownProjectStatuses = {};
+
 async function pollArchConnBadge() {
     try {
         const res  = await fetch(`${CONN_API}/my`, { headers: connHeaders() });
         const data = await res.json();
-        if (data.success) updateArchConnBadge(data.data);
+        if (!data.success) return;
+
+        updateArchConnBadge(data.data);
+
+        // ── Detect client-driven status changes (approve / re-request) ────────
+        (data.data || []).forEach(conn => {
+            const proj = conn.architectProject;
+            if (!proj || !proj._id) return;
+            const pid  = String(proj._id);
+            const prev = _lastKnownProjectStatuses[pid];
+
+            if (prev !== undefined && prev !== proj.status) {
+                const clientName = conn.client?.name || 'Your client';
+                if (proj.status === 'approved') {
+                    showToast(`🎉 ${clientName} has approved the project!`, 'success');
+                } else if (proj.status === 'in_progress') {
+                    showToast(`🔄 ${clientName} requested updates — check the chat.`, 'info');
+                    // Refresh connections so the card shows new status
+                    loadArchConnections();
+                }
+            }
+            _lastKnownProjectStatuses[pid] = proj.status;
+        });
+
+        // Seed initial statuses on first run
+        if (Object.keys(_lastKnownProjectStatuses).length === 0) {
+            (data.data || []).forEach(conn => {
+                if (conn.architectProject?._id) {
+                    _lastKnownProjectStatuses[String(conn.architectProject._id)] = conn.architectProject.status;
+                }
+            });
+        }
     } catch (e) {}
 }
 

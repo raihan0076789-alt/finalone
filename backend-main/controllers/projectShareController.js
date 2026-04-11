@@ -29,11 +29,11 @@ exports.shareProject = async (req, res) => {
             }
 
             // Verify connection exists and is accepted
-            const conn = await Connection.findOne({
-                architect: req.user._id,
-                client:    clientId,
-                status:    'accepted'
-            });
+            // Prefer connectionId lookup when provided (avoids ambiguity with multiple clients)
+            const connQuery = connectionId
+                ? { _id: connectionId, architect: req.user._id, status: 'accepted' }
+                : { architect: req.user._id, client: clientId, status: 'accepted' };
+            const conn = await Connection.findOne(connQuery);
             if (!conn) {
                 return res.status(400).json({
                     success: false,
@@ -41,12 +41,25 @@ exports.shareProject = async (req, res) => {
                 });
             }
 
-            // Check if already shared (non-revoked)
-            const existing = await ProjectShare.findOne({
+            // Check if already shared (non-revoked) — try connection-scoped first, then legacy fallback
+            let existing = await ProjectShare.findOne({
                 project:    project._id,
                 sharedWith: clientId,
+                connection: conn._id,
                 isRevoked:  false
             });
+            // Fallback: legacy record may not have connection field set
+            if (!existing) {
+                existing = await ProjectShare.findOne({
+                    project:    project._id,
+                    sharedWith: clientId,
+                    isRevoked:  false
+                });
+                // Back-fill connection field on legacy record
+                if (existing && !existing.connection) {
+                    existing.connection = conn._id;
+                }
+            }
             if (existing) {
                 // Re-share: update message and reset view stats
                 existing.message   = message;

@@ -263,16 +263,20 @@ exports.updateProjectStatus = async (req, res) => {
         const isOwner  = project.owner.equals(req.user._id);
         const isClient = req.user.role === 'client';
 
-        // Clients may only approve (review → approved)
+        const Connection = require('../models/Connection');
+
         if (isClient) {
-            if (project.status !== 'review' || status !== 'approved') {
+            // Client can only act when project is in 'review':
+            //   - approve  → 'approved'   (project complete)
+            //   - re-request → 'in_progress' (send back for updates)
+            const allowedClientTransitions = ['approved', 'in_progress'];
+            if (project.status !== 'review' || !allowedClientTransitions.includes(status)) {
                 return res.status(403).json({
                     success: false,
-                    message: 'Clients can only approve a project that is in review.'
+                    message: 'Clients can only approve or request updates on a project that is in review.'
                 });
             }
             // Verify the client is connected to this project's architect
-            const Connection = require('../models/Connection');
             const conn = await Connection.findOne({
                 architect: project.owner,
                 client:    req.user._id,
@@ -285,12 +289,18 @@ exports.updateProjectStatus = async (req, res) => {
             return res.status(403).json({ success: false, message: 'Not authorized to change project status.' });
         }
 
-        // ── Architect: enforce forward-only transitions ────────────────────────
+        // ── Architect: enforce forward-only transitions up to 'review' only ───
+        // Architects cannot mark a project as 'approved' — only clients can.
         const ORDER = ['draft', 'in_progress', 'review', 'approved'];
         if (!isClient) {
+            if (status === 'approved') {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Only the client can mark a project as complete (approved).'
+                });
+            }
             const currentIdx = ORDER.indexOf(project.status);
             const newIdx     = ORDER.indexOf(status);
-            // Allow moving forward only (no backwards except to draft from in_progress)
             const allowedBacktrack = project.status === 'in_progress' && status === 'draft';
             if (!allowedBacktrack && newIdx <= currentIdx) {
                 return res.status(400).json({
@@ -302,12 +312,6 @@ exports.updateProjectStatus = async (req, res) => {
 
         const oldStatus = project.status;
         project.status  = status;
-        if (clientFeedback) {
-            // Store optional client feedback note on the project description (appended)
-            project.description = (project.description || '') +
-                (project.description ? '\n\n' : '') +
-                '[Client note] ' + clientFeedback.slice(0, 300);
-        }
         project.lastModifiedBy = req.user._id;
 
         // ── Record status change in history ────────────────────────────────────
@@ -316,21 +320,31 @@ exports.updateProjectStatus = async (req, res) => {
 
         await project.save();
 
-        // ── Auto-share project with connected client when moved to 'review' ────
+        // ── Auto-share project with the specific connected client on 'review' ──
+        // Only shares with the client whose connection maps to this project.
         if (status === 'review' && !isClient) {
             try {
-                const Connection   = require('../models/Connection');
                 const ProjectShare = require('../models/ProjectShare');
-
-                // Find all accepted connections for this architect
                 const conns = await Connection.find({ architect: req.user._id, status: 'accepted' });
                 for (const conn of conns) {
-                    // Check if there's already a non-revoked share for this client
-                    const existing = await ProjectShare.findOne({
+                    let existing = await ProjectShare.findOne({
                         project:    project._id,
                         sharedWith: conn.client,
+                        connection: conn._id,
                         isRevoked:  false
                     });
+                    // Fallback for legacy records without connection field
+                    if (!existing) {
+                        existing = await ProjectShare.findOne({
+                            project:    project._id,
+                            sharedWith: conn.client,
+                            isRevoked:  false
+                        });
+                        if (existing && !existing.connection) {
+                            existing.connection = conn._id;
+                            await existing.save().catch(() => {});
+                        }
+                    }
                     if (!existing) {
                         await ProjectShare.create({
                             project:    project._id,
@@ -338,8 +352,12 @@ exports.updateProjectStatus = async (req, res) => {
                             sharedWith: conn.client,
                             connection: conn._id,
                             mode:       'connection',
-                            message:    'Your architect has moved this project to Review. Please take a look!'
+                            message:    'Your architect has submitted this project for your review. Please take a look!'
                         });
+                        conn.unreadByClient += 1;
+                        await conn.save();
+                    } else {
+                        // Already shared — just bump unread to notify client
                         conn.unreadByClient += 1;
                         await conn.save();
                     }
@@ -349,34 +367,60 @@ exports.updateProjectStatus = async (req, res) => {
             }
         }
 
-        // ── Notify the other party via connection unread count ─────────────────
-        try {
-            const Connection = require('../models/Connection');
-            if (isClient) {
-                // Client approved — notify architect
-                await Connection.updateOne(
-                    { architect: project.owner, client: req.user._id, status: 'accepted' },
-                    { $inc: { unreadByArchitect: 1 } }
-                );
-            } else {
-                // Architect advanced — notify client if moved to in_progress, review, or approved
-                if (['in_progress', 'review', 'approved'].includes(status)) {
-                    // Find connection where architect owns this project and any accepted client
-                    const conns = await Connection.find({
-                        architect: req.user._id,
-                        status:    'accepted'
+        // ── Client re-requests updates: post message to chat + notify architect ─
+        if (isClient && status === 'in_progress') {
+            try {
+                const conn = await Connection.findOne({
+                    architect: project.owner,
+                    client:    req.user._id,
+                    status:    'accepted'
+                });
+                if (conn) {
+                    const chatText = clientFeedback
+                        ? `🔄 Update requested: ${clientFeedback.slice(0, 300)}`
+                        : '🔄 Client has requested updates on the project.';
+                    conn.messages.push({
+                        sender:     req.user._id,
+                        senderRole: 'client',
+                        type:       'text',
+                        text:       chatText
                     });
-                    // Bump unread for all connected clients of this architect
-                    // (project is the architect's own design — all accepted clients can see shared version)
-                    for (const c of conns) {
-                        c.unreadByClient += 1;
-                        await c.save();
-                    }
+                    conn.unreadByArchitect += 1;
+                    await conn.save();
                 }
+            } catch (chatErr) {
+                console.warn('Re-request chat message failed:', chatErr.message);
             }
-        } catch (notifErr) {
-            // Notification failure should not block the status update response
-            console.warn('Status notification update failed:', notifErr.message);
+        }
+
+        // ── Client approves: notify architect ─────────────────────────────────
+        if (isClient && status === 'approved') {
+            try {
+                const conn = await Connection.findOne({
+                    architect: project.owner,
+                    client:    req.user._id,
+                    status:    'accepted'
+                });
+                if (conn) {
+                    conn.unreadByArchitect += 1;
+                    await conn.save();
+                }
+            } catch (notifErr) {
+                console.warn('Approval notification failed:', notifErr.message);
+            }
+        }
+
+        // ── Architect moves to in_progress: notify client only ─────────────────
+        if (!isClient && status === 'in_progress') {
+            try {
+                const conns = await Connection.find({ architect: req.user._id, status: 'accepted' });
+                for (const c of conns) {
+                    c.unreadByClient += 1;
+                    await c.save();
+                }
+            } catch (notifErr) {
+                console.warn('In-progress notification failed:', notifErr.message);
+            }
         }
 
         res.json({

@@ -100,11 +100,28 @@ exports.getMyConnections = async (req, res) => {
             const enriched = await Promise.all(conns.map(async (conn) => {
                 const obj = conn.toObject();
                 if (conn.status === 'accepted') {
-                    const share = await ProjectShare.findOne({
+                    // Try exact connection match first (new records)
+                    let share = await ProjectShare.findOne({
                         sharedBy:   req.user._id,
                         sharedWith: conn.client._id,
+                        connection: conn._id,
                         isRevoked:  false
                     }).populate('project', 'name type status statusHistory');
+
+                    // Fallback for legacy records created before connection field was indexed
+                    if (!share) {
+                        share = await ProjectShare.findOne({
+                            sharedBy:   req.user._id,
+                            sharedWith: conn.client._id,
+                            isRevoked:  false
+                        }).populate('project', 'name type status statusHistory');
+                        // Back-fill the connection field so future lookups hit the fast path
+                        if (share) {
+                            share.connection = conn._id;
+                            await share.save().catch(() => {});
+                        }
+                    }
+
                     obj.architectProject = (share && share.project) ? share.project : null;
                 } else {
                     obj.architectProject = null;

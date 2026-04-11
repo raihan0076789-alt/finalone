@@ -60,6 +60,10 @@ const projectLimitGuard = async (req, res, next) => {
 
         if (limit === Infinity) return next();
 
+        // Allow creating a project when it's for a client connection workspace —
+        // the architect should never be blocked from working on a client's brief.
+        if (req.body && req.body.connectionId) return next();
+
         // Count projects where this user is the owner (field is `owner`, not `user`)
         const count = await Project.countDocuments({ owner: req.user._id });
         if (count >= limit) {

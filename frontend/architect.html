@@ -13,6 +13,7 @@
     .undo-redo-group button{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:#c0c8de;border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.8rem;transition:all .18s;}
     .undo-redo-group button:hover:not(:disabled){background:rgba(91,124,250,0.25);color:#5b7cfa;}
     .undo-redo-group button:disabled{opacity:0.3;cursor:not-allowed;}
+    .toolbar-divider{width:1px;height:20px;background:rgba(255,255,255,0.1);flex-shrink:0;margin:0 2px;}
 
     /* ── Floor isolation buttons (3D per-floor view) ── */
     .floor-iso-bar{display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin-top:6px;}
@@ -349,8 +350,8 @@
     #clientContextBanner {
         display: none;
         align-items: center;
-        gap: 0.55rem;
-        padding: 4px 12px 4px 8px;
+        gap: 0.45rem;
+        padding: 4px 10px 4px 8px;
         background: linear-gradient(135deg, rgba(139,92,246,0.18), rgba(0,212,200,0.12));
         border: 1px solid rgba(139,92,246,0.35);
         border-radius: 8px;
@@ -358,11 +359,12 @@
         font-weight: 600;
         color: #c4b5fd;
         white-space: nowrap;
-        max-width: 280px;
-        overflow: hidden;
+        max-width: 340px;
+        min-width: 0;
+        overflow: visible;
         cursor: default;
         transition: background 0.2s;
-        flex-shrink: 0;
+        flex-shrink: 1;
     }
     #clientContextBanner.visible { display: flex; }
     #clientContextBanner:hover { background: linear-gradient(135deg, rgba(139,92,246,0.28), rgba(0,212,200,0.18)); }
@@ -374,9 +376,9 @@
         flex-shrink: 0;
     }
     #clientContextBanner .ccb-icon i { font-size: 0.65rem; color: #a78bfa; }
-    #clientContextBanner .ccb-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-    #clientContextBanner .ccb-label { font-size: 0.6rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; line-height: 1; }
-    #clientContextBanner .ccb-value { color: #e2e8f0; font-weight: 700; font-size: 0.75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #clientContextBanner .ccb-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; max-width: 90px; flex-shrink: 1; }
+    #clientContextBanner .ccb-label { font-size: 0.58rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; line-height: 1; white-space: nowrap; }
+    #clientContextBanner .ccb-value { color: #e2e8f0; font-weight: 700; font-size: 0.73rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     #clientContextBanner .ccb-sep { width: 1px; height: 24px; background: rgba(255,255,255,0.1); flex-shrink: 0; }
     #clientContextBanner .ccb-back {
         margin-left: 4px;
@@ -603,14 +605,11 @@
             <button class="ccb-specs" onclick="openSpecsModal()" title="View client project requirements">
                 <i class="fas fa-clipboard-list"></i> View Specs
             </button>
-            <button class="ccb-back" onclick="window.location.href='dashboard.html'" title="Back to Dashboard">
-                <i class="fas fa-arrow-left"></i> Dashboard
-            </button>
         </div>
 
         <div class="nav-center">
             <!-- Drawing Tools -->
-            <div class="tool-group" style="margin-top: 30px; margin-right: -45px;">
+            <div class="tool-group" style="margin-top: 5px; margin-right: -45px;">
                 <button class="tool-btn active" data-tool="select" onclick="setTool('select')" title="Select (V)"><i class="fas fa-mouse-pointer"></i><span>Select</span></button>
                 <button class="tool-btn" data-tool="room"     onclick="setTool('room')"     title="Add Room (R)"><i class="fas fa-vector-square"></i><span>Room</span></button>
                 <button class="tool-btn" data-tool="door"     onclick="setTool('door')"     title="Door (D)"><i class="fas fa-door-open"></i><span>Door</span></button>
@@ -618,11 +617,7 @@
                 <button class="tool-btn" data-tool="staircase" onclick="setTool('staircase')" title="Staircase (S)"><i class="fas fa-level-up-alt"></i><span>Stairs</span></button>
                 <button class="tool-btn" data-tool="measure"  onclick="setTool('measure')"  title="Measure (M)"><i class="fas fa-ruler-combined"></i><span>Measure</span></button>
             </div>
-            <!-- Undo / Redo -->
-            <div class="undo-redo-group" style="margin-left:6px;">
-                <button id="undoBtn" onclick="undo()" title="Undo (Ctrl+Z)" disabled><i class="fas fa-undo"></i></button>
-                <button id="redoBtn" onclick="redo()" title="Redo (Ctrl+Y)" disabled><i class="fas fa-redo"></i></button>
-            </div>
+            <!-- Undo / Redo moved to canvas toolbar -->
         </div>
         <div class="nav-right">
           <button class="plan-pill-btn" id="planPillBtn" onclick="window.showUpgradeModal && window.showUpgradeModal()" title="Your current plan">
@@ -823,6 +818,12 @@
 
                 <!-- Mid: zoom + snap (2D only) -->
                 <div class="toolbar-mid">
+                    <!-- Undo / Redo -->
+                    <div class="undo-redo-group">
+                        <button id="undoBtn" onclick="undo()" title="Undo (Ctrl+Z)" disabled><i class="fas fa-undo"></i></button>
+                        <button id="redoBtn" onclick="redo()" title="Redo (Ctrl+Y)" disabled><i class="fas fa-redo"></i></button>
+                    </div>
+                    <div class="toolbar-divider"></div>
                     <div class="zoom-group" id="zoomControls">
                         <button class="zoom-btn" onclick="zoomOut()" title="Zoom out"><i class="fas fa-minus"></i></button>
                         <span id="zoomLevel">100%</span>

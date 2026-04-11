@@ -1048,12 +1048,17 @@ async function saveProject(){
     if(projectId){
       await api.updateProject(projectId,projectData);
     } else {
-      const d=await api.createProject(projectData);
+      // If opened from a client connection, tag the payload with connectionId so
+      // the backend plan-limit guard allows the save regardless of project count.
+      const ctx = window._clientConnectionContext;
+      const createPayload = (ctx && ctx.connectionId)
+        ? Object.assign({}, projectData, { connectionId: ctx.connectionId })
+        : projectData;
+      const d=await api.createProject(createPayload);
       projectId=d.data._id;
       window.history.replaceState({},'',`?id=${projectId}`);
       if(typeof initReviewsPanel==='function') initReviewsPanel(projectId);
       // If opened from a client connection, auto-share this new project with the client
-      const ctx = window._clientConnectionContext;
       if (ctx && ctx.connectionId) {
         try {
           const token = localStorage.getItem('token');
@@ -1067,7 +1072,7 @@ async function saveProject(){
               await fetch(`http://localhost:5000/api/projects/${projectId}/share`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-                body: JSON.stringify({ mode: 'connection', clientId, message: 'Your architect has started working on your project!' })
+                body: JSON.stringify({ mode: 'connection', clientId, connectionId: ctx.connectionId, message: 'Your architect has started working on your project!' })
               });
             }
           }

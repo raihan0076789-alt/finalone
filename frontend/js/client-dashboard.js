@@ -1784,7 +1784,26 @@ var STATUS_CONFIG = {
     cancelled:   { label:'Cancelled',   cls:'status-cancelled' }
 };
 
+// Returns a status pill showing the architect's project progress for the card
+function _archProjectStatusBadge(status, architectName) {
+    var cfg = {
+        draft:       { label: 'Draft',       icon: 'fa-pencil-alt',    color: '#64748b', bg: 'rgba(100,116,139,0.15)',  border: 'rgba(100,116,139,0.3)'  },
+        in_progress: { label: 'In Progress', icon: 'fa-tools',         color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',  border: 'rgba(245,158,11,0.3)'  },
+        review:      { label: 'In Review',   icon: 'fa-search',        color: '#3b82f6', bg: 'rgba(59,130,246,0.12)',  border: 'rgba(59,130,246,0.3)'  },
+        approved:    { label: 'Completed',   icon: 'fa-check-circle',  color: '#10b981', bg: 'rgba(16,185,129,0.12)',  border: 'rgba(16,185,129,0.3)'  },
+    };
+    var s   = cfg[status] || { label: 'Working', icon: 'fa-drafting-compass', color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)', border: 'rgba(139,92,246,0.3)' };
+    var tip = architectName ? 'Architect: ' + architectName : 'Architect assigned';
+    return '<div title="' + tip + '" style="display:inline-flex;align-items:center;gap:0.35rem;' +
+        'padding:0.3rem 0.65rem;border-radius:7px;border:1px solid ' + s.border + ';' +
+        'background:' + s.bg + ';color:' + s.color + ';font-size:0.72rem;font-weight:700;white-space:nowrap;cursor:default;">' +
+        '<i class="fas ' + s.icon + '" style="font-size:0.65rem;"></i>' +
+        s.label +
+    '</div>';
+}
+
 function renderClientProjects(projects) {
+    window._cachedClientProjects = projects; // cache for detail modal use
     var grid = document.getElementById('clientProjectsGrid');
     if (!projects.length) {
         grid.innerHTML =
@@ -1828,7 +1847,9 @@ function renderClientProjects(projects) {
             '<div class="cp-actions">' +
                 '<button class="cp-btn cp-btn-view"    onclick="viewClientProject(\'' + p._id + '\')"><i class="fas fa-eye"></i> View</button>' +
                 '<button class="cp-btn cp-btn-edit"    onclick="editClientProject(\'' + p._id + '\')"><i class="fas fa-edit"></i> Edit</button>' +
-                '<button class="cp-btn cp-btn-connect" onclick="connectFromProject(\'' + p._id + '\',\'' + esc(p.title) + '\')"><i class="fas fa-user-plus"></i> Find Architect</button>' +
+                (p.hasAcceptedConnection
+                    ? _archProjectStatusBadge(p.architectProjectStatus, p.architectName)
+                    : '<button class="cp-btn cp-btn-connect" onclick="connectFromProject(\'' + p._id + '\',\'' + esc(p.title) + '\')"><i class="fas fa-user-plus"></i> Find Architect</button>') +
                 '<button class="cp-btn cp-btn-delete"  onclick="deleteClientProject(\'' + p._id + '\')"><i class="fas fa-trash"></i></button>' +
             '</div>' +
         '</div>';
@@ -1900,9 +1921,21 @@ function renderProjectDetail(p) {
             }).join('') + '</div></div>';
     }
 
-    detailHtml += '<div style="display:flex;gap:0.75rem;margin-top:1.5rem;flex-wrap:wrap">' +
-        '<button class="connect-send-btn" style="flex:1;min-width:140px;justify-content:center" onclick="closeProjDetail();connectFromProject(\'' + p._id + '\',\'' + esc(p.title) + '\')">' +
-            '<i class="fas fa-user-plus"></i> Find Architect</button>' +
+    // Check if already connected using the cached list
+    var cached = (window._cachedClientProjects || []).find(function(cp) { return String(cp._id) === String(p._id); });
+    var isConnected = cached ? cached.hasAcceptedConnection : false;
+    var archStatus  = cached ? cached.architectProjectStatus : null;
+    var archName    = cached ? cached.architectName : null;
+
+    detailHtml += '<div style="display:flex;gap:0.75rem;margin-top:1.5rem;flex-wrap:wrap;align-items:center">' +
+        (isConnected
+            ? '<div style="flex:1;min-width:140px;display:flex;align-items:center;gap:0.5rem;">' +
+                '<i class="fas fa-check-circle" style="color:#10b981;font-size:0.85rem;"></i>' +
+                '<span style="font-size:0.82rem;color:#94a3b8;">Architect assigned</span>' +
+                _archProjectStatusBadge(archStatus, archName) +
+              '</div>'
+            : '<button class="connect-send-btn" style="flex:1;min-width:140px;justify-content:center" onclick="closeProjDetail();connectFromProject(\'' + p._id + '\',\'' + esc(p.title) + '\')">' +
+                '<i class="fas fa-user-plus"></i> Find Architect</button>') +
         '<button class="connect-cancel-btn" onclick="closeProjDetail();editClientProject(\'' + p._id + '\')">' +
             '<i class="fas fa-edit"></i> Edit</button>' +
     '</div>';

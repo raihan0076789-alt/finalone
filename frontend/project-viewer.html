@@ -1055,7 +1055,164 @@ function buildInfoPanel(){
       <div class="info-row"><span class="info-lbl">Ceiling</span><span class="info-val">${cap(p.materials?.interior?.ceilings||'—')}</span></div>
     </div>
 
+    ${p.status === 'review' ? buildClientActionPanel() : ''}
+
   `;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  CLIENT ACTION PANEL — shown when project status is 'review'
+// ─────────────────────────────────────────────────────────────────────────────
+function buildClientActionPanel() {
+  return `
+    <div class="info-section" id="clientActionPanel">
+      <div class="info-section-title" style="color:#a78bfa;">
+        <i class="fas fa-gavel"></i> Your Review
+      </div>
+      <p style="font-size:0.75rem;color:#94a3b8;margin:0 0 0.85rem;">
+        Your architect has submitted this project for your review. Please approve it or request changes.
+      </p>
+
+      <!-- Request Updates form (hidden by default) -->
+      <div id="rerequestForm" style="display:none;margin-bottom:0.75rem;">
+        <textarea id="rerequestMsg"
+          rows="3"
+          placeholder="e.g. Please add a balcony to the master bedroom and increase the kitchen size."
+          style="width:100%;background:#0d1117;border:1px solid rgba(139,92,246,0.3);border-radius:8px;
+                 color:#e2e8f0;font-size:0.78rem;padding:0.6rem 0.75rem;resize:vertical;
+                 outline:none;font-family:inherit;box-sizing:border-box;"
+        ></textarea>
+        <div style="display:flex;gap:0.5rem;margin-top:0.5rem;">
+          <button onclick="submitRerequest()"
+            style="flex:1;padding:0.5rem;background:linear-gradient(135deg,#f59e0b,#ef4444);
+                   color:#fff;border:none;border-radius:8px;font-size:0.78rem;font-weight:700;
+                   cursor:pointer;">
+            <i class="fas fa-paper-plane"></i> Send Request
+          </button>
+          <button onclick="document.getElementById('rerequestForm').style.display='none'"
+            style="padding:0.5rem 0.75rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
+                   color:#94a3b8;border-radius:8px;font-size:0.78rem;cursor:pointer;">
+            Cancel
+          </button>
+        </div>
+      </div>
+
+      <!-- Action buttons -->
+      <div id="clientActionBtns" style="display:flex;flex-direction:column;gap:0.5rem;">
+        <button onclick="submitApproval()"
+          style="padding:0.65rem;background:linear-gradient(135deg,#10b981,#059669);
+                 color:#fff;border:none;border-radius:10px;font-size:0.82rem;font-weight:700;
+                 cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.4rem;">
+          <i class="fas fa-check-circle"></i> Approve Project
+        </button>
+        <button onclick="showRerequestForm()"
+          style="padding:0.65rem;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.35);
+                 color:#f59e0b;border-radius:10px;font-size:0.82rem;font-weight:700;
+                 cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.4rem;">
+          <i class="fas fa-redo"></i> Request Updates
+        </button>
+      </div>
+
+      <!-- Success state (hidden initially) -->
+      <div id="clientActionDone" style="display:none;text-align:center;padding:0.75rem;">
+        <i class="fas fa-check-circle" style="color:#10b981;font-size:1.5rem;display:block;margin-bottom:0.4rem;"></i>
+        <div id="clientActionDoneMsg" style="font-size:0.82rem;color:#e2e8f0;font-weight:600;"></div>
+      </div>
+    </div>
+  `;
+}
+
+function showRerequestForm() {
+  const form    = document.getElementById('rerequestForm');
+  const btnArea = document.getElementById('clientActionBtns');
+  if (form)    form.style.display    = 'block';
+  if (btnArea) btnArea.style.display = 'none';
+  // Pre-fill suggestion
+  const ta = document.getElementById('rerequestMsg');
+  if (ta && !ta.value.trim()) {
+    ta.value = 'Please review and make the following changes: ';
+    ta.focus();
+    ta.setSelectionRange(ta.value.length, ta.value.length);
+  }
+}
+
+async function submitApproval() {
+  const authToken = localStorage.getItem('client_token') || localStorage.getItem('token') || '';
+  if (!authToken) { alert('Please log in to approve the project.'); return; }
+  if (!projectData || !projectData._id) { alert('Project data not available.'); return; }
+
+  const btn = document.querySelector('#clientActionBtns button:first-child');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Approving…'; }
+
+  try {
+    const res  = await fetch(`${API}/projects/${projectData._id}/status`, {
+      method:  'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken },
+      body:    JSON.stringify({ status: 'approved' })
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message || 'Could not approve project.');
+
+    // Update local state
+    projectData.status = 'approved';
+
+    // Show success
+    _showClientActionDone('✅ Project Approved! Your architect has been notified.');
+
+    // Refresh the status row in the info panel
+    const statusVal = document.querySelector('.info-row .info-val');
+    const rows = document.querySelectorAll('.info-row');
+    rows.forEach(r => {
+      if (r.querySelector('.info-lbl')?.textContent === 'Status') {
+        r.querySelector('.info-val').textContent = 'Approved';
+      }
+    });
+  } catch(err) {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-circle"></i> Approve Project'; }
+    alert('Error: ' + err.message);
+  }
+}
+
+async function submitRerequest() {
+  const authToken = localStorage.getItem('client_token') || localStorage.getItem('token') || '';
+  if (!authToken) { alert('Please log in to request updates.'); return; }
+  if (!projectData || !projectData._id) { alert('Project data not available.'); return; }
+
+  const msg = (document.getElementById('rerequestMsg')?.value || '').trim();
+  const feedback = msg || 'Please review and make the requested changes.';
+
+  const sendBtn = document.querySelector('#rerequestForm button:first-child');
+  if (sendBtn) { sendBtn.disabled = true; sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending…'; }
+
+  try {
+    const res  = await fetch(`${API}/projects/${projectData._id}/status`, {
+      method:  'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken },
+      body:    JSON.stringify({ status: 'in_progress', clientFeedback: feedback })
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message || 'Could not send update request.');
+
+    // Update local state
+    projectData.status = 'in_progress';
+
+    // Show success
+    _showClientActionDone('🔄 Update request sent! Your message has been added to the project chat.');
+  } catch(err) {
+    if (sendBtn) { sendBtn.disabled = false; sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Request'; }
+    alert('Error: ' + err.message);
+  }
+}
+
+function _showClientActionDone(msg) {
+  const btns = document.getElementById('clientActionBtns');
+  const form = document.getElementById('rerequestForm');
+  const done = document.getElementById('clientActionDone');
+  const doneMsg = document.getElementById('clientActionDoneMsg');
+  if (btns)    btns.style.display    = 'none';
+  if (form)    form.style.display    = 'none';
+  if (done)    done.style.display    = 'block';
+  if (doneMsg) doneMsg.textContent   = msg;
 }
 
 function buildBudgetHtml(p){
