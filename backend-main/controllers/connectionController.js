@@ -89,9 +89,30 @@ exports.getMyConnections = async (req, res) => {
         const conns = await Connection.find(filter)
             .populate('client',    'name email avatar company lastSeen')
             .populate('architect', 'name email avatar specialization lastSeen')
-            .populate('project',   'name type status')
             .sort('-updatedAt')
-            .select('-messages');   // don't send full message history in list
+            .select('-messages');
+
+        // For architect: enrich each accepted connection with the architect project
+        // shared with that client via ProjectShare (Connection.project stores the
+        // client's brief ID, not the architect's project, so we look up ProjectShare)
+        if (role !== 'client') {
+            const ProjectShare = require('../models/ProjectShare');
+            const enriched = await Promise.all(conns.map(async (conn) => {
+                const obj = conn.toObject();
+                if (conn.status === 'accepted') {
+                    const share = await ProjectShare.findOne({
+                        sharedBy:   req.user._id,
+                        sharedWith: conn.client._id,
+                        isRevoked:  false
+                    }).populate('project', 'name type status statusHistory');
+                    obj.architectProject = (share && share.project) ? share.project : null;
+                } else {
+                    obj.architectProject = null;
+                }
+                return obj;
+            }));
+            return res.json({ success: true, data: enriched });
+        }
 
         res.json({ success: true, data: conns });
     } catch (err) {

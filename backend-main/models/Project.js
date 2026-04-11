@@ -83,6 +83,11 @@ const projectSchema = new mongoose.Schema({
     isPublic: { type: Boolean, default: false },
     version: { type: Number, default: 1 },
     lastModifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    statusHistory: [{
+        status:    { type: String },
+        changedAt: { type: Date, default: Date.now },
+        changedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+    }],
     aiFeedback: {
         overallScore:  { type: Number, default: null },
         scoreLabel:    { type: String, default: '' },

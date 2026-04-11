@@ -850,12 +850,12 @@
     sections.forEach(s => observer.observe(s));
 
     function checkAuth() {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('client_token');
         if (token) {
             document.getElementById('navGuest').style.display = 'none';
             document.getElementById('navUser').style.display = 'flex';
         } else {
-            document.getElementById('navGuest').style.display = 'block';
+            document.getElementById('navGuest').style.display = 'flex';
             document.getElementById('navUser').style.display = 'none';
         }
     }

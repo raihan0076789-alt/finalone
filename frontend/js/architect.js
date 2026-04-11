@@ -92,38 +92,73 @@ document.addEventListener('DOMContentLoaded',()=>{
  * Safe to call even when params are absent — banner stays hidden.
  */
 function _initClientContextBanner(params) {
-  const connectionId  = params.get('connectionId');
-  const clientName    = params.get('clientName');
-  const projectName   = params.get('projectName');
+  const connectionId      = params.get('connectionId');
+  const clientName        = params.get('clientName');
+  // projectName   = used when opening a blank workspace (no existing project)
+  // clientProjectName = used when opening an existing architect project via Open Workspace
+  const projectName       = params.get('projectName');
+  const clientProjectName = params.get('clientProjectName');
+  // The label to show in the banner — prefer clientProjectName, fall back to projectName
+  const briefLabel        = clientProjectName || projectName || 'Client Brief';
 
   if (!connectionId) return;   // not opened from a connection — nothing to do
 
-  const banner      = document.getElementById('clientContextBanner');
-  const nameEl      = document.getElementById('ccbClientName');
-  const projEl      = document.getElementById('ccbProjectName');
+  const banner = document.getElementById('clientContextBanner');
+  const nameEl = document.getElementById('ccbClientName');
+  const projEl = document.getElementById('ccbProjectName');
 
   if (!banner) return;
 
-  if (nameEl)  nameEl.textContent  = clientName  || 'Client';
-  if (projEl)  projEl.textContent  = projectName || 'Client Brief';
+  if (nameEl) nameEl.textContent = clientName || 'Client';
+  if (projEl) projEl.textContent = briefLabel;
 
   banner.classList.add('visible');
 
   // Store on window so other code (e.g. save flow) can reference it if needed
-  window._clientConnectionContext = { connectionId, clientName, projectName };
+  window._clientConnectionContext = { connectionId, clientName, projectName: briefLabel };
 
-  // ── Pre-fill project title when no existing project is loaded ────────────
-  // If no ?id= was in the URL, initNewProject() ran and set "Untitled Project".
-  // Override it with the client's project name so the workspace is pre-labelled.
+  // ── Case 1: blank workspace (no ?id=) — pre-fill title from client brief name ──
   if (!params.get('id') && projectName) {
     const titleInput = document.getElementById('projectTitle');
     if (titleInput) {
       titleInput.value = projectName;
-      // Keep projectData in sync so Save picks up the correct name
       if (typeof projectData !== 'undefined' && projectData) {
         projectData.name = projectName;
       }
     }
+  }
+
+  // ── Case 2: existing architect project loaded via ?id= ──────────────────────
+  // After loadProject() finishes, the title input already has the architect's
+  // saved project name. We additionally store the client's brief label so the
+  // banner shows it — no title override needed (architect keeps their own name).
+  // But if the architect wants the client's name to appear in the title field too,
+  // we update it only when the project name is still generic ('Untitled Project').
+  if (params.get('id') && clientProjectName) {
+    // Wait for loadProject() to finish before checking
+    const waitAndMaybeSetTitle = () => {
+      const titleInput = document.getElementById('projectTitle');
+      if (!titleInput) return;
+      const currentName = (titleInput.value || '').trim();
+      // Only auto-fill if the project has no meaningful name yet
+      if (!currentName || currentName === 'Untitled Project' || currentName === 'Untitled') {
+        titleInput.value = clientProjectName;
+        if (typeof projectData !== 'undefined' && projectData) {
+          projectData.name = clientProjectName;
+        }
+      }
+    };
+    // Poll until loadProject sets the title (it's async)
+    let attempts = 0;
+    const poll = setInterval(() => {
+      attempts++;
+      const titleInput = document.getElementById('projectTitle');
+      // loadProject sets projectData — wait for it
+      if ((typeof projectData !== 'undefined' && projectData && projectData._id) || attempts > 40) {
+        clearInterval(poll);
+        waitAndMaybeSetTitle();
+      }
+    }, 100);
   }
 }
 
@@ -1010,8 +1045,35 @@ function resetRates(){
 async function saveProject(){
   try{
     showLoading('Saving...');projectData.name=el('projectTitle').value;
-    if(projectId)await api.updateProject(projectId,projectData);
-    else{const d=await api.createProject(projectData);projectId=d.data._id;window.history.replaceState({},'',`?id=${projectId}`);if(typeof initReviewsPanel==='function')initReviewsPanel(projectId);}
+    if(projectId){
+      await api.updateProject(projectId,projectData);
+    } else {
+      const d=await api.createProject(projectData);
+      projectId=d.data._id;
+      window.history.replaceState({},'',`?id=${projectId}`);
+      if(typeof initReviewsPanel==='function') initReviewsPanel(projectId);
+      // If opened from a client connection, auto-share this new project with the client
+      const ctx = window._clientConnectionContext;
+      if (ctx && ctx.connectionId) {
+        try {
+          const token = localStorage.getItem('token');
+          // Fetch the connection to get the client ID
+          const connRes  = await fetch(`http://localhost:5000/api/connections/my`, { headers: { 'Authorization': 'Bearer ' + token } });
+          const connData = await connRes.json();
+          if (connData.success) {
+            const conn = (connData.data || []).find(c => String(c._id) === String(ctx.connectionId));
+            if (conn) {
+              const clientId = conn.client?._id || conn.client;
+              await fetch(`http://localhost:5000/api/projects/${projectId}/share`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ mode: 'connection', clientId, message: 'Your architect has started working on your project!' })
+              });
+            }
+          }
+        } catch(shareErr) { console.warn('Auto-share on first save failed:', shareErr); }
+      }
+    }
     const s=el('saveStatus');if(s){s.textContent='Saved';s.classList.remove('unsaved');}
     hideLoading();showToast('Project saved!','success');
   }catch(e){hideLoading();showToast('Save failed','error');console.error(e);}

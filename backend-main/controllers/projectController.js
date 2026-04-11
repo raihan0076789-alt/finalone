@@ -309,7 +309,45 @@ exports.updateProjectStatus = async (req, res) => {
                 '[Client note] ' + clientFeedback.slice(0, 300);
         }
         project.lastModifiedBy = req.user._id;
+
+        // ── Record status change in history ────────────────────────────────────
+        if (!project.statusHistory) project.statusHistory = [];
+        project.statusHistory.push({ status, changedAt: new Date(), changedBy: req.user._id });
+
         await project.save();
+
+        // ── Auto-share project with connected client when moved to 'review' ────
+        if (status === 'review' && !isClient) {
+            try {
+                const Connection   = require('../models/Connection');
+                const ProjectShare = require('../models/ProjectShare');
+
+                // Find all accepted connections for this architect
+                const conns = await Connection.find({ architect: req.user._id, status: 'accepted' });
+                for (const conn of conns) {
+                    // Check if there's already a non-revoked share for this client
+                    const existing = await ProjectShare.findOne({
+                        project:    project._id,
+                        sharedWith: conn.client,
+                        isRevoked:  false
+                    });
+                    if (!existing) {
+                        await ProjectShare.create({
+                            project:    project._id,
+                            sharedBy:   req.user._id,
+                            sharedWith: conn.client,
+                            connection: conn._id,
+                            mode:       'connection',
+                            message:    'Your architect has moved this project to Review. Please take a look!'
+                        });
+                        conn.unreadByClient += 1;
+                        await conn.save();
+                    }
+                }
+            } catch (shareErr) {
+                console.warn('Auto-share on review failed:', shareErr.message);
+            }
+        }
 
         // ── Notify the other party via connection unread count ─────────────────
         try {

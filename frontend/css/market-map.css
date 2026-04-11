@@ -187,7 +187,9 @@
 }
 
 input[type="range"].mm-slider {
-    -webkit-appearance: none;
+    -webkit-appearance: none; /* Chrome, Safari */
+    appearance: none;         /* Standard (fixes warning) */
+    
     width: 100%;
     background: transparent;
     outline: none;

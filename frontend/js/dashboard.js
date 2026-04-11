@@ -354,7 +354,6 @@ function renderProjects() {
                     <span class="proj-rating-badge" id="rating-${project._id}">${ratingBadgeHtml(project)}</span>
                 </div>
                 ${estimatedCostBadgeHtml(project)}
-                ${statusStepperHtml(project)}
                 <div class="project-actions" onclick="event.stopPropagation()">
                     <button class="btn btn-sm btn-primary" onclick="openProject('${project._id}')">
                         <i class="fas fa-edit"></i> Edit
@@ -530,7 +529,6 @@ function filterProjects() {
                     <span class="proj-rating-badge" id="rating-${project._id}">${ratingBadgeHtml(project)}</span>
                 </div>
                 ${estimatedCostBadgeHtml(project)}
-                ${statusStepperHtml(project)}
                 <div class="project-actions" onclick="event.stopPropagation()">
                     <button class="btn btn-sm btn-primary" onclick="openProject('${project._id}')">
                         <i class="fas fa-edit"></i> Edit
@@ -2019,6 +2017,8 @@ function archConnCardHtml(c) {
 
             ${descHtml}
 
+            ${c.status === 'accepted' ? connStatusStepperHtml(c) : ''}
+
             <!-- Click hint + action buttons row -->
             <div style="display:flex;align-items:center;gap:0.6rem;padding-top:0.875rem;border-top:1px solid rgba(255,255,255,0.07);">
                 <span style="font-size:0.7rem;color:#475569;display:flex;align-items:center;gap:0.3rem;margin-right:auto;">
@@ -2051,7 +2051,104 @@ function archConnCardHtml(c) {
     </div>`;
 }
 
-// ── Connection Detail Side Panel ──────────────────────────────────────────────
+// ── Status stepper for Client Request cards (accepted connections) ─────────────
+function connStatusStepperHtml(c) {
+    const proj = c.architectProject;
+    if (!proj || !proj._id) return `
+        <div style="margin-top:0.75rem;padding:0.6rem 0.9rem;background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.08);border-radius:10px;text-align:center;">
+            <span style="font-size:0.72rem;color:#475569;display:flex;align-items:center;justify-content:center;gap:0.4rem;">
+                <i class="fas fa-folder-open" style="font-size:0.65rem;color:rgba(139,92,246,0.4);"></i>
+                No project shared yet — share a project to track progress here
+            </span>
+        </div>`;
+
+    const STEPS = [
+        { key: 'draft',       label: 'Draft',       icon: 'fa-pencil-alt' },
+        { key: 'in_progress', label: 'In Progress',  icon: 'fa-tools'      },
+        { key: 'review',      label: 'Review',       icon: 'fa-search'     },
+        { key: 'approved',    label: 'Complete',     icon: 'fa-check-circle'}
+    ];
+    const ORDER  = STEPS.map(s => s.key);
+    const curIdx = ORDER.indexOf(proj.status);
+    const nextStep = STEPS[curIdx + 1] || null;
+
+    // Build a status → timestamp map from statusHistory
+    const histMap = {};
+    if (Array.isArray(proj.statusHistory)) {
+        // Keep the latest timestamp per status
+        proj.statusHistory.forEach(h => { histMap[h.status] = h.changedAt; });
+    }
+
+    const fmtDate = iso => {
+        if (!iso) return null;
+        const d = new Date(iso);
+        return d.toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    };
+
+    const stepsHtml = STEPS.map((step, i) => {
+        const done   = i < curIdx;
+        const active = i === curIdx;
+        const cls    = done ? 'ps-step done' : active ? 'ps-step active' : 'ps-step';
+        const ts     = fmtDate(histMap[step.key]);
+        const tsHtml = ts
+            ? `<div style="font-size:0.52rem;color:${done ? '#10b981' : active ? '#00d4c8' : '#334155'};margin-top:2px;white-space:nowrap;max-width:70px;overflow:hidden;text-overflow:ellipsis;" title="${ts}">${ts}</div>`
+            : '';
+        return `<div class="${cls}">
+            <div class="ps-dot"><i class="fas ${step.icon}"></i></div>
+            <div class="ps-label">${step.label}</div>
+            ${tsHtml}
+        </div>`;
+    }).join('<div class="ps-line"></div>');
+
+    const reviewNote = nextStep && nextStep.key === 'review'
+        ? `<div style="font-size:0.65rem;color:#f59e0b;display:flex;align-items:center;gap:0.3rem;margin-left:auto;">
+               <i class="fas fa-share-alt" style="font-size:0.6rem;"></i> Auto-shares to client
+           </div>`
+        : '';
+
+    const advBtn = nextStep
+        ? `<div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+               <button class="ps-advance-btn" onclick="event.stopPropagation();advanceConnProjectStatus('${c._id}','${proj._id}','${nextStep.key}','${nextStep.label}')">
+                   <i class="fas fa-arrow-right"></i> Mark as ${nextStep.label}
+               </button>
+               ${reviewNote}
+           </div>`
+        : `<span class="ps-complete-badge"><i class="fas fa-check-circle"></i> Complete</span>`;
+
+    return `<div class="ps-stepper" onclick="event.stopPropagation()" style="margin-top:0.75rem;">
+        <div style="font-size:0.6rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.5rem;display:flex;align-items:center;gap:0.4rem;">
+            <i class="fas fa-tasks" style="font-size:0.55rem;"></i> Project Progress
+        </div>
+        <div class="ps-steps">${stepsHtml}</div>
+        <div class="ps-action">${advBtn}</div>
+    </div>`;
+}
+
+async function advanceConnProjectStatus(connId, projectId, newStatus, label) {
+    try {
+        const res = await api.updateProjectStatus(projectId, newStatus);
+        if (!res.success) { showToast(res.message || 'Could not update status', 'error'); return; }
+
+        // Update the cached connection's project status + history
+        const cache = window._archConnectionsCache || [];
+        const conn  = cache.find(x => String(x._id) === String(connId));
+        if (conn && conn.architectProject) {
+            conn.architectProject.status = newStatus;
+            if (!conn.architectProject.statusHistory) conn.architectProject.statusHistory = [];
+            conn.architectProject.statusHistory.push({ status: newStatus, changedAt: new Date().toISOString() });
+        }
+
+        renderArchConnections(cache);
+
+        let msg = `Project marked as "${label}" ✓`;
+        if (newStatus === 'review') msg += ' — Project auto-shared with connected client!';
+        showToast(msg, 'success');
+    } catch (err) {
+        showToast('Failed to update project status', 'error');
+    }
+}
+
+
 // Opens a slide-in side panel with full connection + project brief details.
 async function openConnDetailModal(connId) {
     const backdrop = document.getElementById('connDetailBackdrop');
@@ -2359,20 +2456,31 @@ function _skeletonRows(n) {
 function openWorkspaceForClient(connId, clientName, projectName) {
     closeConnDetailModal();
 
-    // Look up the connection to find if it has an architect-side project id
+    // Look up the connection from cache — enriched with architectProject by backend
     const cached = window._archConnectionsCache || [];
     const conn   = cached.find(x => String(x._id) === String(connId));
 
     const params = new URLSearchParams();
     params.set('connectionId', connId);
-    if (clientName)   params.set('clientName',   clientName);
-    if (projectName)  params.set('projectName',  projectName);
+    if (clientName)  params.set('clientName',  clientName);
 
-    // If the connection carries an architect project, open it directly;
-    // otherwise open a blank workspace pre-tagged to this client brief.
-    const archProjectId = conn?.project?._id || conn?.project || null;
-    if (archProjectId) {
-        params.set('id', archProjectId);
+    // ── Determine which architect project to open ─────────────────────────────
+    // conn.architectProject is set by the backend (via ProjectShare lookup).
+    // conn.project stores the CLIENT's brief ID — never use it as ?id=.
+    const archProj   = conn?.architectProject || null;
+    const archProjId = archProj?._id || null;
+
+    if (archProjId) {
+        // Open the existing shared architect project — enables save + live updates
+        params.set('id', archProjId);
+        // Still pass the client's project name as a label for the banner,
+        // but the workspace title comes from the loaded project itself.
+        if (projectName) params.set('clientProjectName', projectName);
+    } else {
+        // No project shared yet — open blank workspace pre-labelled with client's brief name
+        if (projectName) {
+            params.set('projectName', projectName);
+        }
     }
 
     window.location.href = `architect.html?${params.toString()}`;
@@ -2778,6 +2886,8 @@ function copyShareLink() {
 // Expose to global scope (called from inline onclick)
 window.openShareModal       = openShareModal;
 window.closeShareModal      = closeShareModal;
+window.connStatusStepperHtml    = connStatusStepperHtml;
+window.advanceConnProjectStatus = advanceConnProjectStatus;
 window.switchShareTab       = switchShareTab;
 window.submitShareWithClient = submitShareWithClient;
 window.generateShareLink    = generateShareLink;
