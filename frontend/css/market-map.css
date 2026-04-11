@@ -714,3 +714,296 @@ input[type="range"].mm-slider::-moz-range-thumb {
     font-size: 0.78rem;
 }
 .mm-empty i { font-size: 1.5rem; margin-bottom: 0.5rem; display: block; color: #1e293b; }
+
+/* ═══════════════════════════════════════════════════════
+   UPGRADE: Currency toggle
+   ═══════════════════════════════════════════════════════ */
+.mm-currency-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: rgba(6,10,18,0.88);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 0.35rem 0.5rem;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+.mm-currency-btn {
+    padding: 0.28rem 0.65rem;
+    border-radius: 7px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    font-family: 'Outfit', sans-serif;
+    border: none;
+    cursor: pointer;
+    background: transparent;
+    color: #64748b;
+    transition: background 0.15s, color 0.15s;
+    letter-spacing: 0.03em;
+}
+.mm-currency-btn.active { background: rgba(0,212,200,0.18); color: #00d4c8; }
+.mm-currency-btn:hover:not(.active) { color: #94a3b8; }
+
+/* ═══════════════════════════════════════════════════════
+   UPGRADE: My Projects pill in sidebar
+   ═══════════════════════════════════════════════════════ */
+.mm-my-projects-section {
+    padding: 0.75rem 1rem 0.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.mm-my-projects-label {
+    font-size: 0.63rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #64748b;
+    margin-bottom: 0.45rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+.mm-project-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.7rem;
+    border-radius: 8px;
+    border: 1px solid rgba(139,92,246,0.25);
+    background: rgba(139,92,246,0.07);
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    margin-bottom: 0.35rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #c4b5fd;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.mm-project-pill:hover { border-color: rgba(139,92,246,0.5); background: rgba(139,92,246,0.13); }
+.mm-project-pill.active { border-color: #8b5cf6; background: rgba(139,92,246,0.2); color: #fff; }
+.mm-project-pill i { color: #8b5cf6; font-size: 0.7rem; flex-shrink: 0; }
+.mm-project-pill-budget {
+    font-size: 0.66rem;
+    color: #64748b;
+    margin-left: auto;
+    flex-shrink: 0;
+    font-weight: 500;
+}
+.mm-no-projects-hint {
+    font-size: 0.74rem;
+    color: #475569;
+    font-style: italic;
+    padding: 0.25rem 0.1rem;
+}
+
+/* ═══════════════════════════════════════════════════════
+   UPGRADE: Budget Fit badge in popup
+   ═══════════════════════════════════════════════════════ */
+.mm-budget-fit-row {
+    margin-bottom: 0.75rem;
+    padding: 0.55rem 0.75rem;
+    border-radius: 9px;
+    border: 1px solid rgba(255,255,255,0.07);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.75rem;
+}
+.mm-budget-fit-row.fit-yes  { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.2); }
+.mm-budget-fit-row.fit-tight{ background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.2); }
+.mm-budget-fit-row.fit-no   { background: rgba(239,68,68,0.07);  border-color: rgba(239,68,68,0.18); }
+.mm-budget-fit-row i { font-size: 0.85rem; flex-shrink: 0; }
+.fit-yes  i { color: #10b981; }
+.fit-tight i { color: #f59e0b; }
+.fit-no   i { color: #ef4444; }
+.mm-budget-fit-text { flex: 1; line-height: 1.35; }
+.mm-budget-fit-text strong { font-weight: 700; display: block; font-size: 0.76rem; }
+.mm-budget-fit-text span { color: #64748b; font-size: 0.67rem; }
+
+/* ═══════════════════════════════════════════════════════
+   UPGRADE: Save to Project button in popup
+   ═══════════════════════════════════════════════════════ */
+.mm-popup-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+.mm-popup-cta { flex: 1; }
+.mm-save-btn {
+    padding: 0.6rem 0.8rem;
+    background: rgba(139,92,246,0.12);
+    border: 1px solid rgba(139,92,246,0.3);
+    border-radius: 9px;
+    color: #a78bfa;
+    font-weight: 700;
+    font-size: 0.78rem;
+    cursor: pointer;
+    font-family: 'Outfit', sans-serif;
+    transition: background 0.2s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+.mm-save-btn:hover { background: rgba(139,92,246,0.22); }
+.mm-save-btn.saved { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.35); color: #10b981; cursor: default; }
+
+/* ═══════════════════════════════════════════════════════
+   UPGRADE: Infra layer zoom hint
+   ═══════════════════════════════════════════════════════ */
+.mm-infra-hint {
+    position: absolute;
+    bottom: 2.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(13,20,36,0.92);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(245,158,11,0.3);
+    border-radius: 10px;
+    padding: 0.6rem 1.1rem;
+    color: #f59e0b;
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-family: 'Outfit', sans-serif;
+    z-index: 900;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+.mm-infra-hint.visible { opacity: 1; }
+
+/* ═══════════════════════════════════════════════════════
+   v3 UPGRADES: New filter controls, calculator, popup badges
+   ═══════════════════════════════════════════════════════ */
+
+/* Region / continent select */
+.mm-filter-select {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 8px;
+    color: #f1f5f9;
+    font-size: 0.78rem;
+    font-family: 'Outfit', sans-serif;
+    padding: 0.45rem 0.65rem;
+    cursor: pointer;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2364748b'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.65rem center;
+    padding-right: 1.8rem;
+}
+.mm-filter-select:focus { border-color: rgba(0,212,200,0.4); }
+.mm-filter-select option { background: #0f1623; }
+
+/* Popup badges row */
+.mm-popup-badges {
+    display: flex;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.75rem;
+}
+
+/* ── CONSTRUCTION COST CALCULATOR panel ────────────────── */
+.mm-calculator-panel {
+    border-top: 1px solid rgba(255,255,255,0.06);
+    padding: 0.85rem 1.1rem 1rem;
+    flex-shrink: 0;
+}
+.mm-calc-title {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #64748b;
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+.mm-calc-row {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.mm-calc-input {
+    flex: 1;
+    min-width: 80px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 8px;
+    color: #f1f5f9;
+    font-size: 0.78rem;
+    font-family: 'Outfit', sans-serif;
+    padding: 0.45rem 0.6rem;
+    outline: none;
+}
+.mm-calc-input:focus { border-color: rgba(0,212,200,0.4); }
+.mm-calc-input::placeholder { color: #475569; }
+.mm-calc-select {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 8px;
+    color: #f1f5f9;
+    font-size: 0.73rem;
+    font-family: 'Outfit', sans-serif;
+    padding: 0.45rem 0.5rem;
+    outline: none;
+    cursor: pointer;
+}
+.mm-calc-select option { background: #0f1623; }
+.mm-calc-btn {
+    padding: 0.45rem 0.75rem;
+    background: linear-gradient(135deg, rgba(0,212,200,0.18), rgba(139,92,246,0.12));
+    border: 1px solid rgba(0,212,200,0.3);
+    border-radius: 8px;
+    color: #00d4c8;
+    font-size: 0.72rem;
+    font-weight: 700;
+    font-family: 'Outfit', sans-serif;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+.mm-calc-btn:hover { background: linear-gradient(135deg,rgba(0,212,200,0.28),rgba(139,92,246,0.2)); }
+.mm-calc-result {
+    margin-top: 0.75rem;
+    background: rgba(6,10,18,0.6);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px;
+    padding: 0.75rem 0.85rem;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    max-height: 260px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+.mm-calc-result table tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+.mm-calc-result table tr:hover { background: rgba(0,212,200,0.04); }
+
+/* ── Arch layer legend dot ──────────────────────────────── */
+.mm-layer-btn[data-layer="climate"].active { background:rgba(239,68,68,0.15); color:#ef4444; }
+.mm-layer-btn[data-layer="arch"].active    { background:rgba(139,92,246,0.15); color:#8b5cf6; }
+
+/* ── Sidebar scroll adjustment for calculator ───────────── */
+.mm-sidebar {
+    display: flex;
+    flex-direction: column;
+}
+.mm-filters-scroll {
+    flex: 1;
+    min-height: 0;
+}

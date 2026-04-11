@@ -545,12 +545,12 @@
                     <div class="wizard-field">
                         <label class="wizard-label">Min Budget (₹) <span class="req">*</span></label>
                         <input class="wizard-input" id="wf-budgetMin" type="number" min="100000" max="500000000" placeholder="e.g. 2500000" oninput="this.classList.remove('wizard-input-error')">
-                        
+                        <div class="wizard-field-hint">Min ₹1,00,000 · Max ₹50 Cr</div>
                     </div>
                     <div class="wizard-field">
                         <label class="wizard-label">Max Budget (₹) <span class="req">*</span></label>
                         <input class="wizard-input" id="wf-budgetMax" type="number" min="100000" max="500000000" placeholder="e.g. 5000000" oninput="this.classList.remove('wizard-input-error')">
-                        
+                        <div class="wizard-field-hint">Must be ≥ Min Budget · Max ₹50 Cr</div>
                     </div>
                 </div>
                 <div class="wizard-row-2">
@@ -1381,6 +1381,12 @@
       </div>
     </div>
 
+    <!-- My Projects section -->
+    <div class="mm-my-projects-section" id="mm-my-projects-section" style="display:none">
+      <div class="mm-my-projects-label"><i class="fas fa-folder-open" style="color:#8b5cf6"></i> My Projects — Quick Match</div>
+      <div id="mm-project-pills"></div>
+    </div>
+
     <div class="mm-filters-scroll">
 
       <!-- Price range -->
@@ -1472,6 +1478,55 @@
         </div>
       </div>
 
+      <!-- Continent filter -->
+      <div class="mm-filter-group">
+        <div class="mm-filter-label"><i class="fas fa-globe"></i> Region</div>
+        <select class="mm-filter-select" id="mm-continent-select">
+          <option value="">All Regions</option>
+          <option value="india">🇮🇳 India</option>
+          <option value="asia">🌏 Asia & Middle East</option>
+          <option value="europe">🌍 Europe</option>
+          <option value="americas">🌎 Americas</option>
+          <option value="africa">🌍 Africa</option>
+          <option value="oceania">🦘 Oceania</option>
+        </select>
+      </div>
+
+      <!-- Climate Risk filter -->
+      <div class="mm-filter-group">
+        <div class="mm-filter-label"><i class="fas fa-cloud-sun-rain"></i> Climate Risk</div>
+        <div class="mm-chip-row">
+          <div class="mm-chip" data-climate="low"     style="border-color:rgba(16,185,129,0.3);color:#10b981">🟢 Low</div>
+          <div class="mm-chip" data-climate="medium"  style="border-color:rgba(245,158,11,0.3);color:#f59e0b">🟡 Medium</div>
+          <div class="mm-chip" data-climate="high"    style="border-color:rgba(239,68,68,0.3);color:#ef4444">🔴 High</div>
+          <div class="mm-chip" data-climate="extreme" style="border-color:rgba(139,92,246,0.3);color:#8b5cf6">🟣 Extreme</div>
+        </div>
+      </div>
+
+      <!-- Safety Index filter -->
+      <div class="mm-filter-group">
+        <div class="mm-filter-label"><i class="fas fa-shield-alt"></i> Min Safety Index</div>
+        <div class="mm-range-wrap">
+          <div class="mm-range-display">
+            <span>0</span>
+            <span id="mm-safety-val">0</span>
+          </div>
+          <input type="range" id="mm-safety-slider" class="mm-slider" min="0" max="90" step="5" value="0">
+        </div>
+      </div>
+
+      <!-- Permit Ease filter -->
+      <div class="mm-filter-group">
+        <div class="mm-filter-label"><i class="fas fa-file-signature"></i> Min Permit Ease</div>
+        <div class="mm-range-wrap">
+          <div class="mm-range-display">
+            <span>Any</span>
+            <span id="mm-permit-val">Any</span>
+          </div>
+          <input type="range" id="mm-permit-slider" class="mm-slider" min="0" max="5" step="1" value="0">
+        </div>
+      </div>
+
       <button id="mm-apply-btn" class="mm-apply-btn">
         <i class="fas fa-filter"></i> Apply Filters
       </button>
@@ -1479,6 +1534,22 @@
         <i class="fas fa-undo" style="margin-right:0.35rem;font-size:0.7rem"></i> Reset All
       </button>
     </div><!-- /mm-filters-scroll -->
+
+    <!-- ── CONSTRUCTION COST CALCULATOR ─────────────────────────────── -->
+    <div class="mm-calculator-panel">
+      <div class="mm-calc-title"><i class="fas fa-calculator" style="color:#00d4c8"></i> Cost Calculator</div>
+      <div class="mm-calc-row">
+        <input type="number" id="mm-calc-area" class="mm-calc-input" placeholder="Area m²" min="10" max="10000" step="10">
+        <select id="mm-calc-type" class="mm-calc-select">
+          <option value="budget">Budget</option>
+          <option value="standard" selected>Standard</option>
+          <option value="premium">Premium</option>
+          <option value="luxury">Luxury</option>
+        </select>
+        <button id="mm-calc-btn" class="mm-calc-btn"><i class="fas fa-calculator"></i> Calculate</button>
+      </div>
+      <div id="mm-calc-result" class="mm-calc-result" style="display:none"></div>
+    </div>
 
     <!-- Results list -->
     <div class="mm-results-panel">
@@ -1519,6 +1590,12 @@
         <div class="pill-sub">Top Score</div>
       </div>
 
+      <!-- Arch Score stat pill -->
+      <div class="mm-stat-pill">
+        <div class="pill-val" id="mm-stat-arch-score">—</div>
+        <div class="pill-sub">Avg Arch★</div>
+      </div>
+
       <!-- Layer switcher -->
       <div class="mm-layer-btns">
         <button class="mm-layer-btn active" data-layer="markers">
@@ -1527,11 +1604,25 @@
         <button class="mm-layer-btn" data-layer="heat">
           <i class="fas fa-fire"></i> Heat
         </button>
+        <button class="mm-layer-btn" data-layer="climate">
+          <i class="fas fa-cloud-sun-rain"></i> Climate
+        </button>
+        <button class="mm-layer-btn" data-layer="arch">
+          <i class="fas fa-drafting-compass"></i> Arch
+        </button>
         <button class="mm-layer-btn" data-layer="infra">
           <i class="fas fa-bolt"></i> Infra
         </button>
       </div>
+      <!-- Currency toggle -->
+      <div class="mm-currency-toggle">
+        <button class="mm-currency-btn active" data-currency="USD">$ USD</button>
+        <button class="mm-currency-btn" data-currency="INR">₹ INR</button>
+      </div>
     </div>
+
+    <!-- Infra zoom hint overlay -->
+    <div class="mm-infra-hint" id="mm-infra-hint"><i class="fas fa-search-location"></i> Zoom into a city to load infrastructure data</div>
 
     <!-- The actual Leaflet map -->
     <div id="mm-leaflet-map"></div>
