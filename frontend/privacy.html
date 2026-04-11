@@ -392,7 +392,7 @@
         Your privacy matters. This policy explains exactly what data we collect, why we collect it,
         how it is stored and protected, and what rights you have over your information.
     </p>
-    <span class="last-updated"><i class="fas fa-calendar-alt"></i> Last updated: December 2025</span>
+    <span class="last-updated"><i class="fas fa-calendar-alt"></i> Last updated: April 2026</span>
 </div>
 
 <!-- DOC LAYOUT -->
@@ -407,6 +407,7 @@
         <a href="#account-auth"   class="toc-link"><i class="fas fa-circle"></i> Authentication</a>
         <a href="#storage"        class="toc-link"><i class="fas fa-circle"></i> Storage &amp; Security</a>
         <a href="#ai-services"    class="toc-link"><i class="fas fa-circle"></i> AI &amp; APIs</a>
+        <a href="#subscription"   class="toc-link"><i class="fas fa-circle"></i> Subscriptions &amp; Billing</a>
         <a href="#sharing"        class="toc-link"><i class="fas fa-circle"></i> Data Sharing</a>
         <a href="#user-rights"    class="toc-link"><i class="fas fa-circle"></i> Your Rights</a>
         <a href="#cookies"        class="toc-link"><i class="fas fa-circle"></i> Cookies &amp; Storage</a>
@@ -484,10 +485,17 @@
                         <div class="data-card-desc">JWT session tokens stored locally in your browser's localStorage to maintain your authenticated session.</div>
                     </div>
                 </div>
+                <div class="data-card">
+                    <div class="data-card-icon ic-amber"><i class="fas fa-credit-card"></i></div>
+                    <div>
+                        <div class="data-card-title">Subscription &amp; Billing Data</div>
+                        <div class="data-card-desc">Your active plan tier (Free/Pro/Enterprise), Razorpay order ID, payment ID, plan expiry date, and monthly AI message usage counter.</div>
+                    </div>
+                </div>
             </div>
 
             <p class="doc-p">
-                We do <strong>not</strong> collect payment card information (no payments are processed through the platform), government identification numbers, biometric data, or any sensitive personal information beyond what is listed above.
+                We do <strong>not</strong> collect government identification numbers, biometric data, or sensitive personal information beyond what is listed above. Payment card details are <strong>never stored by SmartArch</strong> — all payment processing is handled entirely by <strong>Razorpay</strong>, a PCI-DSS compliant payment gateway.
             </p>
         </div>
 
@@ -505,6 +513,8 @@
                 <li><strong>Admin Analytics:</strong> Aggregated, non-personally-identifiable usage statistics (total user count, projects per day, status distributions) are displayed in the admin dashboard for platform monitoring.</li>
                 <li><strong>Collaboration Features:</strong> Your name and email are used to identify you as a collaborator on shared projects you have been invited to join.</li>
                 <li><strong>Platform Improvement:</strong> Usage patterns may be reviewed in aggregate form to identify bugs, improve performance, and prioritize new features.</li>
+                <li><strong>Subscription Management:</strong> Your plan tier, AI message usage count, and plan expiry date are used to enforce plan limits in real time — controlling access to saved project slots, AI generation, multi-floor design, and export formats based on your active subscription.</li>
+                <li><strong>Payment Processing:</strong> When you upgrade a plan, your name, email, and phone number are pre-filled in the Razorpay payment popup to simplify checkout. This data is transmitted directly to Razorpay under their own privacy policy — SmartArch never receives or stores your card details.</li>
             </ul>
 
             <div class="highlight-box amber">
@@ -584,9 +594,84 @@
             </p>
         </div>
 
-        <!-- 7. Data Sharing -->
-        <div class="doc-section" id="sharing">
+        <!-- 7. Subscriptions & Billing -->
+        <div class="doc-section" id="subscription">
             <div class="section-num">Section 07</div>
+            <h2 class="section-h2">Subscriptions &amp; Billing</h2>
+            <p class="doc-p">
+                SmartArch offers a tiered subscription system — <strong>Free</strong>, <strong>Pro</strong>, and <strong>Enterprise</strong> — to access different levels of features within the architect dashboard. This section explains how billing data is handled and what we store in relation to your subscription.
+            </p>
+
+            <div class="highlight-box amber">
+                <strong>We never store your payment card details.</strong> All payment processing is handled exclusively by <strong>Razorpay</strong>, a PCI-DSS Level 1 certified payment gateway. SmartArch only receives a verified payment confirmation (order ID + payment ID + cryptographic signature) — never your card number, CVV, or bank credentials.
+            </div>
+
+            <p class="doc-p">What SmartArch does store in relation to your subscription:</p>
+
+            <div class="data-grid">
+                <div class="data-card">
+                    <div class="data-card-icon ic-cyan"><i class="fas fa-layer-group"></i></div>
+                    <div>
+                        <div class="data-card-title">Plan Tier</div>
+                        <div class="data-card-desc">Your current plan (free, pro, or enterprise) stored in your user record and synced to localStorage after each payment.</div>
+                    </div>
+                </div>
+                <div class="data-card">
+                    <div class="data-card-icon ic-amber"><i class="fas fa-receipt"></i></div>
+                    <div>
+                        <div class="data-card-title">Razorpay Order &amp; Payment IDs</div>
+                        <div class="data-card-desc">The Razorpay order ID (<code>order_id</code>) and payment ID (<code>payment_id</code>) are stored for payment verification, dispute resolution, and audit purposes.</div>
+                    </div>
+                </div>
+                <div class="data-card">
+                    <div class="data-card-icon ic-violet"><i class="fas fa-calendar-check"></i></div>
+                    <div>
+                        <div class="data-card-title">Plan Expiry Date</div>
+                        <div class="data-card-desc">The <code>planExpiresAt</code> timestamp — set to 30 days from the payment date — is stored to manage your active billing period.</div>
+                    </div>
+                </div>
+                <div class="data-card">
+                    <div class="data-card-icon ic-green"><i class="fas fa-robot"></i></div>
+                    <div>
+                        <div class="data-card-title">AI Message Usage Counter</div>
+                        <div class="data-card-desc">A running count of AI messages used this month (<code>aiMessagesUsed</code>) is tracked per user and resets automatically at the start of each billing period.</div>
+                    </div>
+                </div>
+                <div class="data-card">
+                    <div class="data-card-icon ic-blue"><i class="fas fa-folder"></i></div>
+                    <div>
+                        <div class="data-card-title">Project Slot Usage</div>
+                        <div class="data-card-desc">The number of projects you have saved is tracked in real time and enforced against your plan's project limit (3 / 20 / unlimited).</div>
+                    </div>
+                </div>
+                <div class="data-card">
+                    <div class="data-card-icon ic-slate"><i class="fas fa-history"></i></div>
+                    <div>
+                        <div class="data-card-title">Subscription Event Log</div>
+                        <div class="data-card-desc">Up to 10 Razorpay webhook events (e.g. payment captured, subscription activated) are logged per subscription record for debugging and support purposes.</div>
+                    </div>
+                </div>
+            </div>
+
+            <p class="doc-p">Plan feature limits enforced by the platform:</p>
+            <ul class="doc-list">
+                <li><strong>Free Plan:</strong> 3 saved projects, 10 AI messages per month, 2D floor plan editor only, JSON and SVG export only, single-floor design only.</li>
+                <li><strong>Pro Plan (₹499/month):</strong> 20 saved projects, 500 AI messages per month, 2D + 3D editor, OBJ / STL / GLTF export, multi-floor design.</li>
+                <li><strong>Enterprise Plan (₹1,499/month):</strong> Unlimited projects, unlimited AI messages, all export formats including CAD (DXF), priority support with SLA.</li>
+            </ul>
+
+            <div class="highlight-box green">
+                <strong>Cancellation &amp; Expiry:</strong> Paid subscriptions are valid for 30 days from the payment date. If you do not renew, your plan reverts to Free at expiry — your account and projects are never deleted due to a lapsed subscription. To downgrade early, contact our support team.
+            </div>
+
+            <p class="doc-p">
+                When you initiate a payment, your name, email address, and phone number (from your profile) are pre-filled in the Razorpay checkout popup as a convenience. This data is transmitted directly to Razorpay under their <a href="https://razorpay.com/privacy/" target="_blank" rel="noopener" style="color:var(--cyan);text-decoration:none;">Privacy Policy</a> and is not additionally stored by SmartArch beyond what is already in your account profile.
+            </p>
+        </div>
+
+        <!-- 8. Data Sharing -->
+        <div class="doc-section" id="sharing">
+            <div class="section-num">Section 08</div>
             <h2 class="section-h2">Data Sharing &amp; Third Parties</h2>
             <p class="doc-p">
                 We do not sell, rent, or trade your personal information to any third parties. Your data is shared in only the following limited circumstances:
@@ -595,7 +680,8 @@
             <ul class="doc-list">
                 <li><strong>Project Collaborators:</strong> If you invite another user to collaborate on a project, your name and email will be visible to that collaborator within the project interface. You control who is invited.</li>
                 <li><strong>Public Projects:</strong> If you mark a project as "public" (isPublic: true), its details may be visible to other authenticated users of the platform. You can revert a project to private at any time.</li>
-                <li><strong>Platform Administrators:</strong> Authorized administrators with valid admin credentials can view user account information and project listings through the admin dashboard for the purpose of platform management, support, and moderation.</li>
+                <li><strong>Razorpay (Payment Processor):</strong> When you upgrade your subscription, your name, email, and phone number are shared with Razorpay solely to facilitate the payment transaction. Razorpay processes payments independently and is subject to their own privacy policy and PCI-DSS compliance. SmartArch receives only a payment confirmation — never your card or bank details.</li>
+                <li><strong>Platform Administrators:</strong> Authorized administrators with valid admin credentials can view user account information, project listings, and subscription status through the admin dashboard for the purpose of platform management, support, and moderation.</li>
                 <li><strong>Legal Requirements:</strong> We may disclose information if required to do so by law, court order, or to protect the safety and rights of our users or the platform.</li>
             </ul>
 
@@ -604,9 +690,9 @@
             </p>
         </div>
 
-        <!-- 8. User Rights -->
+        <!-- 9. User Rights -->
         <div class="doc-section" id="user-rights">
-            <div class="section-num">Section 08</div>
+            <div class="section-num">Section 09</div>
             <h2 class="section-h2">Your Rights &amp; Data Control</h2>
             <p class="doc-p">
                 You have meaningful control over your data. The following rights are available to all registered users:
@@ -644,9 +730,9 @@
             </p>
         </div>
 
-        <!-- 9. Cookies -->
+        <!-- 10. Cookies -->
         <div class="doc-section" id="cookies">
-            <div class="section-num">Section 09</div>
+            <div class="section-num">Section 10</div>
             <h2 class="section-h2">Cookies &amp; Browser Storage</h2>
             <p class="doc-p">
                 SmartArch uses browser <strong>localStorage</strong> (not cookies) to store your session token and cached user profile on your device. Specifically:
@@ -654,7 +740,7 @@
 
             <ul class="doc-list">
                 <li><strong><code>token</code></strong> — Your JWT authentication token, used to authenticate API requests during your session. This remains until you log out or manually clear browser storage.</li>
-                <li><strong><code>user</code></strong> — A JSON object containing your basic profile information (name, email, role) used to populate the UI without requiring a server request on every page load.</li>
+                <li><strong><code>user</code></strong> — A JSON object containing your basic profile information (name, email, role, and current plan tier) used to populate the UI — including the plan badge in the architect dashboard — without requiring a server request on every page load. This object is refreshed from the server after every successful payment.</li>
                 <li><strong><code>adminToken</code></strong> / <strong><code>adminUser</code></strong> — Equivalent tokens stored when an admin logs in through the admin panel. Cleared on admin logout.</li>
             </ul>
 
@@ -663,9 +749,9 @@
             </p>
         </div>
 
-        <!-- 10. Children -->
+        <!-- 11. Children -->
         <div class="doc-section" id="children">
-            <div class="section-num">Section 10</div>
+            <div class="section-num">Section 11</div>
             <h2 class="section-h2">Children's Privacy</h2>
             <p class="doc-p">
                 SmartArch is not directed at children under the age of 13. We do not knowingly collect personal information from children under 13. If you believe a child under 13 has registered on our platform without parental consent, please contact us immediately and we will promptly delete the account and all associated data.
@@ -675,9 +761,9 @@
             </p>
         </div>
 
-        <!-- 11. Updates -->
+        <!-- 12. Updates -->
         <div class="doc-section" id="updates">
-            <div class="section-num">Section 11</div>
+            <div class="section-num">Section 12</div>
             <h2 class="section-h2">Policy Updates</h2>
             <p class="doc-p">
                 We may update this Privacy Policy from time to time to reflect changes in our platform, data practices, or applicable laws. When we make material changes, we will:
@@ -694,9 +780,9 @@
             </p>
         </div>
 
-        <!-- 12. Contact -->
+        <!-- 13. Contact -->
         <div class="doc-section" id="contact">
-            <div class="section-num">Section 12</div>
+            <div class="section-num">Section 13</div>
             <h2 class="section-h2">Contact Us</h2>
             <p class="doc-p">
                 If you have questions, concerns, or requests related to this Privacy Policy or your personal data, please reach out to us:

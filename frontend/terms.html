@@ -356,7 +356,7 @@
         Please read these terms carefully before using SmartArch. By accessing or using our platform,
         you agree to be bound by these terms and conditions.
     </p>
-    <span class="last-updated"><i class="fas fa-calendar-alt"></i> Last updated: December 2025</span>
+    <span class="last-updated"><i class="fas fa-calendar-alt"></i> Last updated: April 2026</span>
 </div>
 
 <!-- DOC LAYOUT -->
@@ -368,6 +368,7 @@
         <a href="#acceptance"    class="toc-link"><i class="fas fa-circle"></i> Acceptance of Terms</a>
         <a href="#description"   class="toc-link"><i class="fas fa-circle"></i> Service Description</a>
         <a href="#accounts"      class="toc-link"><i class="fas fa-circle"></i> User Accounts</a>
+        <a href="#subscription"  class="toc-link"><i class="fas fa-circle"></i> Subscriptions &amp; Billing</a>
         <a href="#acceptable"    class="toc-link"><i class="fas fa-circle"></i> Acceptable Use</a>
         <a href="#restrictions"  class="toc-link"><i class="fas fa-circle"></i> Prohibited Activities</a>
         <a href="#ip"            class="toc-link"><i class="fas fa-circle"></i> Intellectual Property</a>
@@ -409,9 +410,11 @@
             <ul class="doc-list">
                 <li><strong>AI Floor Plan Generation:</strong> Automatic generation of architectural floor plans using the Ollama phi3:mini AI model and binary space partitioning algorithms based on user-submitted design parameters.</li>
                 <li><strong>Floor Plan Image Analysis:</strong> Upload and analysis of existing floor plan images using edge detection to extract and digitize room layouts.</li>
-                <li><strong>2D and 3D Visualization:</strong> Interactive rendering of architectural designs as two-dimensional blueprints and three-dimensional building models, with export capabilities in OBJ and GLTF formats.</li>
-                <li><strong>Project Management:</strong> Creation, storage, organization, and version tracking of architectural design projects with status management and collaboration tools.</li>
+                <li><strong>2D and 3D Visualization:</strong> Interactive rendering of architectural designs as two-dimensional blueprints and three-dimensional building models, with export capabilities in OBJ, STL, and GLTF formats (available on Pro and Enterprise plans).</li>
+                <li><strong>Project Management:</strong> Creation, storage, organization, and version tracking of architectural design projects with status management and collaboration tools. Project slot limits apply based on your active subscription plan.</li>
+                <li><strong>Multi-Floor Design:</strong> Design of multi-storey buildings with 3D floor stacking and staircase placement. Available on Pro and Enterprise plans only.</li>
                 <li><strong>Cost &amp; Build Estimation:</strong> Automated calculation of total floor area, estimated construction costs, and projected build timelines based on project dimensions.</li>
+                <li><strong>Subscription Plans:</strong> A tiered subscription system (Free, Pro, Enterprise) providing different levels of access to platform features, processed via Razorpay. See Section 04 for full details.</li>
                 <li><strong>Admin Dashboard:</strong> A separate administrative interface for authorized administrators to manage users, monitor platform activity, and view analytics.</li>
             </ul>
             <p class="doc-p">
@@ -455,9 +458,74 @@
             </p>
         </div>
 
-        <!-- 4. Acceptable Use -->
-        <div class="doc-section" id="acceptable">
+        <!-- 4. Subscriptions & Billing -->
+        <div class="doc-section" id="subscription">
             <div class="section-num">Section 04</div>
+            <h2 class="section-h2">Subscriptions &amp; Billing</h2>
+            <p class="doc-p">
+                SmartArch operates a tiered subscription model. By selecting a paid plan and completing a payment, you agree to the billing terms set out in this section.
+            </p>
+
+            <div class="allowed-grid">
+                <div class="rule-card allowed">
+                    <div class="rule-card-header"><i class="fas fa-user"></i> Free Plan — ₹0/month</div>
+                    <ul class="rule-list">
+                        <li>3 saved projects</li>
+                        <li>10 AI messages per month</li>
+                        <li>2D floor plan editor</li>
+                        <li>Basic room templates</li>
+                        <li>JSON &amp; SVG export only</li>
+                        <li>Single-floor design</li>
+                    </ul>
+                </div>
+                <div class="rule-card allowed" style="border-color:rgba(0,212,200,0.3);">
+                    <div class="rule-card-header" style="color:var(--cyan);"><i class="fas fa-star"></i> Pro Plan — ₹499/month</div>
+                    <ul class="rule-list">
+                        <li>20 saved projects</li>
+                        <li>500 AI messages per month</li>
+                        <li>2D + 3D floor plan editor</li>
+                        <li>All room templates</li>
+                        <li>OBJ / STL / GLTF export</li>
+                        <li>Multi-floor design (up to 5 floors)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="rule-card allowed" style="border-color:rgba(139,92,246,0.3);margin-top:0.875rem;">
+                <div class="rule-card-header" style="color:var(--violet);"><i class="fas fa-crown"></i> Enterprise Plan — ₹1,499/month</div>
+                <ul class="rule-list" style="display:grid;grid-template-columns:1fr 1fr;gap:0.3rem 2rem;">
+                    <li>Unlimited saved projects</li>
+                    <li>Unlimited AI messages</li>
+                    <li>2D + 3D floor plan editor</li>
+                    <li>All room templates</li>
+                    <li>CAD (DXF) + OBJ / STL / GLTF export</li>
+                    <li>Multi-floor design</li>
+                    <li>Priority support + SLA</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box amber" style="margin-top:1.5rem;">
+                <strong>Payment Processing:</strong> All payments are processed by <strong>Razorpay</strong>, a PCI-DSS Level 1 certified payment gateway. By initiating a payment, you also agree to Razorpay's terms of service. SmartArch never stores your card number, CVV, or bank account credentials.
+            </div>
+
+            <p class="doc-p">By subscribing to a paid plan, you agree to the following billing terms:</p>
+
+            <ul class="doc-list">
+                <li><strong>Monthly Billing Cycle:</strong> Paid subscriptions are billed on a monthly basis. Each payment activates your plan for 30 days from the payment date, recorded as your <code>planExpiresAt</code> date.</li>
+                <li><strong>No Automatic Renewal:</strong> SmartArch does not auto-renew subscriptions automatically. You must initiate a new payment through the architect dashboard before or after your plan expires to continue on a paid tier.</li>
+                <li><strong>Plan Expiry:</strong> When a paid plan expires without renewal, your account automatically reverts to the Free plan. All your projects and data are preserved — no data is deleted due to plan expiry.</li>
+                <li><strong>AI Message Reset:</strong> Your monthly AI message counter (<code>aiMessagesUsed</code>) resets to zero at the start of each new billing period upon a successful payment, or at the beginning of each calendar month for Free users.</li>
+                <li><strong>Feature Access:</strong> Access to gated features (3D editor, OBJ / STL / GLTF / CAD exports, multi-floor design, higher project and AI message limits) is enabled immediately upon payment verification and disabled immediately upon plan expiry.</li>
+                <li><strong>Refund Policy:</strong> Payments are non-refundable once processed and the plan has been activated, except where required by applicable law. If you believe a payment was made in error, contact us within 7 days at the email address in the Contact section.</li>
+                <li><strong>Downgrade:</strong> To downgrade from a paid plan to Free before your expiry date, contact our support team. You will continue to have access to paid features until your <code>planExpiresAt</code> date.</li>
+                <li><strong>Failed Payments:</strong> If a payment is initiated but not completed or verified (e.g. due to a declined card), no plan upgrade will be applied. The Razorpay order will be marked as failed and your plan will remain unchanged.</li>
+                <li><strong>Fraudulent Payments:</strong> Any attempt to circumvent the payment system, generate fraudulent payment confirmations, or manipulate subscription status through unauthorized API access will result in immediate account termination and may be referred to law enforcement.</li>
+            </ul>
+        </div>
+
+        <!-- 5. Acceptable Use -->
+        <div class="doc-section" id="acceptable">
+            <div class="section-num">Section 05</div>
             <h2 class="section-h2">Acceptable Platform Usage</h2>
             <p class="doc-p">
             SmartArch is intended for legitimate architectural design, educational exploration, and professional project management. The following summarizes what constitutes acceptable and unacceptable use:
@@ -491,9 +559,9 @@
             </div>
         </div>
 
-        <!-- 5. Prohibited Activities -->
+        <!-- 6. Prohibited Activities -->
         <div class="doc-section" id="restrictions">
-            <div class="section-num">Section 05</div>
+            <div class="section-num">Section 06</div>
             <h2 class="section-h2">Prohibited Activities</h2>
             <p class="doc-p">
                 In addition to the acceptable use guidelines above, the following activities are strictly prohibited and may result in immediate account termination and, where applicable, referral to legal authorities:
@@ -514,9 +582,9 @@
             </div>
         </div>
 
-        <!-- 6. IP -->
+        <!-- 7. IP -->
         <div class="doc-section" id="ip">
-            <div class="section-num">Section 06</div>
+            <div class="section-num">Section 07</div>
             <h2 class="section-h2">Intellectual Property</h2>
             <p class="doc-p">
                 Ownership of intellectual property on the platform is divided between platform-owned content and user-created content:
@@ -531,7 +599,7 @@
             </p>
 
             <p class="doc-p">
-                <strong>AI-Generated Outputs:</strong> Floor plan layouts generated by our AI system using your parameters are provided to you as outputs of the service. You may use these for personal and professional purposes subject to the AI Disclaimer in Section 07.
+                <strong>AI-Generated Outputs:</strong> Floor plan layouts generated by our AI system using your parameters are provided to you as outputs of the service. You may use these for personal and professional purposes subject to the AI Disclaimer in Section 08.
             </p>
 
             <p class="doc-p">
@@ -539,9 +607,9 @@
             </p>
         </div>
 
-        <!-- 7. AI Disclaimer -->
+        <!-- 8. AI Disclaimer -->
         <div class="doc-section" id="ai-disclaimer">
-            <div class="section-num">Section 07</div>
+            <div class="section-num">Section 08</div>
             <h2 class="section-h2">AI-Generated Design Disclaimer</h2>
             <p class="doc-p">
                 SmartArch uses artificial intelligence — specifically the Ollama phi3:mini model and a binary space partitioning (BSP) layout engine — to generate architectural floor plans. By using the AI generation features, you acknowledge and accept the following:
@@ -560,9 +628,9 @@
             </div>
         </div>
 
-        <!-- 8. Admin Rights -->
+        <!-- 9. Admin Rights -->
         <div class="doc-section" id="admin-rights">
-            <div class="section-num">Section 08</div>
+            <div class="section-num">Section 09</div>
             <h2 class="section-h2">Admin Rights &amp; Account Moderation</h2>
             <p class="doc-p">
                 Platform administrators have the authority to manage user accounts and project content to maintain the safety, integrity, and performance of SmartArch. By using the platform, you acknowledge the following administrative rights:
@@ -584,9 +652,9 @@
             </p>
         </div>
 
-        <!-- 9. Limitations -->
+        <!-- 10. Limitations -->
         <div class="doc-section" id="limitations">
-            <div class="section-num">Section 09</div>
+            <div class="section-num">Section 10</div>
             <h2 class="section-h2">System Limitations &amp; Service Availability</h2>
             <p class="doc-p">
                 SmartArch is provided as-is and we make the following disclosures about system limitations:
@@ -603,9 +671,9 @@
             </ul>
         </div>
 
-        <!-- 10. Liability -->
+        <!-- 11. Liability -->
         <div class="doc-section" id="liability">
-            <div class="section-num">Section 10</div>
+            <div class="section-num">Section 11</div>
             <h2 class="section-h2">Limitation of Liability</h2>
             <p class="doc-p">
                 To the fullest extent permitted by applicable law, SmartArch and its operators shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including but not limited to:
@@ -618,6 +686,8 @@
                 <li>Business losses or damages arising from platform downtime or service interruptions</li>
                 <li>Any third-party claims arising from your use of platform-exported design files</li>
                 <li>Regulatory non-compliance arising from implementing AI-generated plans without appropriate professional certification</li>
+                <li>Loss of access to paid features due to plan expiry where you have not renewed your subscription</li>
+                <li>Payment failures, transaction fees, or bank charges arising from your use of Razorpay as a payment processor</li>
             </ul>
 
             <p class="doc-p">
@@ -629,9 +699,9 @@
             </div>
         </div>
 
-        <!-- 11. Termination -->
+        <!-- 12. Termination -->
         <div class="doc-section" id="termination">
-            <div class="section-num">Section 11</div>
+            <div class="section-num">Section 12</div>
             <h2 class="section-h2">Account Termination</h2>
             <p class="doc-p">
                 Either you or SmartArch may terminate your account under the following circumstances:
@@ -648,7 +718,7 @@
             <ul class="doc-list">
                 <li>You breach any provision of these Terms of Service</li>
                 <li>We determine in our sole discretion that your conduct is harmful to other users, the platform, or third parties</li>
-                <li>You engage in any prohibited activity as described in Section 05</li>
+                <li>You engage in any prohibited activity as described in Section 06</li>
                 <li>Your account has been inactive for an extended period and we determine it is in the platform's interest to remove it</li>
                 <li>We are required to do so by law or a court order</li>
             </ul>
@@ -658,9 +728,9 @@
             </p>
         </div>
 
-        <!-- 12. Updates -->
+        <!-- 13. Updates -->
         <div class="doc-section" id="updates">
-            <div class="section-num">Section 12</div>
+            <div class="section-num">Section 13</div>
             <h2 class="section-h2">Updates to These Terms</h2>
             <p class="doc-p">
                 We reserve the right to modify these Terms of Service at any time to reflect changes in platform features, legal requirements, or operational needs. When we make significant changes:
@@ -677,9 +747,9 @@
             </p>
         </div>
 
-        <!-- 13. Governing Law -->
+        <!-- 14. Governing Law -->
         <div class="doc-section" id="governing">
-            <div class="section-num">Section 13</div>
+            <div class="section-num">Section 14</div>
             <h2 class="section-h2">Governing Law &amp; Disputes</h2>
             <p class="doc-p">
                 These Terms of Service shall be governed by and construed in accordance with applicable laws, without regard to conflict of law principles. Any disputes arising from these Terms or your use of the platform that cannot be resolved informally shall be subject to the exclusive jurisdiction of the appropriate courts.
@@ -689,9 +759,9 @@
             </p>
         </div>
 
-        <!-- 14. Contact -->
+        <!-- 15. Contact -->
         <div class="doc-section" id="contact">
-            <div class="section-num">Section 14</div>
+            <div class="section-num">Section 15</div>
             <h2 class="section-h2">Contact &amp; Appeals</h2>
             <p class="doc-p">
                 If you have questions about these Terms, wish to appeal an administrative action, or need to make a data request, please contact us:

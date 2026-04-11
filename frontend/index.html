@@ -754,6 +754,137 @@
 
         .cta-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; position: relative; }
 
+        /* ── PRICING SECTION ──────────────────────────────────────────── */
+        .pricing-section {
+            padding: 7rem 5%;
+            position: relative; z-index: 1;
+            max-width: 1400px; margin: 0 auto;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.25rem;
+            margin-top: 3.5rem;
+        }
+
+        .pricing-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--r-lg);
+            padding: 2rem 1.75rem;
+            position: relative;
+            transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+            display: flex; flex-direction: column;
+        }
+        .pricing-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255,255,255,0.14);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .pricing-card.featured {
+            border-color: rgba(0,212,200,0.4);
+            background: linear-gradient(160deg, rgba(0,212,200,0.06) 0%, rgba(6,10,18,0.6) 100%);
+            box-shadow: 0 0 40px rgba(0,212,200,0.08);
+        }
+        .pricing-card.featured:hover {
+            border-color: rgba(0,212,200,0.6);
+            box-shadow: 0 20px 60px rgba(0,212,200,0.12);
+        }
+
+        .pricing-popular-badge {
+            position: absolute; top: -13px; left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, var(--cyan), #7c3aed);
+            color: #fff; font-size: 0.65rem; font-weight: 700;
+            padding: 3px 14px; border-radius: 99px;
+            letter-spacing: 1px; text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .pricing-plan-name {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.78rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1.5px;
+            color: var(--slate-2); margin-bottom: 0.6rem;
+        }
+        .pricing-card.featured .pricing-plan-name { color: var(--cyan); }
+
+        .pricing-price {
+            font-family: 'Syne', sans-serif;
+            font-size: 2.5rem; font-weight: 800;
+            color: var(--white); letter-spacing: -1.5px;
+            line-height: 1; margin-bottom: 0.25rem;
+        }
+        .pricing-price span {
+            font-size: 0.9rem; font-weight: 400;
+            color: var(--slate-2); letter-spacing: 0;
+        }
+
+        .pricing-desc {
+            font-size: 0.83rem; color: var(--slate-2);
+            margin-bottom: 1.75rem; line-height: 1.55;
+            min-height: 2.4rem;
+        }
+
+        .pricing-divider {
+            height: 1px; background: var(--border);
+            margin-bottom: 1.5rem;
+        }
+
+        .pricing-features {
+            list-style: none; flex: 1;
+            display: flex; flex-direction: column; gap: 0.65rem;
+            margin-bottom: 2rem;
+        }
+        .pricing-features li {
+            display: flex; align-items: flex-start; gap: 0.65rem;
+            font-size: 0.85rem; color: var(--slate); line-height: 1.45;
+        }
+        .pricing-features li .pf-icon {
+            width: 16px; height: 16px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.55rem; flex-shrink: 0; margin-top: 1px;
+        }
+        .pricing-features li.on .pf-icon { background: rgba(16,185,129,0.15); color: #4ade80; }
+        .pricing-features li.off .pf-icon { background: rgba(148,163,184,0.1); color: var(--slate-2); }
+        .pricing-features li.off { color: var(--slate-2); }
+
+        .pricing-btn {
+            width: 100%; padding: 0.8rem;
+            border-radius: 10px; font-size: 0.9rem; font-weight: 700;
+            cursor: pointer; transition: all 0.25s;
+            font-family: 'Syne', sans-serif; letter-spacing: 0.2px;
+            border: none; display: flex; align-items: center;
+            justify-content: center; gap: 0.5rem;
+        }
+        .pricing-btn.primary {
+            background: linear-gradient(135deg, var(--cyan), #7c3aed);
+            color: #fff;
+        }
+        .pricing-btn.primary:hover { opacity: 0.88; transform: translateY(-1px); }
+        .pricing-btn.ghost {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.12);
+            color: var(--slate);
+        }
+        .pricing-btn.ghost:hover {
+            border-color: rgba(255,255,255,0.25);
+            color: var(--white);
+            background: rgba(255,255,255,0.04);
+        }
+
+        .pricing-note {
+            text-align: center; margin-top: 1.75rem;
+            font-size: 0.82rem; color: var(--slate-2);
+            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+        }
+        .pricing-note i { color: var(--cyan); }
+
+        @media (max-width: 900px) {
+            .pricing-grid { grid-template-columns: 1fr; max-width: 420px; margin-left: auto; margin-right: auto; }
+        }
+
         /* ── FOOTER ───────────────────────────────────────────────────── */
         .footer {
             border-top: 1px solid var(--border);
@@ -1812,6 +1943,7 @@
 
     <div class="nav-center">
         <a href="#features" class="nav-link">Features</a>
+        <a href="#pricing" class="nav-link">Pricing</a>
         <a href="#workflow" class="nav-link">How It Works</a>
         <a href="about.html" class="nav-link">About</a>
         <a href="contact.html" class="nav-link">Contact</a>
@@ -1855,6 +1987,7 @@
 <!-- Mobile nav -->
 <div class="mobile-menu" id="mobileMenu">
     <a href="#features" class="nav-link" onclick="closeMobileMenu()">Features</a>
+    <a href="#pricing" class="nav-link" onclick="closeMobileMenu()">Pricing</a>
     <a href="#workflow" class="nav-link" onclick="closeMobileMenu()">How It Works</a>
     <a href="about.html" class="nav-link">About</a>
     <div id="mobileNavAuth">
@@ -1872,18 +2005,20 @@
     <div class="ticker-track">
         <div class="ticker-item"><span class="ticker-dot">●</span> AI Floor Plan Generation</div>
         <div class="ticker-item"><span class="ticker-dot">●</span> 3D Visualization Engine</div>
-        <div class="ticker-item"><span class="ticker-dot">●</span> Node.js + Express Backend</div>
-        <div class="ticker-item"><span class="ticker-dot">●</span> MongoDB Data Storage</div>
+        <div class="ticker-item"><span class="ticker-dot">●</span> Subscription Plans via Razorpay</div>
+        <div class="ticker-item"><span class="ticker-dot">●</span> Multi-Floor Design</div>
         <div class="ticker-item"><span class="ticker-dot">●</span> JWT Authentication</div>
-        <div class="ticker-item"><span class="ticker-dot">●</span> Real-time Analytics</div>
+        <div class="ticker-item"><span class="ticker-dot">●</span> CAD · OBJ · STL · GLTF Export</div>
         <div class="ticker-item"><span class="ticker-dot">●</span> Project Collaboration</div>
+        <div class="ticker-item"><span class="ticker-dot">●</span> Real-time Usage Analytics</div>
         <div class="ticker-item"><span class="ticker-dot">●</span> AI Floor Plan Generation</div>
         <div class="ticker-item"><span class="ticker-dot">●</span> 3D Visualization Engine</div>
-        <div class="ticker-item"><span class="ticker-dot">●</span> Node.js + Express Backend</div>
-        <div class="ticker-item"><span class="ticker-dot">●</span> MongoDB Data Storage</div>
+        <div class="ticker-item"><span class="ticker-dot">●</span> Subscription Plans via Razorpay</div>
+        <div class="ticker-item"><span class="ticker-dot">●</span> Multi-Floor Design</div>
         <div class="ticker-item"><span class="ticker-dot">●</span> JWT Authentication</div>
-        <div class="ticker-item"><span class="ticker-dot">●</span> Real-time Analytics</div>
+        <div class="ticker-item"><span class="ticker-dot">●</span> CAD · OBJ · STL · GLTF Export</div>
         <div class="ticker-item"><span class="ticker-dot">●</span> Project Collaboration</div>
+        <div class="ticker-item"><span class="ticker-dot">●</span> Real-time Usage Analytics</div>
     </div>
 </div>
 
@@ -1892,7 +2027,7 @@
     <div class="hero-content">
         <div class="hero-eyebrow">
             <span class="pulse-dot"></span>
-            AI-Powered Architecture Platform
+            AI-Powered Architecture — Free to Start
         </div>
         <h1 class="hero-h1">
             Design Homes<br>
@@ -1901,6 +2036,7 @@
         <p class="hero-p">
             Transform your vision into detailed 2D floor plans and immersive 3D models.
             Powered by machine intelligence, built for modern architects and dreamers.
+            Start free — upgrade when you're ready.
         </p>
         <div class="hero-btns">
             <button class="btn-hero-primary" onclick="showRegister()">
@@ -1981,8 +2117,8 @@
             AI Generated
         </div>
         <div class="float-badge float-badge-2">
-            <div class="badge-icon"><i class="fas fa-ruler-combined"></i></div>
-            Precise Measurements
+            <div class="badge-icon"><i class="fas fa-layer-group"></i></div>
+            Multi-Floor Design
         </div>
         <div class="float-badge float-badge-3">
             <div class="badge-icon"><i class="fas fa-cube"></i></div>
@@ -1998,7 +2134,7 @@
         <h2 class="section-h2 reveal">Everything You Need to<br>Build Great Architecture</h2>
         <p class="section-sub reveal reveal-delay-1">
             A complete architectural design platform — from AI-generated floor plans to
-            project management, 3D visualization, and admin analytics.
+            multi-floor 3D visualization, professional exports, and flexible subscription plans.
         </p>
     </div>
 
@@ -2007,35 +2143,42 @@
             <div class="feat-icon c1"><i class="fas fa-brain"></i></div>
             <div class="feat-tag">AI Engine</div>
             <div class="feat-title">AI Floor Plan Generation</div>
-            <p class="feat-desc">Powered by Ollama (phi3:mini), our AI generates intelligent room layouts optimized for your space dimensions, building type, and floor count using a BSP layout algorithm.</p>
+            <p class="feat-desc">Powered by Ollama (phi3:mini), our AI generates intelligent room layouts optimized for your space dimensions, building type, and floor count using a BSP layout algorithm. Free users get 10 AI messages/month; Pro gets 500; Enterprise is unlimited.</p>
         </div>
 
         <div class="feat-card reveal reveal-delay-2">
             <div class="feat-icon c2"><i class="fas fa-cube"></i></div>
             <div class="feat-tag">Visualization</div>
             <div class="feat-title">2D & 3D Model Rendering</div>
-            <p class="feat-desc">Instantly switch between precise 2D floor plan views and interactive 3D building models. Export designs in JSON, OBJ, and GLTF formats for use in other tools.</p>
+            <p class="feat-desc">Instantly switch between precise 2D floor plan views and interactive 3D building models. Export in OBJ, STL, and GLTF on Pro — or add CAD (DXF) on Enterprise. Free users export JSON and SVG.</p>
         </div>
 
         <div class="feat-card reveal reveal-delay-3">
-            <div class="feat-icon c3"><i class="fas fa-folder-open"></i></div>
-            <div class="feat-tag">Project Hub</div>
-            <div class="feat-title">Full Project Management</div>
-            <p class="feat-desc">Create, save, and organize multiple architectural projects. Track status (draft, in progress, review, approved), add collaborators, and maintain full version history.</p>
+            <div class="feat-icon c3"><i class="fas fa-layer-group"></i></div>
+            <div class="feat-tag">Pro Feature</div>
+            <div class="feat-title">Multi-Floor Design</div>
+            <p class="feat-desc">Design multi-storey buildings with full 3D floor stacking and staircase placement. Pro and Enterprise plans support up to 5 floors with synchronized 2D and 3D views across every level.</p>
         </div>
 
         <div class="feat-card reveal reveal-delay-4">
-            <div class="feat-icon c4"><i class="fas fa-shield-alt"></i></div>
-            <div class="feat-tag">Security</div>
-            <div class="feat-title">JWT Authentication & Roles</div>
-            <p class="feat-desc">Secure user registration and login with bcrypt password hashing and JWT tokens. Three role levels — user, architect, and admin — with route-level access control.</p>
+            <div class="feat-icon c4"><i class="fas fa-folder-open"></i></div>
+            <div class="feat-tag">Project Hub</div>
+            <div class="feat-title">Full Project Management</div>
+            <p class="feat-desc">Create, save, and organize projects — 3 on Free, 20 on Pro, unlimited on Enterprise. Track status (draft, in progress, review, approved), add collaborators, and maintain full version history.</p>
+        </div>
+
+        <div class="feat-card reveal reveal-delay-5">
+            <div class="feat-icon c5"><i class="fas fa-star"></i></div>
+            <div class="feat-tag">Subscription</div>
+            <div class="feat-title">Flexible Plan Tiers</div>
+            <p class="feat-desc">Start free with core tools and 3 project slots. Upgrade to Pro (₹499/mo) for 20 projects, 500 AI messages, 3D editor, and all export formats. Enterprise (₹1,499/mo) unlocks everything with unlimited usage and priority support.</p>
         </div>
 
         <div class="feat-card reveal reveal-delay-6">
             <div class="feat-icon c6"><i class="fas fa-magic"></i></div>
             <div class="feat-tag">Intelligence</div>
             <div class="feat-title">Smart Auto Layout Engine</div>
-            <p class="feat-desc">Specify rooms by type and count; the BSP-based algorithm automatically arranges them for optimal space utilization, handling proportions, adjacency, and structural flow.</p>
+            <p class="feat-desc">Specify rooms by type and count; the BSP-based algorithm automatically arranges them for optimal space utilization, handling proportions, adjacency, and structural flow across single or multi-floor layouts.</p>
         </div>
 
         <div class="feat-card reveal reveal-delay-7">
@@ -2065,29 +2208,29 @@
                 <div class="step reveal reveal-delay-1">
                     <div class="step-num">01</div>
                     <div class="step-body">
-                        <h4>Register & Set Project Parameters</h4>
-                        <p>Create your account and define your project — name, building type (residential, commercial, industrial), dimensions, number of floors, and desired rooms.</p>
+                        <h4>Register & Choose Your Plan</h4>
+                        <p>Create your account and start on the Free plan instantly — no card required. Define your project parameters: name, building type, dimensions, number of floors, and desired rooms. Upgrade to Pro or Enterprise anytime from your dashboard.</p>
                     </div>
                 </div>
                 <div class="step reveal reveal-delay-2">
                     <div class="step-num">02</div>
                     <div class="step-body">
                         <h4>AI Generates Your Floor Plan</h4>
-                        <p>Submit your parameters to the AI backend. The phi3:mini model and BSP algorithm intelligently partition and arrange rooms, generating a complete, optimized layout.</p>
+                        <p>Submit your parameters to the AI backend. The phi3:mini model and BSP algorithm intelligently partition and arrange rooms, generating a complete, optimized layout — single-floor on Free, up to 5 floors on Pro and Enterprise.</p>
                     </div>
                 </div>
                 <div class="step reveal reveal-delay-3">
                     <div class="step-num">03</div>
                     <div class="step-body">
                         <h4>Visualize in 2D & 3D</h4>
-                        <p>Your floor plan renders instantly as a detailed 2D blueprint and a 3D walkthrough model. Adjust materials, specifications, and room positions interactively.</p>
+                        <p>Your floor plan renders instantly as a detailed 2D blueprint. Pro and Enterprise users get full 3D walkthrough models with multi-floor stacking. Adjust materials, specifications, and room positions interactively.</p>
                     </div>
                 </div>
                 <div class="step reveal reveal-delay-4">
                     <div class="step-num">04</div>
                     <div class="step-body">
                         <h4>Save, Collaborate & Export</h4>
-                        <p>Projects auto-save to MongoDB. Invite collaborators, track revision history, and export finalized designs in OBJ or GLTF for use in professional CAD tools.</p>
+                        <p>Projects auto-save to MongoDB within your plan's project limit. Invite collaborators, track revision history, and export finalized designs — OBJ / STL / GLTF on Pro, plus CAD (DXF) on Enterprise.</p>
                     </div>
                 </div>
             </div>
@@ -2115,12 +2258,106 @@
                     <div class="arch-arrow"><i class="fas fa-arrows-alt-v"></i></div>
                     <div class="arch-layer l4">
                         <span class="arch-layer-icon"><i class="fas fa-database"></i></span>
-                        MongoDB — Projects & Users
+                        MongoDB — Projects, Users &amp; Subscriptions
+                    </div>
+                    <div class="arch-arrow"><i class="fas fa-arrows-alt-v"></i></div>
+                    <div class="arch-layer" style="background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.2);color:var(--amber);display:flex;align-items:center;gap:0.75rem;padding:0.875rem 1rem;border-radius:10px;font-size:0.82rem;font-weight:600;">
+                        <span class="arch-layer-icon"><i class="fas fa-credit-card"></i></span>
+                        Razorpay — Subscription Payments
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</section>
+
+<!-- ═══ PRICING ───────────────────────────────────────────────────────────── -->
+<section id="pricing" style="position:relative;z-index:1;">
+<div class="pricing-section">
+    <div class="section-header">
+        <div class="section-eyebrow">Simple, Transparent Pricing</div>
+        <h2 class="section-h2 reveal">Plans That Grow<br>With Your Work</h2>
+        <p class="section-sub reveal reveal-delay-1">
+            Start free — no credit card required. Upgrade when you need more projects,
+            more AI power, or professional export formats.
+        </p>
+    </div>
+
+    <div class="pricing-grid">
+
+        <!-- FREE -->
+        <div class="pricing-card reveal reveal-delay-1">
+            <div class="pricing-plan-name">Free</div>
+            <div class="pricing-price">₹0 <span>/ month</span></div>
+            <div class="pricing-desc">Everything you need to get started. No card required.</div>
+            <div class="pricing-divider"></div>
+            <ul class="pricing-features">
+                <li class="on"><span class="pf-icon"><i class="fas fa-check"></i></span>3 saved projects</li>
+                <li class="on"><span class="pf-icon"><i class="fas fa-check"></i></span>10 AI messages / month</li>
+                <li class="on"><span class="pf-icon"><i class="fas fa-check"></i></span>2D floor plan editor</li>
+                <li class="on"><span class="pf-icon"><i class="fas fa-check"></i></span>Basic room templates</li>
+                <li class="on"><span class="pf-icon"><i class="fas fa-check"></i></span>JSON &amp; SVG export</li>
+                <li class="off"><span class="pf-icon"><i class="fas fa-minus"></i></span>3D model viewer</li>
+                <li class="off"><span class="pf-icon"><i class="fas fa-minus"></i></span>OBJ / STL / GLTF export</li>
+                <li class="off"><span class="pf-icon"><i class="fas fa-minus"></i></span>Multi-floor design</li>
+                <li class="off"><span class="pf-icon"><i class="fas fa-minus"></i></span>Priority support</li>
+            </ul>
+            <!-- <button class="pricing-btn ghost" onclick="showRegister()">
+                <i class="fas fa-rocket"></i> Get Started Free
+            </button> -->
+        </div>
+
+        <!-- PRO -->
+        <div class="pricing-card featured reveal reveal-delay-2">
+            <div class="pricing-popular-badge">Most Popular</div>
+            <div class="pricing-plan-name">Pro</div>
+            <div class="pricing-price">₹499 <span>/ month</span></div>
+            <div class="pricing-desc">For active architects and serious home designers.</div>
+            <div class="pricing-divider"></div>
+            <ul class="pricing-features">
+                <li class="on"><span class="pf-icon"><i class="fas fa-check"></i></span>20 saved projects</li>
+                <li class="on"><span class="pf-icon"><i class="fas fa-check"></i></span>500 AI messages / month</li>
+                <li class="on"><span class="pf-icon"><i class="fas fa-check"></i></span>2D + 3D floor plan editor</li>
+                <li class="on"><span class="pf-icon"><i class="fas fa-check"></i></span>All room templates</li>
+                <li class="on"><span class="pf-icon"><i class="fas fa-check"></i></span>OBJ / STL / GLTF export</li>
+                <li class="on"><span class="pf-icon"><i class="fas fa-check"></i></span>Multi-floor design (5 floors)</li>
+                <li class="on"><span class="pf-icon"><i class="fas fa-check"></i></span>Staircase placement</li>
+                <li class="off"><span class="pf-icon"><i class="fas fa-minus"></i></span>CAD (DXF) export</li>
+                <li class="off"><span class="pf-icon"><i class="fas fa-minus"></i></span>Priority support + SLA</li>
+            </ul>
+            <!-- <button class="pricing-btn primary" onclick="showRegister()">
+                <i class="fas fa-star"></i> Upgrade to Pro
+            </button> -->
+        </div>
+
+        <!-- ENTERPRISE -->
+        <div class="pricing-card reveal reveal-delay-3">
+            <div class="pricing-plan-name">Enterprise</div>
+            <div class="pricing-price">₹1,499 <span>/ month</span></div>
+            <div class="pricing-desc">Unlimited everything for studios and professional firms.</div>
+            <div class="pricing-divider"></div>
+            <ul class="pricing-features">
+                <li class="on"><span class="pf-icon"><i class="fas fa-check"></i></span>Unlimited projects</li>
+                <li class="on"><span class="pf-icon"><i class="fas fa-check"></i></span>Unlimited AI messages</li>
+                <li class="on"><span class="pf-icon"><i class="fas fa-check"></i></span>2D + 3D floor plan editor</li>
+                <li class="on"><span class="pf-icon"><i class="fas fa-check"></i></span>All room templates</li>
+                <li class="on"><span class="pf-icon"><i class="fas fa-check"></i></span>CAD (DXF) + OBJ / STL / GLTF</li>
+                <li class="on"><span class="pf-icon"><i class="fas fa-check"></i></span>Multi-floor design</li>
+                <li class="on"><span class="pf-icon"><i class="fas fa-check"></i></span>Staircase placement</li>
+                <li class="on"><span class="pf-icon"><i class="fas fa-check"></i></span>Priority support + SLA</li>
+            </ul>
+            <!-- <button class="pricing-btn ghost" onclick="showRegister()">
+                <i class="fas fa-crown"></i> Get Enterprise
+            </button> -->
+        </div>
+
+    </div>
+
+    <p class="pricing-note">
+        <i class="fas fa-shield-alt"></i>
+        Secure payment via Razorpay &nbsp;·&nbsp; Cancel anytime &nbsp;·&nbsp; Your projects are never deleted on plan expiry
+    </p>
+</div>
 </section>
 
 <!-- ═══ CTA ──────────────────────────────────────────────────────────────── -->
@@ -2151,8 +2388,8 @@
         <div class="footer-col">
             <h4>Product</h4>
             <a href="#features">Features</a>
+            <a href="#pricing">Pricing</a>
             <a href="#workflow">How It Works</a>
-           
         </div>
         <div class="footer-col">
             <h4>Company</h4>
@@ -2166,8 +2403,8 @@
         </div>
     </div>
     <div class="footer-bottom">
-        <span>&copy; 2025 SmartArch. All rights reserved.</span>
-        <span>Built with <span style="color:var(--cyan)">♥</span> using Node.js, MongoDB & AI</span>
+        <span>&copy; 2026 SmartArch. All rights reserved.</span>
+        <span>Built with <span style="color:var(--cyan)">♥</span> using Node.js, MongoDB &amp; Razorpay</span>
     </div>
 </footer>
 
