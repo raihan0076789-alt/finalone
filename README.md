@@ -1,6 +1,6 @@
 # 🏠 SmartArch — Full Stack AI-Powered Architecture Application
 
-A complete house architecture design tool with AI chat, 3D visualization, multi-floor design, drag-and-drop rooms/doors/windows/staircases, export to CAD/OBJ/STL/GLTF, Google OAuth, email verification, support tickets, and Ollama integration.
+A complete house architecture design platform with AI chat, 3D visualization, multi-floor design, drag-and-drop rooms/doors/windows/staircases, export to CAD/OBJ/STL/GLTF, Google OAuth, email verification, support tickets, subscription plans (Razorpay), a dedicated client portal, architect marketplace, real-time presence, project sharing, ratings, and Ollama integration.
 
 ---
 
@@ -13,29 +13,45 @@ smartarch
 │   │
 │   ├── css
 │   │   ├── admin.css
+│   │   ├── admin-restructured.css
 │   │   ├── architect.css
+│   │   ├── client-dashboard.css
 │   │   ├── dashboard.css
+│   │   ├── market-map.css
 │   │   └── styles.css
 │   │
 │   ├── js
 │   │   ├── admin.js
+│   │   ├── admin-restructured.js
 │   │   ├── api.js
 │   │   ├── architect.js
 │   │   ├── auth.js
+│   │   ├── client-dashboard.js
 │   │   ├── dashboard-charts.js
 │   │   ├── dashboard-profile.js
 │   │   ├── dashboard.js
 │   │   ├── interior.js
+│   │   ├── market-map.js
+│   │   ├── presence.js
+│   │   ├── reviews.js
+│   │   ├── subscription.js
 │   │   └── templates.js
 │   │
 │   ├── about.html
 │   ├── admin-login.html
 │   ├── admin.html
 │   ├── architect.html
+│   ├── client-about.html
+│   ├── client-contact.html
+│   ├── client-dashboard.html
+│   ├── client-index.html
+│   ├── client-privacy.html
+│   ├── client-terms.html
 │   ├── contact.html
 │   ├── dashboard.html
 │   ├── index.html
 │   ├── privacy.html
+│   ├── project-viewer.html
 │   ├── reset-password.html
 │   └── terms.html
 │
@@ -46,29 +62,66 @@ smartarch
 │   │
 │   ├── controllers
 │   │   ├── adminController.js
+│   │   ├── adminControllerExtended.js
+│   │   ├── appRatingController.js
+│   │   ├── architectController.js
+│   │   ├── architectListingController.js
+│   │   ├── architectRatingController.js
 │   │   ├── authController.js
+│   │   ├── clientController.js
+│   │   ├── clientProjectController.js
+│   │   ├── clientSupportController.js
+│   │   ├── connectionController.js
 │   │   ├── feedbackController.js
 │   │   ├── modelController.js
 │   │   ├── projectController.js
+│   │   ├── projectShareController.js
+│   │   ├── reviewController.js
+│   │   ├── subscriptionController.js
 │   │   └── ticketController.js
 │   │
 │   ├── middleware
 │   │   ├── adminAuth.js
 │   │   ├── auth.js
+│   │   ├── planGuard.js
+│   │   ├── uploadMiddleware.js
 │   │   └── validation.js
 │   │
 │   ├── models
+│   │   ├── AppRating.js
+│   │   ├── ArchitectRating.js
+│   │   ├── ClientProject.js
+│   │   ├── ClientTicket.js
+│   │   ├── Connection.js
 │   │   ├── ModelVersion.js
 │   │   ├── Project.js
+│   │   ├── ProjectShare.js
+│   │   ├── Review.js
+│   │   ├── Subscription.js
 │   │   ├── Ticket.js
 │   │   └── User.js
 │   │
 │   ├── routes
 │   │   ├── adminRoutes.js
+│   │   ├── aiChatRoutes.js
+│   │   ├── appRatingRoutes.js
+│   │   ├── architectRoutes.js
 │   │   ├── authRoutes.js
+│   │   ├── clientRoutes.js
+│   │   ├── connectionRoutes.js
 │   │   ├── modelRoutes.js
 │   │   ├── projectRoutes.js
+│   │   ├── projectShareRoutes.js
+│   │   ├── reviewRoutes.js
+│   │   ├── subscriptionRoutes.js
 │   │   └── ticketRoutes.js
+│   │
+│   ├── scripts
+│   │   └── migrate-to-architect.js
+│   │
+│   ├── uploads
+│   │   ├── chat/
+│   │   └── client-projects/
 │   │
 │   ├── utils
 │   │   ├── modelGenerator.js
@@ -85,8 +138,6 @@ smartarch
 │   │   ├── architectureController.js
 │   │   └── feedbackController.js
 │   │
-│   ├── logs
-│   │
 │   ├── middleware
 │   │   ├── errorHandler.js
 │   │   ├── rateLimiter.js
@@ -97,7 +148,8 @@ smartarch
 │   │   └── architectureRoutes.js
 │   │
 │   ├── services
-│   │   └── architectureService.js
+│   │   ├── architectureService.js
+│   │   └── exportService.js
 │   │
 │   ├── tests
 │   │   └── api.test.js
@@ -132,6 +184,7 @@ smartarch
 1. **Node.js** v18+ — https://nodejs.org
 2. **MongoDB** — https://www.mongodb.com/try/download/community
 3. **Ollama** (for AI features) — https://ollama.ai
+4. **Razorpay account** (optional, for subscription payments) — https://razorpay.com
 
 ---
 
@@ -229,6 +282,14 @@ npx http-server frontend -p 3000
 # Right-click index.html → Open with Live Server
 ```
 
+**Client Portal:**
+```bash
+# Client landing page
+open frontend/client-index.html
+# Client dashboard
+open frontend/client-dashboard.html
+```
+
 ---
 
 ## 🎯 Features
@@ -238,9 +299,51 @@ npx http-server frontend -p 3000
 - **Google OAuth** — Sign in with Google (access-token flow)
 - **Email Verification** — OTP-based email verification on signup
 - **Forgot / Reset Password** — Token-based password reset via email
-- **User Roles** — `user`, `architect`, `admin`
+- **User Roles** — `architect` (formerly `user`), `client`, `admin`
 - **Profile Management** — Update name, company, phone, avatar, preferences (theme, units, auto-save)
+- **Architect Professional Profile** — Bio, location, specialization, years of experience, portfolio URLs (up to 10)
 - **Account Suspension** — Admin can suspend/unsuspend users
+- **Real-time Presence** — Heartbeat-based online/offline status (30 s ping, 60 s threshold)
+- **Role Migration** — Legacy `user` role is backward-compatible; treated as `architect` transparently
+
+### ✅ Subscription & Plan System (Razorpay)
+- **Plans** — Free, Pro (₹499/mo), Enterprise (₹1,499/mo)
+- **Razorpay Payment Integration** — Create order → verify signature → activate plan
+- **Plan Guards** — Middleware enforces plan limits on API routes:
+  - Free: 3 projects, 10 AI messages/month, no 3D export
+  - Pro: 20 projects, 500 AI messages/month, OBJ/STL/GLTF export, multi-floor, 3D viz
+  - Enterprise: unlimited projects and AI messages, all export formats including CAD
+- **AI Message Quota** — Monthly counter with auto-reset; plan-gated via `aiMessageGuard`
+- **Project Limit Guard** — Blocks project creation when plan quota is reached
+- **Subscription UI** — Plan badges, upgrade modal, Razorpay popup in dashboard
+- **Webhook Support** — Razorpay server-to-server webhook handler for plan lifecycle events
+
+### ✅ Client Portal (New)
+- **Dedicated Landing Page** (`client-index.html`) — "Find Your Perfect Architect" marketing page
+- **Client Registration / Login** — Role-restricted to `client` only; architects directed to main portal
+- **Client Dashboard** (`client-dashboard.html`) with sidebar navigation:
+  - **Dashboard** — Overview stats and quick actions
+  - **Find Architects** — Browse verified architects with filters
+  - **My Architects** — Manage connection requests and active connections
+  - **My Projects** — Client construction briefs (not architect design projects)
+  - **Design Submissions** — View designs architects shared with the client
+  - **Documents** — All downloaded design files
+  - **Market Intelligence** — Global real estate market map
+  - **Settings** — Account and preference management
+  - **Support** — Dedicated client ticket system
+- **Client Project Briefs** — Multi-step creation with file attachments (images, PDFs, DXF/DWG), budget range, land size, style, requirements (bedrooms, bathrooms, floors)
+
+### ✅ Architect Marketplace & Connections
+- **Architect Listing** — Clients browse verified architects filtered by specialization, experience, rating, and search term (paginated)
+- **Architect Detail Page** — Full profile with portfolio, ratings, and project count
+- **Connection Requests** — Client sends a connection request to an architect, optionally attaching a project brief and intro message
+- **Request Management** — Architect accepts or rejects; client can cancel pending requests or remove rejected cards
+- **In-App Chat** — Real-time text and image messaging between client and architect after connection is accepted (images: 8 MB max; jpg/png/webp/gif)
+- **Project Brief Sharing** — Architect can view client's full project brief from the connection chat
+- **Project Sharing** — Architect shares design projects with connected clients (connection mode or public token link); revoke anytime
+- **Project Viewer** (`project-viewer.html`) — Read-only client view of shared architect projects with download options (JSON, SVG, PNG, OBJ)
+- **Architect Rating** — Client rates architect (1–5 stars + review) after viewing a shared project; rating is aggregated on the architect profile
+- **App Rating** — Users and guests can submit overall app ratings
 
 ### ✅ Design Canvas (architect.html)
 - **Drag & Drop Rooms** — Click Room tool, click canvas to add rooms
@@ -251,27 +354,39 @@ npx http-server frontend -p 3000
 - **Undo / Redo** — Up to 60 undo steps (Ctrl+Z / Ctrl+Y)
 - **Zoom** — Mouse wheel zoom on canvas
 - **3D Model View** — Full 3D with proper floor stacking
-- **Multi-Floor Support** — Floors stack with correct heights
+- **Multi-Floor Support** — Floors stack with correct heights (Pro/Enterprise plan)
 - **Interior View** — 3D furnished walkthrough
 - **Style System** — Modern, Minimalist, Traditional, Luxury
 - **Auto Layout** — Smart room arrangement
 - **Templates** — Pre-built house layouts
+- **Project Reviews Panel** — Collaborators and shared users can leave star ratings + comments per project
 
 ### ✅ AI Features
-- **Ollama AI Chat** — Chat with AI about your design (right sidebar)
+- **Ollama AI Chat** — Chat with AI about your design (right sidebar), plan-gated with monthly quota
 - **AI Architecture Generator** — Generate layout ideas from text description
 - **Floorplan Image Upload** — Upload a floorplan image and parse it with AI
-- **AI Design Suggestions** — Proactive suggestions for interior, exterior, layout, and materials
-- **AI Design Feedback** — Get scored feedback on your project design
-- **Rate Limiting** — 100 requests per 15 minutes per IP
+- **AI Design Suggestions** — Proactive suggestions for interior, exterior, layout, and materials (plan-gated)
+- **AI Design Feedback** — Get scored feedback on your project design (plan-gated)
+- **AI Chat Proxy** — Main backend (`/api/ai/*`) proxies to AI backend with plan enforcement; supports Node 18 native fetch with http.request fallback
+- **Rate Limiting** — 100 requests per 15 minutes per IP (AI backend level)
 
 ### ✅ Export
 - **JSON** — Export project data as JSON
 - **SVG** — Export floor plan as SVG
-- **DXF (CAD)** — Export 2D floor plan for AutoCAD (via AI backend)
-- **OBJ** — Export 3D model as OBJ + MTL files (via AI backend)
-- **STL** — Export 3D model for 3D printing (via AI backend)
-- **GLB (GLTF)** — Export 3D model as binary glTF 2.0 (via AI backend)
+- **PNG** — Export floor plan as PNG image
+- **DXF (CAD)** — Export 2D floor plan for AutoCAD — Enterprise plan only
+- **OBJ** — Export 3D model as OBJ + MTL files — Pro/Enterprise
+- **STL** — Export 3D model for 3D printing — Pro/Enterprise
+- **GLB (GLTF)** — Export 3D model as binary glTF 2.0 — Pro/Enterprise
+- **Export Engine v3** — Full geometry rewrite: foundation slab, outer walls, ceiling/floor slabs, interior partitions, door frames + panels, window frames + glass panes, staircase steps, flat/hip/gable roofs; PBR materials throughout
+
+### ✅ Market Intelligence Map (New)
+- **Global Real Estate Market Map** — Interactive Leaflet map with 90+ cities worldwide
+- **Data per City** — Price per m² (USD), YoY growth %, rental yield %, proximity, electricity, transport, schools, property type
+- **Construction Cost Calculator** — Estimate build cost based on area and city
+- **Architecture Market Suitability Score** — Scoring for market opportunities
+- **Climate Risk Layer** — Overlay climate/risk indicators
+- **Tier Filtering** — Filter cities by affordability tier (A–D)
 
 ### ✅ Project Management
 - **Save / Load Projects** — Full project persistence in MongoDB
@@ -280,15 +395,18 @@ npx http-server frontend -p 3000
 - **Project Status** — `draft`, `in_progress`, `review`, `approved`, `archived`
 - **Project Types** — `residential`, `commercial`, `industrial`, `mixed`
 - **AI Feedback Storage** — Save and retrieve AI feedback per project
+- **Project Sharing** — Share via connected client or public link; revoke anytime
 
 ### ✅ Admin Panel (admin.html)
-- **Dashboard Stats** — Users, projects, AI score analytics
-- **User Management** — List, view, suspend/unsuspend, delete users
-- **Project Management** — List, view, toggle visibility, delete projects
-- **Support Tickets** — View all tickets, reply, update status, unread count
+- **Dashboard Stats** — Users, projects, AI score analytics, app rating stats
+- **User Management** — Architects and Clients tabs; list, view, suspend/unsuspend, delete, verify users; filter by plan, verification, and role
+- **Project Management** — Architect projects and client project briefs; analytics
+- **Support Tickets** — Architect tickets and Client tickets (separate tabs); reply, update status, unread badges
+- **Connection Requests** — View all client ↔ architect connection requests with status
+- **Review Management** — View and delete project reviews; review stats
 
 ### ✅ Support Ticket System
-- **Guest + User Tickets** — Submit tickets without an account or while logged in
+- **Separate Systems** — Architects use `/api/tickets`; Clients use `/api/client/support`
 - **Threaded Replies** — Admin and user can exchange messages per ticket
 - **Status Tracking** — `new`, `seen`, `replied`, `closed`
 - **Unread Badges** — Separate unread counts for users and admins
@@ -321,9 +439,11 @@ npx http-server frontend -p 3000
 ## 🌐 API Endpoints
 
 ### Main Backend (Port 5000)
+
+#### Auth
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | /api/auth/register | Register new user |
+| POST | /api/auth/register | Register new architect user |
 | POST | /api/auth/login | Login |
 | POST | /api/auth/google | Google OAuth (ID token) |
 | POST | /api/auth/google-profile | Google OAuth (access token) |
@@ -335,8 +455,20 @@ npx http-server frontend -p 3000
 | POST | /api/auth/resend-verification | Resend verification OTP |
 | POST | /api/auth/forgot-password | Request password reset email |
 | PUT | /api/auth/reset-password/:token | Reset password |
+| POST | /api/auth/heartbeat | Update lastSeen for presence |
+
+#### Architect Profile
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /api/architect/profile | Get architect professional profile |
+| PUT | /api/architect/profile | Update profile (bio, location, specialization, experience, portfolio) |
+| GET | /api/architect/me | Alias for /api/architect/profile |
+
+#### Projects
+| Method | Endpoint | Description |
+|--------|----------|-------------|
 | GET | /api/projects | Get all projects |
-| POST | /api/projects | Create project |
+| POST | /api/projects | Create project (plan limit enforced) |
 | GET | /api/projects/:id | Get project |
 | PUT | /api/projects/:id | Update project |
 | DELETE | /api/projects/:id | Delete project |
@@ -345,30 +477,137 @@ npx http-server frontend -p 3000
 | POST | /api/projects/:id/versions/:versionId/restore | Restore version |
 | GET | /api/projects/:id/ai-feedback | Get AI feedback |
 | PUT | /api/projects/:id/ai-feedback | Save AI feedback |
+
+#### Project Sharing
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | /api/projects/:id/share | Share project with client (connection or link mode) |
+| GET | /api/projects/:id/shares | List all shares for a project |
+| DELETE | /api/projects/:id/shares/:shareId | Revoke a share |
+| GET | /api/shares/connected-clients | Get connected clients list (for share modal) |
+| GET | /api/shares/my | Get all projects shared with the logged-in client |
+| GET | /api/shares/token/:token | Public: access a shared project by token |
+| POST | /api/shares/:shareId/rate | Client: submit/update architect rating |
+| GET | /api/shares/:shareId/rating | Client: get own rating for a share |
+
+#### Models & Export
+| Method | Endpoint | Description |
+|--------|----------|-------------|
 | POST | /api/models/:projectId/floorplan | Generate floor plan model |
 | POST | /api/models/:projectId/3d | Generate 3D model |
 | GET | /api/models/:projectId/stats | Get model stats |
 | GET | /api/models/:projectId/export/:format | Export model |
+
+#### Reviews
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /api/reviews/:projectId | Get all reviews for a project |
+| POST | /api/reviews/:projectId | Create or update own review |
+| DELETE | /api/reviews/:projectId | Delete own review |
+| GET | /api/reviews/admin/stats | Admin: review stats |
+| DELETE | /api/reviews/admin/:reviewId | Admin: delete any review |
+
+#### Subscriptions (Razorpay)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | /api/subscriptions/subscribe | Create Razorpay order for plan upgrade |
+| POST | /api/subscriptions/verify | Verify payment signature and activate plan |
+| POST | /api/subscriptions/webhook | Razorpay server-to-server webhook |
+| GET | /api/subscriptions/status | Get current plan info |
+
+#### AI Chat Proxy (plan-gated)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | /api/ai/chat | AI chat (proxied to AI backend, counts monthly quota) |
+| POST | /api/ai/suggest | AI design suggestions (quota-gated) |
+| POST | /api/ai/feedback | AI design feedback (quota-gated) |
+| POST | /api/ai/floorplan/generate | AI floorplan generation |
+
+#### Client Module
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | /api/client/register | Register new client |
+| POST | /api/client/login | Client login |
+| GET | /api/client/me | Get client profile |
+| PUT | /api/client/profile | Update client profile |
+| GET | /api/client/dashboard | Client dashboard stats |
+| DELETE | /api/client/account | Delete client account |
+| POST | /api/client/projects | Create client project brief (multipart, up to 10 attachments) |
+| GET | /api/client/projects | Get own project briefs |
+| GET | /api/client/projects/:id | Get project brief |
+| PUT | /api/client/projects/:id | Update project brief |
+| DELETE | /api/client/projects/:id | Delete project brief |
+| DELETE | /api/client/projects/:id/attachments/:filename | Delete a project attachment |
+| GET | /api/client/architects | Browse verified architects (filterable) |
+| GET | /api/client/architects/:id | View architect profile detail |
+| POST | /api/client/support | Submit client support ticket |
+| GET | /api/client/support | Get own tickets |
+| GET | /api/client/support/unread | Get unread ticket count |
+| GET | /api/client/support/:id | Get ticket detail |
+| POST | /api/client/support/:id/reply | Reply to a ticket |
+| GET | /api/client/support/admin/all | Admin: all client tickets |
+| GET | /api/client/support/admin/unread-count | Admin: unread client ticket count |
+| GET | /api/client/support/admin/:id | Admin: get client ticket |
+| POST | /api/client/support/admin/:id/reply | Admin: reply to client ticket |
+| PATCH | /api/client/support/admin/:id/status | Admin: update client ticket status |
+
+#### Connections (Client ↔ Architect)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | /api/connections/request | Client: send connection request to architect |
+| GET | /api/connections/status/:architectId | Client: check connection status with architect |
+| DELETE | /api/connections/:id | Client: cancel pending request |
+| DELETE | /api/connections/:id/rejected | Client: remove a rejected connection card |
+| GET | /api/connections/my | Get all connections (client + architect) |
+| PUT | /api/connections/:id/respond | Architect: accept or reject request |
+| GET | /api/connections/:id/project-brief | Architect: view client's project brief |
+| GET | /api/connections/:id/messages | Get chat messages |
+| POST | /api/connections/:id/messages | Send text message |
+| POST | /api/connections/:id/messages/image | Send image message (multipart) |
+
+#### App Ratings
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | /api/app-ratings | Submit app rating (guest or authenticated) |
+| GET | /api/app-ratings/admin/stats | Admin: app rating analytics |
+| DELETE | /api/app-ratings/admin/:id | Admin: delete an app rating |
+
+#### Admin
+| Method | Endpoint | Description |
+|--------|----------|-------------|
 | POST | /api/admin/login | Admin login |
 | GET | /api/admin/dashboard | Dashboard stats |
-| GET | /api/admin/users | List all users |
+| GET | /api/admin/users | List all users (architects) |
 | GET | /api/admin/users/:id | Get user by ID |
 | PATCH | /api/admin/users/:id/status | Suspend / unsuspend user |
 | DELETE | /api/admin/users/:id | Delete user |
-| GET | /api/admin/projects | List all projects |
+| GET | /api/admin/projects | List all architect projects |
 | GET | /api/admin/projects/:id | Get project by ID |
 | PATCH | /api/admin/projects/:id/visibility | Toggle project visibility |
 | DELETE | /api/admin/projects/:id | Delete project |
 | GET | /api/admin/ai-scores | AI score analytics |
+| GET | /api/admin/client-projects | List all client project briefs |
+| GET | /api/admin/client-projects/:id | Get client project brief |
+| GET | /api/admin/client-projects/analytics | Client project analytics |
+
+#### Architect Support Tickets (original system)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
 | POST | /api/tickets | Submit support ticket (guest or user) |
 | GET | /api/tickets/my | Get own tickets |
 | GET | /api/tickets/my/unread | Get own unread count |
-| GET | /api/tickets/admin/all | Admin: list all tickets |
+| GET | /api/tickets/admin/all | Admin: list all architect tickets |
 | GET | /api/tickets/admin/unread-count | Admin: unread count |
 | GET | /api/tickets/admin/:id | Admin: get ticket |
 | POST | /api/tickets/admin/:id/reply | Admin: reply to ticket |
 | PATCH | /api/tickets/admin/:id/status | Admin: update ticket status |
+
+#### Health
+| Method | Endpoint | Description |
+|--------|----------|-------------|
 | GET | /api/health | Health check |
+
+---
 
 ### AI Backend (Port 3001)
 | Method | Endpoint | Description |
@@ -405,6 +644,14 @@ EMAIL_USER=your_email@example.com
 EMAIL_PASS=your_email_password
 EMAIL_FROM_NAME=SmartArch
 ADMIN_EMAIL=admin@example.com
+
+# AI Backend URL (proxy target)
+AI_BACKEND_URL=http://localhost:3001
+
+# Razorpay (for subscription payments)
+RAZORPAY_KEY_ID=rzp_test_xxxxxxxxxxxx
+RAZORPAY_KEY_SECRET=your_razorpay_secret
+RAZORPAY_WEBHOOK_SECRET=your_webhook_secret
 ```
 
 ### backend-ai/.env
@@ -427,16 +674,47 @@ To enable Google Sign-In, set the `GOOGLE_CLIENT_ID` meta tag in `index.html`:
 
 ---
 
+## 📦 Subscription Plans
+
+| Feature | Free | Pro (₹499/mo) | Enterprise (₹1,499/mo) |
+|---------|------|---------------|------------------------|
+| Saved projects | 3 | 20 | Unlimited |
+| AI messages / month | 10 | 500 | Unlimited |
+| 2D floor plan editor | ✅ | ✅ | ✅ |
+| Basic room templates | ✅ | ✅ | ✅ |
+| Multi-floor design | ❌ | ✅ | ✅ |
+| 3D visualization | ❌ | ✅ | ✅ |
+| Export OBJ / STL / GLTF | ❌ | ✅ | ✅ |
+| Export CAD (DXF) | ❌ | ❌ | ✅ |
+| Priority support | ❌ | ✅ | ✅ |
+
+---
+
+## 🗃️ Database Migration
+
+If you have existing users with the legacy `user` role, run the migration script once to promote them to `architect` and backfill new professional fields:
+
+```bash
+cd backend-main
+node scripts/migrate-to-architect.js
+```
+
+This is safe to re-run — it preserves existing field values and only sets defaults where fields are missing.
+
+---
+
 ## 🐛 Troubleshooting
 
 ### AI Chat not working?
 1. Make sure Ollama is running: `ollama serve`
 2. Check model is pulled: `ollama list`
 3. Make sure AI backend is on port 3001: `curl http://localhost:3001/health`
+4. Check your plan's monthly AI message limit — upgrade if exhausted
 
 ### Cannot save project?
 1. Make sure main backend is on port 5000: `curl http://localhost:5000/api/health`
 2. Make sure MongoDB is running
+3. Check if the project limit for your plan is reached (Free: 3 projects)
 
 ### 3D not rendering?
 - CDN connection required for Three.js
@@ -458,6 +736,20 @@ To enable Google Sign-In, set the `GOOGLE_CLIENT_ID` meta tag in `index.html`:
 ### Export (DXF/OBJ/STL/GLB) not working?
 - These exports require the AI backend to be running on port 3001
 - Check: `curl http://localhost:3001/health`
+- DXF export requires Enterprise plan; OBJ/STL/GLB require Pro or Enterprise plan
+
+### Razorpay payment not completing?
+- Verify `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` in `backend-main/.env`
+- Use test keys (`rzp_test_*`) in development mode
+- Ensure webhook secret matches your Razorpay dashboard configuration
+
+### Client portal login rejected?
+- Client login (`/api/client/login`) only accepts accounts with `role: client`
+- Architects must use the main login (`/api/auth/login`) on `index.html`
+
+### Connection chat images not uploading?
+- Max image size is 8 MB (jpg, png, webp, gif only)
+- Ensure the `uploads/chat/` directory exists and is writable
 
 ---
 
@@ -485,4 +777,7 @@ cd backend-ai && npm install && npm start
 cd frontend && python3 -m http.server 3000
 ```
 
-Then open: http://localhost:3000
+Then open:
+- **Architect portal:** http://localhost:3000 (`index.html`)
+- **Client portal:** http://localhost:3000/client-index.html
+- **Admin panel:** http://localhost:3000/admin-login.html
